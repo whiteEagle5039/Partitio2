@@ -25,6 +25,8 @@ interface MusicEditorProps {
   activeSectionId: string;
   onVoiceChange: (voice: 'S' | 'A' | 'T' | 'B') => void;
   onSectionChange: (sectionId: string) => void;
+  onStaffFocus?: (voice: 'S' | 'A' | 'T' | 'B', sectionId: string) => void;
+  
 }
 
 const { width } = Dimensions.get('window');
@@ -36,6 +38,8 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
   activeSectionId,
   onVoiceChange,
   onSectionChange,
+  onStaffFocus,
+
 }) => {
   const colors = useThemeColors();
   const scrollViewRef = useRef<ScrollView>(null);
@@ -349,6 +353,8 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                 onPress={() => {
                   onVoiceChange(voice.key as 'S' | 'A' | 'T' | 'B');
                   onSectionChange(section.id);
+                  onStaffFocus?.(voice.key as 'S' | 'A' | 'T' | 'B', section.id);
+
                 }}
               >
                 <TextComponent style={[
@@ -374,11 +380,16 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                   onFocus={() => {
                     onVoiceChange(voice.key as 'S' | 'A' | 'T' | 'B');
                     onSectionChange(section.id);
+                    onStaffFocus?.(voice.key as 'S' | 'A' | 'T' | 'B', section.id);
+
                   }}
                   placeholder={`${voice.name} : do re mi fa | sol la si do |`}
                   placeholderTextColor={colors.text2}
                   multiline={false}
                   scrollEnabled={false}
+
+                  // Empêche clavier
+                    showSoftInputOnFocus={false} // Android seulement
                 />
               </View>
             </View>

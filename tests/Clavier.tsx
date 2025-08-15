@@ -58,13 +58,12 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
     },
     voiceButton: {
       backgroundColor: colors.background2,
-      borderRadius: 5,
-      paddingHorizontal: 20,
-      paddingVertical: 2,
+      borderRadius: 16,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
       marginRight: 8,
       borderWidth: 1,
       borderColor: colors.border,
-      justifyContent:'center'
     },
     activeVoiceButton: {
       backgroundColor: colors.primary,
@@ -74,7 +73,6 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
       fontSize: 14,
       color: colors.text,
       fontWeight: '500',
-      textAlign:'center'
     },
     activeVoiceButtonText: {
       color: colors.primaryForeground,
@@ -112,6 +110,20 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
     activeTabText: {
       color: colors.primary,
       fontWeight: '600',
+    },
+    
+    // Bouton de fermeture
+    closeButton: {
+      position: 'absolute',
+      top: 8,
+      right: 8,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: colors.background2,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 10,
     },
     
     // Clavier principal
@@ -192,21 +204,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
       borderColor: colors.border,
       minWidth: 50,
     },
-     // Bouton de fermeture
-    closeButton: {
-      position: 'absolute',
-      top: 8,
-      right: 8,
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: colors.background2,
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 10,
-    },
   });
-  
 
   const voices = [
     { key: 'S', label: 'S', name: 'Soprano' },
