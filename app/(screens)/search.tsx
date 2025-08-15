@@ -17,7 +17,7 @@ export default function SearchScreen() {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: colors.card,
     },
     header: {
       flexDirection: 'row',
@@ -28,8 +28,8 @@ export default function SearchScreen() {
       elevation: 2,
     },
     backButton: {
-      marginRight: 16,
-      padding: 8,
+      marginRight: 2,
+      padding: 3,
     },
     searchContainer: {
       flex: 1,
@@ -38,11 +38,11 @@ export default function SearchScreen() {
       backgroundColor: colors.input,
       borderRadius: 12,
       paddingHorizontal: 16,
-      marginRight: 12,
+      marginRight: 2,
     },
     searchInput: {
       flex: 1,
-      paddingVertical: 12,
+      paddingVertical: 10,
       fontSize: 16,
       color: colors.text,
     },
@@ -68,11 +68,13 @@ export default function SearchScreen() {
       borderRadius: 20,
     },
     filterChipActive: {
-      backgroundColor: colors.primary,
+      backgroundColor: colors.cardForeground,
     },
     content: {
       flex: 1,
       paddingTop: 16,
+      backgroundColor: colors.background,
+
     },
     resultsHeader: {
       paddingHorizontal: 20,
@@ -95,7 +97,7 @@ export default function SearchScreen() {
     },
   });
 
-  const genres = ['Tous', 'Classique', 'Jazz', 'Pop', 'Rock', 'Blues'];
+  const genres = ['Tous', 'Cantiques', 'Classique', 'Chorales'];
   const difficulties = ['Tous', 'Débutant', 'Intermédiaire', 'Avancé'];
 
   const filteredSheets = sheetMusic.filter((sheet: SheetMusic) => {
@@ -125,7 +127,7 @@ export default function SearchScreen() {
             <Search size={20} color={colors.icon} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Rechercher des partitions..."
+              placeholder="Rechercher..."
               placeholderTextColor={colors.text2}
               value={searchQuery}
               onChangeText={setSearchQuery}

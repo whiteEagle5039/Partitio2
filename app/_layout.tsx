@@ -9,7 +9,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    GgSansRegular: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    'StyreneB-Regular': require('../assets/fonts/StyreneB-Regular-Trial-BF63f6cbe9db1d5.otf'),
   });
 
   useEffect(() => {

@@ -28,7 +28,7 @@ export default function ProfileScreen() {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: colors.card,
     },
     header: {
       flexDirection: 'row',
@@ -50,6 +50,7 @@ export default function ProfileScreen() {
     },
     content: {
       flex: 1,
+      backgroundColor:colors.background
     },
     profileSection: {
       backgroundColor: colors.card,
@@ -72,6 +73,8 @@ export default function ProfileScreen() {
     },
     email: {
       marginBottom: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     joinDate: {
       flexDirection: 'row',

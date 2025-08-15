@@ -72,7 +72,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     id: '1',
     name: 'Utilisateur',
     email: 'user@partitio.com',
-    storageUsed: 45.2,
+    storageUsed: 25.2,
     storageLimit: 100,
   },
   setUser: (user) => set({ user }),

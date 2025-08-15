@@ -7,7 +7,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
 import { SheetMusic
-  
+
  } from '@/stores/appStore';
 export default function DownloadsScreen() {
   const colors = useThemeColors();
@@ -25,15 +25,14 @@ export default function DownloadsScreen() {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: colors.card,
     },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 20,
+      paddingHorizontal: 10,
       paddingVertical: 16,
       backgroundColor: colors.card,
-      elevation: 2,
     },
     backButton: {
       marginRight: 16,
@@ -51,7 +50,7 @@ export default function DownloadsScreen() {
     storageHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 16,
+      marginBottom: 10,
     },
     storageIcon: {
       marginRight: 12,
@@ -74,6 +73,7 @@ export default function DownloadsScreen() {
     },
     content: {
       flex: 1,
+      backgroundColor:colors.background
     },
     sectionHeader: {
       paddingHorizontal: 20,
@@ -205,43 +205,42 @@ export default function DownloadsScreen() {
 
           {downloadedSheets.length > 0 ? (
             downloadedSheets.map((sheet:any) => (
-              <View key={sheet.id} style={styles.downloadItem}>
-                <View style={styles.downloadIcon}>
-                  <Download size={24} color={colors.primary} />
-                </View>
-                
-                <View style={styles.downloadInfo}>
-                  <TextComponent variante="subtitle3" style={styles.downloadTitle}>
-                    {sheet.title}
-                  </TextComponent>
-                  <View style={styles.downloadMeta}>
-                    <TextComponent variante="caption" color={colors.text2}>
-                      {sheet.composer}
+              <TouchableOpacity 
+                onPress={() => console.log(`Ouvrir ${sheet.title}`)}
+              >
+                <View key={sheet.id} style={styles.downloadItem}>
+                  <View style={styles.downloadIcon}>
+                    <Download size={24} color={colors.primary} />
+                  </View>
+                  
+                  <View style={styles.downloadInfo}>
+                    <TextComponent variante="subtitle3" style={styles.downloadTitle}>
+                      {sheet.title}
                     </TextComponent>
-                    <TextComponent variante="caption" color={colors.text2}>
-                      •
-                    </TextComponent>
-                    <TextComponent variante="caption" color={colors.text2}>
-                      {sheet.fileSize?.toFixed(1)} MB
-                    </TextComponent>
+                    <View style={styles.downloadMeta}>
+                      <TextComponent variante="caption" color={colors.text2}>
+                        {sheet.composer}
+                      </TextComponent>
+                      <TextComponent variante="caption" color={colors.text2}>
+                        •
+                      </TextComponent>
+                      <TextComponent variante="caption" color={colors.text2}>
+                        {sheet.fileSize?.toFixed(1)} MB
+                      </TextComponent>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.downloadActions}>
+                    <TouchableOpacity 
+                      style={styles.actionButton}
+                      onPress={() => handleDeleteDownload(sheet.id, sheet.title)}
+                    >
+                      <Trash2 size={20} color={colors.destructive} />
+                    </TouchableOpacity>
                   </View>
                 </View>
-                
-                <View style={styles.downloadActions}>
-                  <TouchableOpacity 
-                    style={styles.actionButton}
-                    onPress={() => console.log(`Ouvrir ${sheet.title}`)}
-                  >
-                    <FolderOpen size={20} color={colors.primary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={styles.actionButton}
-                    onPress={() => handleDeleteDownload(sheet.id, sheet.title)}
-                  >
-                    <Trash2 size={20} color={colors.destructive} />
-                  </TouchableOpacity>
-                </View>
-              </View>
+              </TouchableOpacity>
+
             ))
           ) : (
             <View style={styles.emptyState}>

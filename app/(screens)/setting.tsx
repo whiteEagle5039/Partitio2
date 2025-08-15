@@ -62,7 +62,7 @@ export default function SettingsScreen() {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: colors.card,
     },
     header: {
       flexDirection: 'row',
@@ -81,6 +81,7 @@ export default function SettingsScreen() {
     },
     content: {
       flex: 1,
+      backgroundColor: colors.background,
     },
     section: {
       backgroundColor: colors.card,
@@ -166,7 +167,7 @@ export default function SettingsScreen() {
         {
           icon: Download,
           title: 'Téléchargement automatique',
-          description: 'Télécharger automatiquement les nouvelles partitions',
+          description: 'Télécharger automatiquement les nouvelles partitions proposé par Partitio',
           type: 'switch',
           value: autoDownload,
           onValueChange: setAutoDownload,

@@ -19,7 +19,7 @@ export default function LibraryScreen() {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: colors.card,
     },
     header: {
       flexDirection: 'row',
@@ -31,7 +31,6 @@ export default function LibraryScreen() {
     },
     backButton: {
       marginRight: 16,
-      padding: 8,
     },
     headerTitle: {
       flex: 1,
@@ -44,7 +43,7 @@ export default function LibraryScreen() {
       padding: 8,
     },
     categoriesContainer: {
-      backgroundColor: colors.card,
+      backgroundColor: colors.background,
       paddingVertical: 16,
     },
     categoriesScroll: {
@@ -58,11 +57,12 @@ export default function LibraryScreen() {
       marginRight: 12,
     },
     categoryChipActive: {
-      backgroundColor: colors.primary,
+      backgroundColor: colors.cardForeground,
     },
     content: {
       flex: 1,
-      paddingTop: 16,
+      paddingTop: 10,
+      backgroundColor: colors.background,
     },
     statsRow: {
       flexDirection: 'row',
@@ -107,13 +107,13 @@ export default function LibraryScreen() {
     },
     emptyState: {
       flex: 1,
-      justifyContent: 'center',
       alignItems: 'center',
       paddingHorizontal: 40,
+      paddingTop:'35%'
     },
   });
 
-  const categories = ['Tous', 'Classique', 'Jazz', 'Pop', 'Rock', 'Mes compositions'];
+  const categories = ['Tous', 'Cantiques','Mes compositions', 'Chorale'];
   
   const filteredSheets = sheetMusic.filter((sheet: SheetMusic) => 
     selectedCategory === 'Tous' || sheet.genre === selectedCategory
@@ -191,15 +191,15 @@ export default function LibraryScreen() {
           {/* Statistiques */}
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <TextComponent variante="subtitle2">{stats.total}</TextComponent>
+              <TextComponent variante="subtitle1">{stats.total}</TextComponent>
               <TextComponent variante="caption" color={colors.text2}>Total</TextComponent>
             </View>
             <View style={styles.statItem}>
-              <TextComponent variante="subtitle2">{stats.downloaded}</TextComponent>
+              <TextComponent variante="subtitle1">{stats.downloaded}</TextComponent>
               <TextComponent variante="caption" color={colors.text2}>Téléchargées</TextComponent>
             </View>
             <View style={styles.statItem}>
-              <TextComponent variante="subtitle2">{stats.compositions}</TextComponent>
+              <TextComponent variante="subtitle1">{stats.compositions}</TextComponent>
               <TextComponent variante="caption" color={colors.text2}>Compositions</TextComponent>
             </View>
           </View>
@@ -243,11 +243,9 @@ export default function LibraryScreen() {
             <View style={styles.emptyState}>
               <Folder size={48} color={colors.text2} />
               <TextComponent variante="subtitle2" style={{ marginTop: 16, textAlign: 'center' }}>
-                Aucune partition dans cette catégorie
+                Vide comme l'air ...
               </TextComponent>
-              <TextComponent variante="body4" color={colors.text2} style={{ textAlign: 'center', marginTop: 8 }}>
-                Explorez notre catalogue pour ajouter des partitions
-              </TextComponent>
+              {/* <TextComponent>( Vide comme l'air )..</TextComponent> */}
             </View>
           )}
         </ScrollView>

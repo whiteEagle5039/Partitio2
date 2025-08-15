@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
   User, 
@@ -15,42 +15,49 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const DRAWER_WIDTH = 276;
+
 export function DrawerMenu() {
   const colors = useThemeColors();
   const { user, isDrawerOpen, setDrawerOpen } = useAppStore();
   const router = useRouter();
+  const slideAnim = useRef(new Animated.Value(DRAWER_WIDTH)).current; // Commence à droite (hors écran)
+
+  useEffect(() => {
+    Animated.timing(slideAnim, {
+      toValue: isDrawerOpen ? 0 : DRAWER_WIDTH, // 0 = visible, DRAWER_WIDTH = caché à droite
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  }, [isDrawerOpen]);
 
   const styles = StyleSheet.create({
-    overlay: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      zIndex: 1000,
-    },
     drawer: {
       position: 'absolute',
       top: 0,
-      left: 0,
+      right: 0, // Position à droite
       bottom: 0,
-      width: 280,
+      width: DRAWER_WIDTH,
       backgroundColor: colors.card,
       zIndex: 1001,
       elevation: 16,
       shadowColor: '#000',
-      shadowOffset: { width: 2, height: 0 },
+      shadowOffset: { width: -2, height: 0 }, // Ombre vers la gauche
       shadowOpacity: 0.25,
       shadowRadius: 8,
+
+      // Ajout de bord en haut à gauche
+      borderTopLeftRadius: 30, 
     },
     header: {
-      padding: 20,
+      padding: 15,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
+      gap:14
     },
     userInfo: {
       flex: 1,
@@ -104,7 +111,7 @@ export function DrawerMenu() {
     { icon: PenTool, label: 'Composition', route: '/compose' },
     { icon: HardDrive, label: 'Téléchargements', route: '/downloads' },
     { icon: User, label: 'Profil', route: '/profile' },
-    { icon: Settings, label: 'Paramètres', route: '/settings' },
+    { icon: Settings, label: 'Paramètres', route: '/setting' },
   ];
 
   const handleMenuItemPress = (route: string) => {
@@ -114,21 +121,17 @@ export function DrawerMenu() {
 
   const storagePercentage = user ? (user.storageUsed / user.storageLimit) * 100 : 0;
 
-  if (!isDrawerOpen) return null;
-
   return (
-    <>
-      <TouchableOpacity 
-        style={styles.overlay} 
-        onPress={() => setDrawerOpen(false)}
-        activeOpacity={1}
-      />
-      <SafeAreaView style={styles.drawer}>
+    <Animated.View style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}>
+      <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.header}>
-          <View style={styles.userInfo}>
-            <View style={styles.avatar}>
-              <User size={24} color={colors.primaryForeground} />
-            </View>
+          <TouchableOpacity 
+            style={styles.closeButton}
+            onPress={() => setDrawerOpen(false)}
+          >
+            <X size={24} color={colors.icon} />
+          </TouchableOpacity>
+          <View style={styles.userInfo} >
             <TextComponent variante="subtitle2">
               {user?.name || 'Utilisateur'}
             </TextComponent>
@@ -136,12 +139,6 @@ export function DrawerMenu() {
               {user?.email || 'user@partitio.com'}
             </TextComponent>
           </View>
-          <TouchableOpacity 
-            style={styles.closeButton}
-            onPress={() => setDrawerOpen(false)}
-          >
-            <X size={24} color={colors.icon} />
-          </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.menuItems}>
@@ -176,6 +173,6 @@ export function DrawerMenu() {
           </View>
         </View>
       </SafeAreaView>
-    </>
+    </Animated.View>
   );
 }

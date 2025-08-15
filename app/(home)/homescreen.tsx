@@ -7,23 +7,19 @@ import {
   Search, 
   Library, 
   PenTool, 
-  Download,
   Music,
-  TrendingUp,
-  Clock
 } from 'lucide-react-native';
 import { TextComponent } from '@/components/TextComponent';
 import { SheetMusicCard } from '@/components/SheetMusicCard';
-import { DrawerMenu } from '@/components/DrawerMenu';
+import { WrapperComponent } from '@/components/WrapperComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
-
 import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
   const colors = useThemeColors();
   const router = useRouter();
-  const { sheetMusic, setDrawerOpen, downloadedSheets } = useAppStore();
+  const { sheetMusic, setDrawerOpen, downloadedSheets, isDrawerOpen } = useAppStore();
 
   const styles = StyleSheet.create({
     container: {
@@ -37,11 +33,11 @@ export default function HomeScreen() {
       paddingHorizontal: 20,
       paddingVertical: 16,
       backgroundColor: colors.card,
-      elevation: 2,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+    // //   elevation: 2,
+    // //   shadowColor: '#000',
+    //   shadowOffset: { width: 0, height: 2 },
+    //   shadowOpacity: 0.1,
+    //   shadowRadius: 4,
     },
     logo: {
       flexDirection: 'row',
@@ -56,10 +52,10 @@ export default function HomeScreen() {
     },
     scrollView: {
       flex: 1,
-      backgroundColor:colors.background
+      backgroundColor: colors.background
     },
     quickActions: {
-      flexDirection: 'row',
+      flexDirection: 'column',
       paddingHorizontal: 20,
       paddingVertical: 24,
       gap: 12,
@@ -68,8 +64,11 @@ export default function HomeScreen() {
       flex: 1,
       backgroundColor: colors.card,
       borderRadius: 16,
-      padding: 16,
+      padding: 15,
+      gap: 12,
+      flexDirection: 'row',
       alignItems: 'center',
+      textAlign: 'center',
       elevation: 2,
       shadowColor: colors.primary,
       shadowOffset: { width: 0, height: 2 },
@@ -91,22 +90,6 @@ export default function HomeScreen() {
     },
     seeAllButton: {
       padding: 8,
-    },
-    statsContainer: {
-      flexDirection: 'row',
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      gap: 16,
-    },
-    statCard: {
-      flex: 1,
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      padding: 16,
-      alignItems: 'center',
-    },
-    statNumber: {
-      marginTop: 8,
     },
     horizontalScroll: {
       paddingLeft: 20,
@@ -137,7 +120,7 @@ export default function HomeScreen() {
   const recentSheets = sheetMusic.slice(0, 5);
 
   return (
-    <View style={styles.container}>
+    <WrapperComponent>
       <SafeAreaView style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -155,7 +138,7 @@ export default function HomeScreen() {
           
           <TouchableOpacity 
             style={styles.menuButton}
-            onPress={() => setDrawerOpen(true)}
+            onPress={() => setDrawerOpen(!isDrawerOpen)}
           >
             <Menu size={24} color={colors.icon} />
           </TouchableOpacity>
@@ -182,37 +165,6 @@ export default function HomeScreen() {
             ))}
           </View>
 
-          {/* Statistiques */}
-          <View style={styles.statsContainer}>
-            <View style={styles.statCard}>
-              <TrendingUp size={24} color={colors.primary} />
-              <TextComponent variante="subtitle2" style={styles.statNumber}>
-                {sheetMusic.length}
-              </TextComponent>
-              <TextComponent variante="caption" color={colors.text2}>
-                Partitions
-              </TextComponent>
-            </View>
-            <View style={styles.statCard}>
-              <Download size={24} color={colors.primary2} />
-              <TextComponent variante="subtitle2" style={styles.statNumber}>
-                {downloadedSheets.length}
-              </TextComponent>
-              <TextComponent variante="caption" color={colors.text2}>
-                Téléchargées
-              </TextComponent>
-            </View>
-            <View style={styles.statCard}>
-              <Clock size={24} color={colors.primary3} />
-              <TextComponent variante="subtitle2" style={styles.statNumber}>
-                12h
-              </TextComponent>
-              <TextComponent variante="caption" color={colors.text2}>
-                Cette semaine
-              </TextComponent>
-            </View>
-          </View>
-
           {/* Partitions récentes */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -234,7 +186,7 @@ export default function HomeScreen() {
               showsHorizontalScrollIndicator={false}
               style={styles.horizontalScroll}
             >
-              {recentSheets.map((sheet:any) => (
+              {recentSheets.map((sheet: any) => (
                 <SheetMusicCard
                   key={sheet.id}
                   title={sheet.title}
@@ -268,7 +220,7 @@ export default function HomeScreen() {
               showsHorizontalScrollIndicator={false}
               style={styles.horizontalScroll}
             >
-              {sheetMusic.map((sheet:any) => (
+              {sheetMusic.map((sheet: any) => (
                 <SheetMusicCard
                   key={sheet.id}
                   title={sheet.title}
@@ -282,8 +234,6 @@ export default function HomeScreen() {
           </View>
         </ScrollView>
       </SafeAreaView>
-
-      <DrawerMenu />
-    </View>
+    </WrapperComponent>
   );
 }
