@@ -28,15 +28,14 @@ export default function ComposeScreen() {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background,
+      backgroundColor: colors.card,
     },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingVertical: 16,
+      paddingHorizontal: 10,
+      paddingVertical: 10,
       backgroundColor: colors.card,
-      elevation: 2,
     },
     backButton: {
       marginRight: 16,
