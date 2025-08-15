@@ -1,143 +1,89 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  ArrowLeft, 
-  Save, 
-  Share, 
-  FileText, 
-  Music,
-  Play,
-  Pause,
-  RotateCcw
-} from 'lucide-react-native';
+import { View, StyleSheet, TouchableOpacity, Alert, BackHandler } from 'react-native';
 import { TextComponent } from '@/components/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
+import { MusicEditor } from '@/components/MusicEditor';
+import { MusicKeyboard } from '@/components/Musickeyboard';
+import { CompositionDrawer } from '@/components/CompositionDrawer';
+
+interface Section {
+  id: string;
+  name: string;
+  soprano: string;
+  alto: string;
+  tenor: string;
+  bass: string;
+}
+
+interface Composition {
+  title: string;
+  tempo: string;
+  key: string;
+  sections: Section[];
+}
 
 export default function ComposeScreen() {
   const colors = useThemeColors();
   const router = useRouter();
   const { addComposition } = useAppStore();
   
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [isPlaying, setIsPlaying] = useState(false);
+  // État principal de la composition
+  const [composition, setComposition] = useState<Composition>({
+    title: '',
+    tempo: '4/4',
+    key: 'Do M',
+    sections: [
+      {
+        id: '1',
+        name: 'Couplet 1',
+        soprano: '',
+        alto: '',
+        tenor: '',
+        bass: '',
+      }
+    ],
+  });
+
+  // État de l'interface
+  const [activeVoice, setActiveVoice] = useState<'S' | 'A' | 'T' | 'B'>('S');
+  const [activeSectionId, setActiveSectionId] = useState('1');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.card,
+      backgroundColor: colors.background,
     },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 10,
-      paddingVertical: 10,
-      backgroundColor: colors.card,
-    },
+
     backButton: {
       marginRight: 16,
       padding: 8,
     },
-    headerTitle: {
-      flex: 1,
-    },
-    headerActions: {
-      flexDirection: 'row',
-      gap: 8,
-    },
+
     actionButton: {
       padding: 8,
     },
-    content: {
-      flex: 1,
-      padding: 20,
-    },
-    titleInput: {
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      padding: 16,
-      fontSize: 18,
-      fontWeight: 'bold',
-      color: colors.text,
-      marginBottom: 20,
-      elevation: 1,
-    },
     editorContainer: {
       flex: 1,
+    },
+    keyboardContainer: {
       backgroundColor: colors.card,
-      borderRadius: 16,
-      overflow: 'hidden',
-      elevation: 2,
-    },
-    editorHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    editorTitle: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    editorControls: {
-      flexDirection: 'row',
-      gap: 8,
-    },
-    controlButton: {
-      backgroundColor: colors.primary + '20',
-      borderRadius: 8,
-      padding: 8,
-    },
-    editor: {
-      flex: 1,
-      padding: 16,
-      fontSize: 16,
-      color: colors.text,
-      textAlignVertical: 'top',
-      minHeight: 300,
-    },
-    toolbar: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      padding: 16,
-      backgroundColor: colors.background2,
-      borderTopWidth: 1,
-      borderTopColor: colors.border,
-    },
-    toolButton: {
-      alignItems: 'center',
-      padding: 8,
-    },
-    saveButton: {
-      backgroundColor: colors.primary,
-      borderRadius: 12,
-      padding: 16,
-      margin: 20,
-      alignItems: 'center',
-      flexDirection: 'row',
-      justifyContent: 'center',
-    },
-    saveButtonText: {
-      marginLeft: 8,
-      fontWeight: 'bold',
     },
   });
 
-  const handleSave = () => {
-    if (!title.trim()) {
+  // Gestion de la sauvegarde
+  const handleSave = async () => {
+    if (!composition.title.trim()) {
       Alert.alert('Erreur', 'Veuillez saisir un titre pour votre composition');
       return;
     }
 
     const newComposition = {
       id: Date.now().toString(),
-      title: title.trim(),
-      content: content.trim(),
+      title: composition.title.trim(),
+      content: formatCompositionAsText(composition),
       createdAt: new Date(),
       lastModified: new Date(),
       isPublic: false,
@@ -145,9 +91,26 @@ export default function ComposeScreen() {
 
     addComposition(newComposition);
     Alert.alert('Succès', 'Votre composition a été sauvegardée !');
-    router.back();
   };
 
+  // Formatage de la composition en texte structuré
+  const formatCompositionAsText = (comp: Composition): string => {
+    let text = `# Titre: ${comp.title}\n`;
+    text += `# Temps: ${comp.tempo}\n`;
+    text += `# Gamme: ${comp.key}\n\n`;
+
+    comp.sections.forEach((section) => {
+      text += `## ${section.name}\n`;
+      text += `S: ${section.soprano}\n`;
+      text += `A: ${section.alto}\n`;
+      text += `T: ${section.tenor}\n`;
+      text += `B: ${section.bass}\n\n`;
+    });
+
+    return text;
+  };
+
+  // Gestion de l'export PDF
   const handleExportPDF = () => {
     Alert.alert(
       'Exporter en PDF',
@@ -156,119 +119,160 @@ export default function ComposeScreen() {
     );
   };
 
-  const togglePlayback = () => {
-    setIsPlaying(!isPlaying);
-    // Ici vous pourriez intégrer un lecteur audio
+  // Gestion de la navigation vers une section
+  const handleSectionSelect = (sectionId: string) => {
+    setActiveSectionId(sectionId);
+    setIsDrawerOpen(false);
   };
 
-  const toolbarItems = [
-    { icon: Music, label: 'Note', onPress: () => setContent(content + '♪ ') },
-    { icon: FileText, label: 'Texte', onPress: () => setContent(content + '\n\n') },
-    { icon: RotateCcw, label: 'Annuler', onPress: () => setContent('') },
-  ];
+  // Gestion des touches du clavier musical
+  const handleInsertNote = (note: string) => {
+    const currentSection = composition.sections.find(s => s.id === activeSectionId);
+    if (!currentSection) return;
+
+    const voiceKey = activeVoice.toLowerCase() as keyof Omit<Section, 'id' | 'name'>;
+    const currentContent = currentSection[voiceKey];
+    const newContent = currentContent + note + ' ';
+
+    updateSectionContent(activeSectionId, voiceKey, newContent);
+  };
+
+  const handleInsertSymbol = (symbol: string) => {
+    const currentSection = composition.sections.find(s => s.id === activeSectionId);
+    if (!currentSection) return;
+
+    const voiceKey = activeVoice.toLowerCase() as keyof Omit<Section, 'id' | 'name'>;
+    const currentContent = currentSection[voiceKey];
+    const newContent = currentContent + symbol;
+
+    updateSectionContent(activeSectionId, voiceKey, newContent);
+  };
+
+  const handleInsertMeasure = () => {
+    handleInsertSymbol(' | ');
+  };
+
+  const handleDeleteLast = () => {
+    const currentSection = composition.sections.find(s => s.id === activeSectionId);
+    if (!currentSection) return;
+
+    const voiceKey = activeVoice.toLowerCase() as keyof Omit<Section, 'id' | 'name'>;
+    const currentContent = currentSection[voiceKey];
+    const newContent = currentContent.slice(0, -1);
+
+    updateSectionContent(activeSectionId, voiceKey, newContent);
+  };
+
+  // Mise à jour du contenu d'une section
+  const updateSectionContent = (sectionId: string, voice: keyof Omit<Section, 'id' | 'name'>, content: string) => {
+    setComposition(prev => ({
+      ...prev,
+      sections: prev.sections.map(section =>
+        section.id === sectionId
+          ? { ...section, [voice]: content }
+          : section
+      )
+    }));
+  };
+
+  // Gestion de la fermeture avec confirmation
+  const handleGoBack = () => {
+    const hasContent = composition.sections.some(section => 
+      section.soprano || section.alto || section.tenor || section.bass
+    ) || composition.title.trim();
+
+    if (hasContent) {
+      Alert.alert(
+        'Quitter la composition',
+        'Vous avez des modifications non sauvegardées. Voulez-vous vraiment quitter ?',
+        [
+          { text: 'Annuler', style: 'cancel' },
+          { text: 'Sauvegarder et quitter', onPress: () => { handleSave(); router.back(); } },
+          { text: 'Quitter sans sauvegarder', style: 'destructive', onPress: () => router.back() },
+        ]
+      );
+    } else {
+      router.back();
+    }
+  };
 
   return (
     <View style={styles.container}>
-      <SafeAreaView style={styles.container}>
-        {/* Header */}
+        {/* Header
         <View style={styles.header}>
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => router.back()}
+            onPress={handleGoBack}
           >
             <ArrowLeft size={24} color={colors.icon} />
           </TouchableOpacity>
           
           <View style={styles.headerTitle}>
             <TextComponent variante="subtitle1">
-              Composition
+              {composition.title || 'Nouvelle composition'}
+            </TextComponent>
+            <TextComponent variante="caption" color={colors.text2}>
+              {composition.sections.length} section{composition.sections.length > 1 ? 's' : ''} • {composition.tempo} • {composition.key}
             </TextComponent>
           </View>
           
           <View style={styles.headerActions}>
             <TouchableOpacity 
               style={styles.actionButton}
+              onPress={() => setIsDrawerOpen(true)}
+            >
+              <Settings size={24} color={colors.icon} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.actionButton}
               onPress={handleExportPDF}
             >
               <Share size={24} color={colors.icon} />
             </TouchableOpacity>
-          </View>
-        </View>
 
-        <View style={styles.content}>
-          {/* Titre de la composition */}
-          <TextInput
-            style={styles.titleInput}
-            placeholder="Titre de votre composition..."
-            placeholderTextColor={colors.text2}
-            value={title}
-            onChangeText={setTitle}
+            <TouchableOpacity 
+              style={styles.actionButton}
+              onPress={handleSave}
+            >
+              <Save size={24} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+        </View> */}
+
+        {/* Éditeur de partition */}
+        <View style={styles.editorContainer}>
+          <MusicEditor
+            composition={composition}
+            onCompositionChange={setComposition}
+            activeVoice={activeVoice}
+            activeSectionId={activeSectionId}
+            onVoiceChange={setActiveVoice}
+            onSectionChange={setActiveSectionId}
           />
-
-          {/* Éditeur */}
-          <View style={styles.editorContainer}>
-            <View style={styles.editorHeader}>
-              <View style={styles.editorTitle}>
-                <Music size={20} color={colors.primary} />
-                <TextComponent variante="subtitle3" style={{ marginLeft: 8 }}>
-                  Éditeur de partition
-                </TextComponent>
-              </View>
-              
-              <View style={styles.editorControls}>
-                <TouchableOpacity 
-                  style={styles.controlButton}
-                  onPress={togglePlayback}
-                >
-                  {isPlaying ? (
-                    <Pause size={16} color={colors.primary} />
-                  ) : (
-                    <Play size={16} color={colors.primary} />
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <TextInput
-              style={styles.editor}
-              placeholder="Commencez à écrire votre partition ici...&#10;&#10;Exemple :&#10;C G Am F&#10;Do Sol La- Fa&#10;&#10;Ou utilisez la notation musicale traditionnelle..."
-              placeholderTextColor={colors.text2}
-              value={content}
-              onChangeText={setContent}
-              multiline
-              textAlignVertical="top"
-            />
-
-            {/* Barre d'outils */}
-            <View style={styles.toolbar}>
-              {toolbarItems.map((item, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.toolButton}
-                  onPress={item.onPress}
-                >
-                  <item.icon size={20} color={colors.icon} />
-                  <TextComponent variante="caption" color={colors.text2} style={{ marginTop: 4 }}>
-                    {item.label}
-                  </TextComponent>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
         </View>
 
-        {/* Bouton de sauvegarde */}
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Save size={20} color={colors.primaryForeground} />
-          <TextComponent 
-            variante="body2" 
-            color={colors.primaryForeground} 
-            style={styles.saveButtonText}
-          >
-            Sauvegarder la composition
-          </TextComponent>
-        </TouchableOpacity>
-      </SafeAreaView>
+        {/* Clavier musical */}
+        <View style={styles.keyboardContainer}>
+          <MusicKeyboard
+            activeVoice={activeVoice}
+            onVoiceChange={setActiveVoice}
+            onInsertNote={handleInsertNote}
+            onInsertSymbol={handleInsertSymbol}
+            onInsertMeasure={handleInsertMeasure}
+            onDeleteLast={handleDeleteLast}
+          />
+        </View>
+
+        {/* Drawer de configuration */}
+        <CompositionDrawer
+          isOpen={isDrawerOpen}
+          onClose={() => setIsDrawerOpen(false)}
+          composition={composition}
+          onCompositionChange={setComposition}
+          onSectionSelect={handleSectionSelect}
+          activeSectionId={activeSectionId}
+        />
     </View>
   );
 }
