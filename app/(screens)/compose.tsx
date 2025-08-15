@@ -9,6 +9,7 @@ import { MusicKeyboard } from '@/components/Musickeyboard';
 import { CompositionDrawer } from '@/components/CompositionDrawer';
 import { Settings, Settings2 } from 'lucide-react-native';
 
+
 interface Section {
   id: string;
   name: string;
@@ -53,6 +54,7 @@ export default function ComposeScreen() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showKeyboard, setShowKeyboard] = useState(false);
   const [drawerAnimation] = useState(new Animated.Value(0));
+  
 
   const styles = StyleSheet.create({
     container: {

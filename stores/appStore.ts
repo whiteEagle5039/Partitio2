@@ -54,6 +54,9 @@ interface AppState {
   // UI State
   isDrawerOpen: boolean;
   setDrawerOpen: (open: boolean) => void;
+
+  isDrawerOpene: boolean;
+  setDrawerOpene: (open: boolean) => void;
   
   // Search
   searchQuery: string;
@@ -159,6 +162,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   // UI State
   isDrawerOpen: false,
   setDrawerOpen: (open) => set({ isDrawerOpen: open }),
+
+   // UI State
+  isDrawerOpene: false,
+  setDrawerOpene: (open) => set({ isDrawerOpene: open }),
   
   // Search
   searchQuery: '',

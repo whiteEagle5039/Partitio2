@@ -1,11 +1,21 @@
 // components/CompositionDrawer.tsx
-import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Animated, Dimensions } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { TextComponent } from '@/components/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { 
-  Plus, Trash2, Edit3, ChevronUp, ChevronDown,
-  X, Copy, Music, FileText, Settings2
+  Plus, 
+  Trash2, 
+  Edit3, 
+  ChevronUp, 
+  ChevronDown,
+  X,
+  Copy,
+  Music,
+  Clock,
+  Hash,
+  FileText,
+  Settings2
 } from 'lucide-react-native';
 
 interface Section {
@@ -31,9 +41,6 @@ interface CompositionDrawerProps {
   activeSectionId: string;
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const DRAWER_WIDTH = 360;
-
 export const CompositionDrawer: React.FC<CompositionDrawerProps> = ({
   isOpen,
   onClose,
@@ -45,40 +52,6 @@ export const CompositionDrawer: React.FC<CompositionDrawerProps> = ({
   const colors = useThemeColors();
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
 
-  // Animation
-  const slideAnim = useRef(new Animated.Value(DRAWER_WIDTH)).current; // Drawer hors écran à droite
-  const overlayAnim = useRef(new Animated.Value(0)).current; // Overlay transparent
-
-  useEffect(() => {
-    if (isOpen) {
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: false,
-        }),
-        Animated.timing(overlayAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: false,
-        }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: DRAWER_WIDTH,
-          duration: 200,
-          useNativeDriver: false,
-        }),
-        Animated.timing(overlayAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: false,
-        }),
-      ]).start();
-    }
-  }, [isOpen]);
-
   const styles = StyleSheet.create({
     overlay: {
       position: 'absolute',
@@ -87,7 +60,7 @@ export const CompositionDrawer: React.FC<CompositionDrawerProps> = ({
       right: 0,
       bottom: 0,
       backgroundColor: 'rgba(0,0,0,0.5)',
-      zIndex: -1,
+      zIndex: 1000,
     },
     drawer: {
       position: 'absolute',
@@ -291,23 +264,24 @@ export const CompositionDrawer: React.FC<CompositionDrawerProps> = ({
     },
   });
 
-
   const updateCompositionField = (field: string, value: string) => {
-    onCompositionChange({ ...composition, [field]: value });
+    onCompositionChange({
+      ...composition,
+      [field]: value,
+    });
   };
 
-   const addSection = (sectionType: string = 'custom') => {
-   const sectionNames: Record<'verse' | 'chorus' | 'bridge' | 'intro' | 'outro' | 'custom', string> = {
-    verse: 'Couplet',
-    chorus: 'Refrain',
-    bridge: 'Pont',
-    intro: 'Introduction',
-    outro: 'Conclusion',
-    custom: 'Section',
-  };
+  const addSection = (sectionType: string = 'custom') => {
+    const sectionNames = {
+      verse: 'Couplet',
+      chorus: 'Refrain',
+      bridge: 'Pont',
+      intro: 'Introduction',
+      outro: 'Conclusion',
+      custom: 'Section'
+    };
 
-const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Section';
-
+    const baseName = sectionNames[sectionType] || 'Section';
     const existingCount = composition.sections.filter(s => 
       s.name.startsWith(baseName)
     ).length;
@@ -330,66 +304,6 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
     onSectionSelect(newSection.id);
   };
 
-  const getSectionStats = (section: Section) => {
-    const totalNotes = (section.soprano + section.alto + section.tenor + section.bass)
-      .replace(/[^a-zA-ZÀ-ÿ]/g, '').length;
-    const measures = Math.max(
-      (section.soprano.match(/\|/g) || []).length,
-      (section.alto.match(/\|/g) || []).length,
-      (section.tenor.match(/\|/g) || []).length,
-      (section.bass.match(/\|/g) || []).length
-    );
-    return `${totalNotes} notes • ${measures} mesures`;
-  };
-
-   const moveSectionUp = (index: number) => {
-    if (index > 0) {
-      const newSections = [...composition.sections];
-      [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
-      onCompositionChange({
-        ...composition,
-        sections: newSections,
-      });
-    }
-  };
-  const moveSectionDown = (index: number) => {
-    if (index < composition.sections.length - 1) {
-      const newSections = [...composition.sections];
-      [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
-      onCompositionChange({
-        ...composition,
-        sections: newSections,
-      });
-    }
-  };
-
-   const deleteSection = (sectionId: string) => {
-      const section = composition.sections.find(s => s.id === sectionId);
-      Alert.alert(
-        'Supprimer la section',
-        `Êtes-vous sûr de vouloir supprimer "${section?.name}" ?`,
-        [
-          { text: 'Annuler', style: 'cancel' },
-          {
-            text: 'Supprimer',
-            style: 'destructive',
-            onPress: () => {
-              const newSections = composition.sections.filter(s => s.id !== sectionId);
-              onCompositionChange({
-                ...composition,
-                sections: newSections,
-              });
-              
-              // Si c'était la section active, sélectionner une autre
-              if (activeSectionId === sectionId && newSections.length > 0) {
-                onSectionSelect(newSections[0].id);
-              }
-            },
-          },
-        ]
-      );
-    };
-
   const duplicateSection = (sectionId: string) => {
     const sectionToDuplicate = composition.sections.find(s => s.id === sectionId);
     if (!sectionToDuplicate) return;
@@ -405,7 +319,35 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
       sections: [...composition.sections, newSection],
     });
   };
-   const updateSectionName = (sectionId: string, name: string) => {
+
+  const deleteSection = (sectionId: string) => {
+    const section = composition.sections.find(s => s.id === sectionId);
+    Alert.alert(
+      'Supprimer la section',
+      `Êtes-vous sûr de vouloir supprimer "${section?.name}" ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: () => {
+            const newSections = composition.sections.filter(s => s.id !== sectionId);
+            onCompositionChange({
+              ...composition,
+              sections: newSections,
+            });
+            
+            // Si c'était la section active, sélectionner une autre
+            if (activeSectionId === sectionId && newSections.length > 0) {
+              onSectionSelect(newSections[0].id);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const updateSectionName = (sectionId: string, name: string) => {
     onCompositionChange({
       ...composition,
       sections: composition.sections.map(section =>
@@ -414,33 +356,52 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
     });
   };
 
+  const moveSectionUp = (index: number) => {
+    if (index > 0) {
+      const newSections = [...composition.sections];
+      [newSections[index - 1], newSections[index]] = [newSections[index], newSections[index - 1]];
+      onCompositionChange({
+        ...composition,
+        sections: newSections,
+      });
+    }
+  };
+
+  const moveSectionDown = (index: number) => {
+    if (index < composition.sections.length - 1) {
+      const newSections = [...composition.sections];
+      [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
+      onCompositionChange({
+        ...composition,
+        sections: newSections,
+      });
+    }
+  };
+
+  const getSectionStats = (section: Section) => {
+    const totalNotes = (section.soprano + section.alto + section.tenor + section.bass)
+      .replace(/[^a-zA-ZÀ-ÿ]/g, '').length;
+    const measures = Math.max(
+      (section.soprano.match(/\|/g) || []).length,
+      (section.alto.match(/\|/g) || []).length,
+      (section.tenor.match(/\|/g) || []).length,
+      (section.bass.match(/\|/g) || []).length
+    );
+    return `${totalNotes} notes • ${measures} mesures`;
+  };
 
   const tempoPresets = ['2/4', '3/4', '4/4', '6/8', '9/8', '12/8'];
-  const keyPresets = ['Do ', 'Ré ', 'Mi ', 'Fa ', 'Sol ', 'La ', 'Si ', 'Do #', 'Ré #', 'Fa #', 'Sol #', 'La #' , 'Re b', 'Mi b', 'Sol b', 'La b', 'Ti b'];
+  const keyPresets = ['Do M', 'Ré M', 'Mi M', 'Fa M', 'Sol M', 'La M', 'Si M', 'La m', 'Si m', 'Do m', 'Ré m', 'Mi m'];
+
+  if (!isOpen) return null;
 
   return (
-    <>
-      {/* Overlay animé */}
-      <Animated.View
-        pointerEvents={isOpen ? 'auto' : 'none'} // bloque le clic seulement si ouvert
-        style={[
-          styles.overlay,
-          { opacity: overlayAnim },
-        ]}
-      >
-        <TouchableOpacity style={{ flex: 1 }} onPress={onClose} />
-      </Animated.View>
-
-      {/* Drawer animé */}
-      <Animated.View
-        style={[
-          styles.drawer,
-          { transform: [{ translateX: slideAnim }] },
-        ]}
-      >
-        {/* Header */}
+    <View style={styles.overlay}>
+      <TouchableOpacity style={{ flex: 1 }} onPress={onClose} />
+      
+      <View style={styles.drawer}>
         <View style={styles.header}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <View style={styles.headerTitle}>
             <Settings2 size={20} color={colors.primary} />
             <TextComponent variante="subtitle2" style={{ marginLeft: 8 }}>
               Configuration
@@ -451,9 +412,8 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
           </TouchableOpacity>
         </View>
 
-        {/* Contenu */}
-        <ScrollView>
-          {/* Infos générales */}
+        <ScrollView style={styles.content}>
+          {/* Informations générales */}
           <View style={styles.section}>
             <View style={styles.sectionTitle}>
               <FileText size={16} color={colors.primary} />
@@ -461,6 +421,7 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
                 Informations générales
               </TextComponent>
             </View>
+            
             <TextComponent style={styles.inputLabel}>Titre</TextComponent>
             <TextInput
               style={styles.input}
@@ -469,6 +430,7 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
               value={composition.title}
               onChangeText={(text) => updateCompositionField('title', text)}
             />
+            
             <TextComponent style={styles.inputLabel}>Temps</TextComponent>
             <TextInput
               style={styles.input}
@@ -488,6 +450,7 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
                 </TouchableOpacity>
               ))}
             </View>
+            
             <TextComponent style={styles.inputLabel}>Gamme</TextComponent>
             <TextInput
               style={styles.input}
@@ -509,7 +472,7 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
             </View>
           </View>
 
-            {/* Gestion des sections */}
+          {/* Gestion des sections */}
           <View style={styles.section}>
             <View style={styles.sectionTitle}>
               <Music size={16} color={colors.primary} />
@@ -656,10 +619,8 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
               </TextComponent>
             </TouchableOpacity>
           </View>
-          
         </ScrollView>
-      </Animated.View>
-    </>
-
+      </View>
+    </View>
   );
 };
