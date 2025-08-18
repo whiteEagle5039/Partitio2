@@ -71,7 +71,7 @@ export default function HomeScreen() {
       alignItems: 'center',
       textAlign: 'center',
       borderColor: colors.border,
-      borderWidth:0.5,
+      borderWidth:1,
 
     },
     quickActionIcon: {

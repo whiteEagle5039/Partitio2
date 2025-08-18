@@ -64,7 +64,8 @@ export function DrawerMenu() {
       flexDirection:'row'
     },
     closeButton: {
-      padding: 8,
+      padding: 5,
+      paddingRight:0,
     },
     avatar: {
       width: 48,
