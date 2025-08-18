@@ -15,7 +15,6 @@ const styles = StyleSheet.create({
     subtitle0: { 
         fontSize: 32, 
         lineHeight: 36, 
-        // fontWeight: "bold",
         fontFamily: "Styrene-Bold"
     },
     subtitle1: { 
@@ -44,9 +43,15 @@ const styles = StyleSheet.create({
     },
     
     // Styles pour le corps de texte (Tiempos-like)
-    body1: { 
+    body0: { 
         fontSize: 32, 
         lineHeight: 36, 
+        fontFamily: "Tiempos-Medium"
+    },
+    body1: { 
+        fontSize: 24, 
+        lineHeight: 28, 
+        fontWeight: "600",
         fontFamily: "Tiempos-Medium"
     },
     body2: { 

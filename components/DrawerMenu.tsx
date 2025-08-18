@@ -133,10 +133,10 @@ export function DrawerMenu() {
             <X size={32} color={colors.icon} />
           </TouchableOpacity>
           <View style={styles.userInfo} >
-            <TextComponent variante="subtitle0" color={colors.blueSingle}>
+            <TextComponent variante="body0" color={colors.blueSingle}>
               {user?.name || 'Utilisateur'}
             </TextComponent>
-            <TextComponent variante="subtitle0">'s Work</TextComponent>
+            <TextComponent variante="body0">'s Work</TextComponent>
             {/* <TextComponent variante="caption" color={colors.text2}>
               {user?.email || 'user@partitio.com'}
             </TextComponent> */}

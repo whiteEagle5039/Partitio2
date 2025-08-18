@@ -47,7 +47,6 @@ export default function HomeScreen() {
     },
     logoText: {
       marginLeft: 12,
-      fontWeight: 'bold',
     },
     menuButton: {
       padding: 8,
@@ -141,7 +140,7 @@ export default function HomeScreen() {
               <Music size={24} color="#FFFFFF" />
             </LinearGradient> */}
               {/* <Music size={24} color="#333" /> */}
-            <TextComponent variante='body1' >
+            <TextComponent variante='body1'  style={styles.logoText}>
               Partitio
             </TextComponent>
             
@@ -187,7 +186,7 @@ export default function HomeScreen() {
                 style={styles.seeAllButton}
                 onPress={() => router.push('/search')}
               >
-                <TextComponent variante="body4" color={colors.primary}>
+                <TextComponent variante="body3" color={colors.primary}>
                   Explorer
                 </TextComponent>
               </TouchableOpacity>

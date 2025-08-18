@@ -43,7 +43,7 @@ export default function SearchScreen() {
     searchInput: {
       flex: 1,
       paddingVertical: 10,
-      fontSize: 16,
+      fontSize: 24,
       color: colors.text,
     },
     filterButton: {
@@ -120,11 +120,11 @@ export default function SearchScreen() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <ArrowLeft size={24} color={colors.icon} />
+            <ArrowLeft size={32} color={colors.icon} />
           </TouchableOpacity>
           
           <View style={styles.searchContainer}>
-            <Search size={20} color={colors.icon} />
+            <Search size={30} color={colors.icon} />
             <TextInput
               style={styles.searchInput}
               placeholder="Rechercher..."
@@ -138,7 +138,7 @@ export default function SearchScreen() {
             style={styles.filterButton}
             onPress={() => setShowFilters(!showFilters)}
           >
-            <Filter size={24} color={showFilters ? colors.primary : colors.icon} />
+            <Filter size={32} color={showFilters ? colors.primary : colors.icon} />
           </TouchableOpacity>
         </View>
 
@@ -160,7 +160,7 @@ export default function SearchScreen() {
                     onPress={() => setSearchFilters({ genre: genre === 'Tous' ? '' : genre })}
                   >
                     <TextComponent 
-                      variante="body4" 
+                      variante="body2" 
                       color={searchFilters.genre === genre ? colors.primaryForeground : colors.text}
                     >
                       {genre}
@@ -185,7 +185,7 @@ export default function SearchScreen() {
                     onPress={() => setSearchFilters({ difficulty: difficulty === 'Tous' ? '' : difficulty })}
                   >
                     <TextComponent 
-                      variante="body4" 
+                      variante="body2" 
                       color={searchFilters.difficulty === difficulty ? colors.primaryForeground : colors.text}
                     >
                       {difficulty}
@@ -200,7 +200,7 @@ export default function SearchScreen() {
         {/* Résultats */}
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.resultsHeader}>
-            <TextComponent variante="body3" color={colors.text2}>
+            <TextComponent variante="body2" color={colors.text2}>
               {filteredSheets.length} résultat{filteredSheets.length > 1 ? 's' : ''} trouvé{filteredSheets.length > 1 ? 's' : ''}
             </TextComponent>
           </View>
@@ -221,11 +221,11 @@ export default function SearchScreen() {
             </View>
           ) : (
             <View style={styles.noResults}>
-              <Search size={48} color={colors.text2} />
-              <TextComponent variante="subtitle2" style={{ marginTop: 16, textAlign: 'center' }}>
+              <Search size={64} color={colors.text2} />
+              <TextComponent variante="subtitle1" style={{ marginTop: 16, textAlign: 'center' }}>
                 Aucun résultat trouvé
               </TextComponent>
-              <TextComponent variante="body4" color={colors.text2} style={{ textAlign: 'center', marginTop: 8 }}>
+              <TextComponent variante="body2" color={colors.text2} style={{ textAlign: 'center', marginTop: 8 }}>
                 Essayez de modifier vos critères de recherche
               </TextComponent>
             </View>
