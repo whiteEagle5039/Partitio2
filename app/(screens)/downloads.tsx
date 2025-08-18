@@ -56,7 +56,7 @@ export default function DownloadsScreen() {
       marginRight: 12,
     },
     storageBar: {
-      height: 8,
+      height: 10,
       backgroundColor: colors.muted,
       borderRadius: 4,
       marginTop: 12,
@@ -152,7 +152,7 @@ export default function DownloadsScreen() {
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <ArrowLeft size={24} color={colors.icon} />
+            <ArrowLeft size={32} color={colors.icon} />
           </TouchableOpacity>
           
           <View style={styles.headerTitle}>
@@ -166,12 +166,12 @@ export default function DownloadsScreen() {
           {/* Carte de stockage */}
           <View style={styles.storageCard}>
             <View style={styles.storageHeader}>
-              <HardDrive size={24} color={colors.primary} style={styles.storageIcon} />
+              <HardDrive size={32} color={colors.primary} style={styles.storageIcon} />
               <View style={{ flex: 1 }}>
-                <TextComponent variante="subtitle2">
+                <TextComponent variante="subtitle1">
                   Stockage local
                 </TextComponent>
-                <TextComponent variante="body4" color={colors.text2}>
+                <TextComponent variante="body2" color={colors.text2}>
                   {totalSize.toFixed(1)} MB utilisés
                 </TextComponent>
               </View>
@@ -187,10 +187,10 @@ export default function DownloadsScreen() {
             </View>
             
             <View style={styles.storageStats}>
-              <TextComponent variante="caption" color={colors.text2}>
+              <TextComponent variante="body3" color={colors.text2}>
                 {user?.storageUsed || 0} MB
               </TextComponent>
-              <TextComponent variante="caption" color={colors.text2}>
+              <TextComponent variante="body3" color={colors.text2}>
                 {user?.storageLimit || 100} MB
               </TextComponent>
             </View>
@@ -204,27 +204,28 @@ export default function DownloadsScreen() {
           </View>
 
           {downloadedSheets.length > 0 ? (
-            downloadedSheets.map((sheet:any) => (
+            downloadedSheets.map((sheet: any) => (
               <TouchableOpacity 
+                key={sheet.id}   // ✅ le key doit être ici
                 onPress={() => console.log(`Ouvrir ${sheet.title}`)}
               >
-                <View key={sheet.id} style={styles.downloadItem}>
+                <View style={styles.downloadItem}>
                   <View style={styles.downloadIcon}>
                     <Download size={24} color={colors.primary} />
                   </View>
                   
                   <View style={styles.downloadInfo}>
-                    <TextComponent variante="subtitle3" style={styles.downloadTitle}>
+                    <TextComponent variante="subtitle2" style={styles.downloadTitle}>
                       {sheet.title}
                     </TextComponent>
                     <View style={styles.downloadMeta}>
-                      <TextComponent variante="caption" color={colors.text2}>
+                      <TextComponent variante="body4" color={colors.text2}>
                         {sheet.composer}
                       </TextComponent>
-                      <TextComponent variante="caption" color={colors.text2}>
+                      <TextComponent variante="body4" color={colors.text2}>
                         •
                       </TextComponent>
-                      <TextComponent variante="caption" color={colors.text2}>
+                      <TextComponent variante="body4" color={colors.text2}>
                         {sheet.fileSize?.toFixed(1)} MB
                       </TextComponent>
                     </View>
@@ -240,7 +241,6 @@ export default function DownloadsScreen() {
                   </View>
                 </View>
               </TouchableOpacity>
-
             ))
           ) : (
             <View style={styles.emptyState}>

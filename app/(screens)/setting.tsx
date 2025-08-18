@@ -246,7 +246,7 @@ export default function SettingsScreen() {
           {settingSections.map((section, sectionIndex) => (
             <View key={sectionIndex} style={styles.section}>
               <View style={styles.sectionHeader}>
-                <TextComponent variante="subtitle3">
+                <TextComponent variante="subtitle2">
                   {section.title}
                 </TextComponent>
               </View>
@@ -264,10 +264,10 @@ export default function SettingsScreen() {
                   <item.icon size={24} color={colors.icon} style={styles.settingIcon} />
                   
                   <View style={styles.settingContent}>
-                    <TextComponent variante="subtitle3" style={styles.settingTitle}>
+                    <TextComponent variante="subtitle2" style={styles.settingTitle}>
                       {item.title}
                     </TextComponent>
-                    <TextComponent variante="caption" style={styles.settingDescription}>
+                    <TextComponent variante="body4" style={styles.settingDescription}>
                       {item.description}
                     </TextComponent>
                   </View>
@@ -292,7 +292,7 @@ export default function SettingsScreen() {
           {/* Actions dangereuses */}
           <View style={[styles.section, styles.dangerSection]}>
             <View style={styles.sectionHeader}>
-              <TextComponent variante="subtitle3" color={colors.destructive}>
+              <TextComponent variante="subtitle2" color={colors.destructive}>
                 Zone de danger
               </TextComponent>
             </View>
@@ -310,10 +310,10 @@ export default function SettingsScreen() {
                 <action.icon size={24} color={colors.destructive} style={styles.settingIcon} />
                 
                 <View style={styles.settingContent}>
-                  <TextComponent variante="subtitle3" style={styles.settingTitle} color={colors.destructive}>
+                  <TextComponent variante="subtitle2" style={styles.settingTitle} color={colors.destructive}>
                     {action.title}
                   </TextComponent>
-                  <TextComponent variante="caption" style={styles.settingDescription}>
+                  <TextComponent variante="body4" style={styles.settingDescription}>
                     {action.description}
                   </TextComponent>
                 </View>
@@ -325,11 +325,14 @@ export default function SettingsScreen() {
 
           {/* Informations de version */}
           <View style={styles.versionInfo}>
-            <TextComponent variante="caption" color={colors.text2}>
+            <TextComponent variante="body4" color={colors.text2}>
               Partitio v1.0.0
             </TextComponent>
-            <TextComponent variante="caption" color={colors.text2} style={{ marginTop: 4 }}>
+            <TextComponent variante="body4" color={colors.text2} style={{ marginTop: 4 }}>
               © 2025 Partitio. Tous droits réservés.
+            </TextComponent>
+            <TextComponent variante="body4" color={colors.text2} style={{ marginTop: 4 }}>
+              By Jemuel G. ANIFA
             </TextComponent>
           </View>
         </ScrollView>

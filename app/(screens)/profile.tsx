@@ -63,7 +63,7 @@ export default function ProfileScreen() {
       width: 80,
       height: 80,
       borderRadius: 40,
-      backgroundColor: colors.primary,
+      backgroundColor: colors.cardForeground+'85',
       justifyContent: 'center',
       alignItems: 'center',
       marginBottom: 16,
@@ -179,8 +179,8 @@ export default function ProfileScreen() {
 
     const stats: Stat[] = [
     { icon: Music, label: 'Partitions', value: sheetMusic.length, color: colors.primary },
-    { icon: Download, label: 'Téléchargées', value: sheetMusic.filter((s: any) => s.isDownloaded).length, color: colors.primary2 },
-    { icon: Edit, label: 'Compositions', value: compositions.length, color: colors.primary3 },
+    { icon: Download, label: 'Téléchargées', value: sheetMusic.filter((s: any) => s.isDownloaded).length, color: colors.primary },
+    { icon: Edit, label: 'Compositions', value: compositions.length, color: colors.primary },
     ];
 
     const achievements: Achievement[] = [
@@ -225,7 +225,7 @@ export default function ProfileScreen() {
               {user?.avatar ? (
                 <Image source={{ uri: user.avatar }} style={styles.avatar} />
               ) : (
-                <TextComponent variante="subtitle1" color={colors.primaryForeground}>
+                <TextComponent variante="subtitle0" color={colors.primaryForeground}>
                   {user?.name?.charAt(0) || 'U'}
                 </TextComponent>
               )}
@@ -237,14 +237,14 @@ export default function ProfileScreen() {
             
             <View style={styles.email}>
               <Mail size={16} color={colors.text2} />
-              <TextComponent variante="body4" color={colors.text2} style={{ marginLeft: 8 }}>
+              <TextComponent variante="body2" color={colors.text2} style={{ marginLeft: 8 }}>
                 {user?.email || 'user@partitio.com'}
               </TextComponent>
             </View>
             
             <View style={styles.joinDate}>
               <Calendar size={16} color={colors.text2} />
-              <TextComponent variante="caption" color={colors.text2} style={{ marginLeft: 8 }}>
+              <TextComponent variante="body3" color={colors.text2} style={{ marginLeft: 8 }}>
                 Membre depuis janvier 2025
               </TextComponent>
             </View>
@@ -258,7 +258,7 @@ export default function ProfileScreen() {
                 <TextComponent variante="subtitle2" style={styles.statNumber}>
                   {stat.value}
                 </TextComponent>
-                <TextComponent variante="caption" color={colors.text2}>
+                <TextComponent variante="body4" color={colors.text2}>
                   {stat.label}
                 </TextComponent>
               </View>
@@ -278,22 +278,22 @@ export default function ProfileScreen() {
               <View key={index} style={styles.achievement}>
                 <View style={[
                   styles.achievementIcon,
-                  { backgroundColor: achievement.unlocked ? colors.primary + '20' : colors.muted }
+                  { backgroundColor: achievement.unlocked ? colors.blueSingle + '20' : colors.muted }
                 ]}>
                   <achievement.icon 
                     size={20} 
-                    color={achievement.unlocked ? colors.primary : colors.text2} 
+                    color={achievement.unlocked ? colors.blueSingle : colors.text2} 
                   />
                 </View>
                 <View style={styles.achievementInfo}>
                   <TextComponent 
-                    variante="subtitle3" 
+                    variante="subtitle2" 
                     style={styles.achievementTitle}
                     color={achievement.unlocked ? colors.text : colors.text2}
                   >
                     {achievement.title}
                   </TextComponent>
-                  <TextComponent variante="caption" color={colors.text2}>
+                  <TextComponent variante="body4" color={colors.text2}>
                     {achievement.description}
                   </TextComponent>
                 </View>
@@ -311,10 +311,10 @@ export default function ProfileScreen() {
               >
                 <action.icon size={24} color={colors.icon} style={styles.actionIcon} />
                 <View style={styles.actionContent}>
-                  <TextComponent variante="subtitle3" style={styles.actionTitle}>
+                  <TextComponent variante="subtitle2" style={styles.actionTitle}>
                     {action.title}
                   </TextComponent>
-                  <TextComponent variante="caption" color={colors.text2}>
+                  <TextComponent variante="body4" color={colors.text2}>
                     {action.description}
                   </TextComponent>
                 </View>
