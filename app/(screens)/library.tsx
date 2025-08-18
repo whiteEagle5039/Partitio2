@@ -10,7 +10,7 @@ import {
   Edit3, 
   Users, 
   Play,
-  FileText
+  User
 } from 'lucide-react-native';
 import { TextComponent } from '@/components/TextComponent';
 import { WrapperComponent } from '@/components/WrapperComponent';
@@ -195,6 +195,23 @@ export default function LibraryScreen() {
       borderRadius: 24,
       marginTop: 8,
     },
+    // Nouveau style pour les détails des packages
+    packageDetails: {
+      marginTop: 4,
+    },
+    packageInfo: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 8,
+    },
+    infoSeparator: {
+      width: 4,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.text2,
+    },
   });
 
   // Fonction pour obtenir l'icône selon le type
@@ -323,16 +340,18 @@ export default function LibraryScreen() {
                   {category.description}
                 </TextComponent>
                 <View style={styles.listMetrics}>
-                  <View style={styles.metricItem}>
-                    <Folder size={16} color={colors.blueSingle} />
-                    <TextComponent variante="body4" color={colors.text2}>
-                      {category.folderCount} dossiers
-                    </TextComponent>
-                  </View>
+                  {!category.hasDirectCourses && (
+                    <View style={styles.metricItem}>
+                      <Folder size={16} color={colors.blueSingle} />
+                      <TextComponent variante="body4" color={colors.text2}>
+                        {category.folderCount} dossiers
+                      </TextComponent>
+                    </View>
+                  )}
                   <View style={styles.metricItem}>
                     <Music size={16} color={colors.blueSingle} />
                     <TextComponent variante="body3" color={colors.text2}>
-                      {category.totalCourses} cours
+                      {category.totalCourses} contenues
                     </TextComponent>
                   </View>
                 </View>
@@ -370,18 +389,32 @@ export default function LibraryScreen() {
               <Folder size={24} color={colors.primary2} />
             </View>
             <View style={styles.listContent}>
-              <TextComponent variante="subtitle2"  style={styles.listTitle}>
+              <TextComponent variante="subtitle2" style={styles.listTitle}>
                 {folder.name}
               </TextComponent>
               <TextComponent variante="body4" color={colors.text2}>
                 {folder.description}
               </TextComponent>
-              <View style={styles.listMetrics}>
-                <View style={styles.metricItem}>
-                  <Music size={16} color={colors.blueSingle} />
-                  <TextComponent variante="body4" color={colors.text2}>
-                    {folder.courseCount} cours
-                  </TextComponent>
+              
+              <View style={styles.packageDetails}>
+                <View style={styles.packageInfo}>
+                  {folder.author && (
+                    <>
+                      <View style={styles.metricItem}>
+                        <User size={14} color={colors.blueSingle} />
+                        <TextComponent variante="body4" color={colors.text2}>
+                          {folder.author}
+                        </TextComponent>
+                      </View>
+                      <View style={styles.infoSeparator} />
+                    </>
+                  )}
+                  <View style={styles.metricItem}>
+                    <Music size={14} color={colors.blueSingle} />
+                    <TextComponent variante="body4" color={colors.text2}>
+                      {folder.courseCount} contenues
+                    </TextComponent>
+                  </View>
                 </View>
               </View>
             </View>
@@ -391,23 +424,47 @@ export default function LibraryScreen() {
     );
   };
 
-  // Rendu des cours
+  // Rendu des cours (pour les catégories directes comme Chansons ET pour les dossiers)
   const renderCourses = () => {
-    if (!currentFolder || currentFolder.courses.length === 0) {
+    let coursesToDisplay: Course[] = [];
+    let emptyTitle = "Aucun cours";
+    let emptySubtitle = "";
+    let emptyActionText = "";
+    let emptyAction = () => {};
+
+    if (currentCategory?.hasDirectCourses && !currentFolder) {
+      // Cas des chansons (cours directs)
+      coursesToDisplay = currentCategory.courses || [];
+      emptyTitle = "Aucune chanson";
+      emptySubtitle = `La catégorie "${currentCategory?.name}" ne contient pas encore de chansons.`;
+      emptyActionText = "Retour aux catégories";
+      emptyAction = () => setCurrentCategory(null);
+    } else if (currentFolder) {
+      // Cas des cours dans un dossier
+      coursesToDisplay = currentFolder.courses || [];
+      emptyTitle = "Aucun cours";
+      emptySubtitle = `Le dossier "${currentFolder?.name}" ne contient pas encore de cours.`;
+      emptyActionText = "Retour aux dossiers";
+      emptyAction = () => setCurrentFolder(null);
+    }
+
+    if (coursesToDisplay.length === 0) {
       return (
         <EmptyStateCard
           icon={Music}
-          title="Aucun cours"
-          subtitle={`Le dossier "${currentFolder?.name}" ne contient pas encore de cours.`}
-          actionText="Retour aux dossiers"
-          onActionPress={() => setCurrentFolder(null)}
+          title={emptyTitle}
+          subtitle={emptySubtitle}
+          actionText={emptyActionText}
+          onActionPress={emptyAction}
         />
       );
     }
 
+    const isLessonCategory = currentCategory?.id === '5' || currentFolder?.categoryId === '5';
+
     return (
       <View style={styles.listContainer}>
-        {currentFolder.courses.map((course: Course) => (
+        {coursesToDisplay.map((course: Course) => (
           <TouchableOpacity
             key={course.id}
             style={styles.listItem}
@@ -425,16 +482,41 @@ export default function LibraryScreen() {
               </TextComponent>
               
               <View style={styles.courseStatus}>
-                {course.fileSize && (
-                  <View style={styles.metricItem}>
-                    <FileText size={12} color={colors.text2} />
-                    <TextComponent variante="caption" color={colors.text2}>
-                      {course.fileSize} MB
-                    </TextComponent>
-                  </View>
-                )}
+                <View style={styles.packageInfo}>
+                  {course.author && (
+                    <>
+                      <View style={styles.metricItem}>
+                        <User size={12} color={colors.text2} />
+                        <TextComponent variante="caption" color={colors.text2}>
+                          {course.author}
+                        </TextComponent>
+                      </View>
+                      <View style={styles.infoSeparator} />
+                    </>
+                  )}
+                  
+                  {course.composer && (
+                    <>
+                      <View style={styles.metricItem}>
+                        <Music size={12} color={colors.text2} />
+                        <TextComponent variante="caption" color={colors.text2}>
+                          {course.composer}
+                        </TextComponent>
+                      </View>
+                      <View style={styles.infoSeparator} />
+                    </>
+                  )}
+                  
+                  {/* Afficher la taille seulement si ce n'est PAS une leçon */}
+                  {!isLessonCategory && course.fileSize && (
+                    <View style={styles.metricItem}>
+                      <TextComponent variante="caption" color={colors.text2}>
+                        {course.fileSize} MB
+                      </TextComponent>
+                    </View>
+                  )}
+                </View>
               </View>
-
             </View>
           </TouchableOpacity>
         ))}
@@ -447,7 +529,6 @@ export default function LibraryScreen() {
     if (navigationLevel === 'categories') {
       const totalCategories = categories.filter(cat => cat.id !== '1').length;
       const totalFolders = categories.reduce((sum, cat) => sum + cat.folderCount, 0);
-      // const totalCourses = categories.reduce((sum, cat) => sum + cat.totalCourses, 0);
 
       return (
         <View style={styles.statsContainer}>
@@ -477,19 +558,44 @@ export default function LibraryScreen() {
             <TextComponent variante="subtitle1">{currentCategory.folderCount}</TextComponent>
             <TextComponent variante="body4" color={colors.text2}>Dossiers</TextComponent>
           </View>
-         
         </View>
       );
-    } else if (navigationLevel === 'courses' && currentFolder) {
+    } else if (navigationLevel === 'courses') {
+      let coursesCount = 0;
+      let authorName = "";
+      let title = "";
+      let description = "";
+
+      if (currentCategory?.hasDirectCourses && !currentFolder) {
+        // Cas des chansons (cours directs)
+        coursesCount = currentCategory.courses?.length || 0;
+        authorName = "Divers arrangements";
+        title = currentCategory.name;
+        description = currentCategory.description;
+      } else if (currentFolder) {
+        // Cas des cours dans un dossier
+        coursesCount = currentFolder.courseCount;
+        authorName = currentFolder.author || "Auteur";
+        title = currentFolder.name;
+        description = currentFolder.description;
+      }
 
       return (
         <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
+          <View style={[styles.statCard, { flex: 2 }]}>
+            <View style={[styles.statIcon, { backgroundColor: `${colors.primary}15` }]}>
+              <User size={20} color={colors.primary} />
+            </View>
+            <TextComponent variante="body3" color={colors.text2}>Auteur</TextComponent>
+            <TextComponent variante="subtitle3">{authorName}</TextComponent>
+          </View>
+          
+          <View style={[styles.statCard, { flex: 1 }]}>
             <View style={[styles.statIcon, { backgroundColor: `${colors.primary}15` }]}>
               <Music size={20} color={colors.primary} />
             </View>
-            <TextComponent variante="subtitle1">{currentFolder.courseCount}</TextComponent>
-            <TextComponent variante="caption" color={colors.text2}>Total</TextComponent>
+            <TextComponent variante="subtitle1">{coursesCount}</TextComponent>
+            <TextComponent variante="caption" color={colors.text2}>Contenues</TextComponent>
           </View>
         </View>
       );
@@ -499,8 +605,10 @@ export default function LibraryScreen() {
 
   // Fonction pour gérer le retour
   const handleBack = () => {
-    if (navigationLevel === 'courses') {
+    if (navigationLevel === 'courses' && currentFolder) {
       setCurrentFolder(null);
+    } else if (navigationLevel === 'courses' && currentCategory?.hasDirectCourses) {
+      setCurrentCategory(null);
     } else if (navigationLevel === 'folders') {
       setCurrentCategory(null);
     } else {
@@ -513,7 +621,10 @@ export default function LibraryScreen() {
     switch (navigationLevel) {
       case 'categories': return 'Ma Bibliothèque';
       case 'folders': return currentCategory?.name || 'Dossiers';
-      case 'courses': return currentFolder?.name || 'Cours';
+      case 'courses': 
+        if (currentFolder) return currentFolder.name;
+        if (currentCategory?.hasDirectCourses) return currentCategory.name;
+        return 'Cours';
       default: return 'Ma Bibliothèque';
     }
   };

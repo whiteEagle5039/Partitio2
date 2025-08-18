@@ -176,7 +176,7 @@ export default function HomeScreen() {
         ]}
       >
         <View style={[styles.emptyStateIcon, { backgroundColor: `${colors.primary}15` }]}>
-          <IconComponent size={32} color={colors.primary2} />
+          <IconComponent size={32} color={colors.primary} />
         </View>
         <TextComponent variante="subtitle2" style={styles.emptyStateTitle}>
           {title}

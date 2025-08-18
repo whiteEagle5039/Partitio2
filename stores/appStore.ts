@@ -36,12 +36,17 @@ export interface User {
 export interface Course {
   id: string;
   title: string;
-  description: string;
+  content: string;
+  createdAt: Date;
+  lastModified: Date;
+  isPublic: boolean;
+  description?: string;
   thumbnail: string;
   isDownloaded: boolean;
   dateAdded: Date;
   fileSize?: number;
   composer?: string;
+  author?: string; // Pour les leçons et packages
 }
 
 export interface Folder {
@@ -53,6 +58,7 @@ export interface Folder {
   courses: Course[];
   categoryId: string;
   createdAt: Date;
+  author?: string; // Auteur du package/dossier
 }
 
 export interface Category {
@@ -64,6 +70,8 @@ export interface Category {
   folderCount: number;
   totalCourses: number;
   folders: Folder[];
+  hasDirectCourses?: boolean; // Pour les catégories comme "Chansons"
+  courses?: Course[]; // Cours directs sans dossier
 }
 
 // Store principal
@@ -97,7 +105,7 @@ interface AppState {
   removeDownload: (sheetId: string) => void;
   
   // Course actions
-  downloadCourse: (courseId: string, folderId: string) => void;
+  downloadCourse: (courseId: string, folderId?: string) => void;
   
   // Compositions
   compositions: UserComposition[];
@@ -167,24 +175,33 @@ export const useAppStore = create<AppState>((set, get) => ({
           courseCount: 5,
           categoryId: '2',
           createdAt: new Date(),
+          author: 'John Newton',
           courses: [
             {
               id: 'c1',
               title: 'Amazing Grace',
+              content: 'Contenu de la partition Amazing Grace...',
               description: 'Partition complète avec variations',
               thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
               isDownloaded: true,
               dateAdded: new Date(),
+              createdAt: new Date(),
+              lastModified: new Date(),
+              isPublic: true,
               fileSize: 2.4,
               composer: 'John Newton'
             },
             {
               id: 'c2',
               title: 'How Great Thou Art',
+              content: 'Contenu de la partition How Great Thou Art...',
               description: 'Arrangement pour piano solo',
               thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
               isDownloaded: false,
               dateAdded: new Date(),
+              createdAt: new Date(),
+              lastModified: new Date(),
+              isPublic: true,
               fileSize: 1.8,
               composer: 'Carl Boberg'
             }
@@ -198,14 +215,19 @@ export const useAppStore = create<AppState>((set, get) => ({
           courseCount: 3,
           categoryId: '2',
           createdAt: new Date(),
+          author: 'Matt Redman',
           courses: [
             {
               id: 'c3',
               title: '10,000 Reasons',
+              content: 'Contenu de la partition 10,000 Reasons...',
               description: 'Partition moderne avec accords',
               thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
               isDownloaded: true,
               dateAdded: new Date(),
+              createdAt: new Date(),
+              lastModified: new Date(),
+              isPublic: true,
               fileSize: 3.1,
               composer: 'Matt Redman'
             }
@@ -230,14 +252,19 @@ export const useAppStore = create<AppState>((set, get) => ({
           courseCount: 3,
           categoryId: '3',
           createdAt: new Date(),
+          author: 'Owen',
           courses: [
             {
               id: 'c4',
               title: 'Ma première composition',
+              content: 'Contenu de ma première composition...',
               description: 'Mélodie originale en Do majeur',
               thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
               isDownloaded: true,
               dateAdded: new Date(),
+              createdAt: new Date(),
+              lastModified: new Date(),
+              isPublic: false,
               fileSize: 1.2
             }
           ]
@@ -246,22 +273,70 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
     {
       id: '4',
-      name: 'Chorale',
+      name: 'Chansons',
       description: 'Arrangements pour chœur',
       icon: 'Users',
       color: '#EF4444',
-      folderCount: 1,
+      folderCount: 0,
       totalCourses: 4,
-      folders: [
+      hasDirectCourses: true,
+      folders: [],
+      courses: [
         {
-          id: 'f4',
-          name: 'Arrangements SATB',
-          description: 'Partitions pour chœur à 4 voix',
+          id: 'ch1',
+          title: 'Hallelujah',
+          content: 'Contenu de Hallelujah arrangement SATB...',
+          description: 'Arrangement pour chœur à 4 voix',
           thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
-          courseCount: 4,
-          categoryId: '4',
+          isDownloaded: true,
+          dateAdded: new Date(),
           createdAt: new Date(),
-          courses: []
+          lastModified: new Date(),
+          isPublic: true,
+          composer: 'Leonard Cohen',
+          author: 'Arrangement SATB'
+        },
+        {
+          id: 'ch2',
+          title: 'Ave Maria',
+          content: 'Contenu de Ave Maria arrangement choral...',
+          description: 'Arrangement choral classique',
+          thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
+          isDownloaded: false,
+          dateAdded: new Date(),
+          createdAt: new Date(),
+          lastModified: new Date(),
+          isPublic: true,
+          composer: 'Franz Schubert',
+          author: 'Arrangement Choral'
+        },
+        {
+          id: 'ch3',
+          title: 'Amazing Grace Choral',
+          content: 'Contenu de Amazing Grace arrangement choral...',
+          description: 'Version chorale traditionnelle',
+          thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
+          isDownloaded: true,
+          dateAdded: new Date(),
+          createdAt: new Date(),
+          lastModified: new Date(),
+          isPublic: true,
+          composer: 'John Newton',
+          author: 'Arrangement Traditionnel'
+        },
+        {
+          id: 'ch4',
+          title: 'How Great Thou Art Choir',
+          content: 'Contenu de How Great Thou Art arrangement choir...',
+          description: 'Arrangement pour grand chœur',
+          thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
+          isDownloaded: false,
+          dateAdded: new Date(),
+          createdAt: new Date(),
+          lastModified: new Date(),
+          isPublic: true,
+          composer: 'Carl Boberg',
+          author: 'Arrangement Grand Chœur'
         }
       ]
     },
@@ -282,33 +357,46 @@ export const useAppStore = create<AppState>((set, get) => ({
           courseCount: 8,
           categoryId: '5',
           createdAt: new Date(),
+          author: 'Prof. Marie Dubois',
           courses: [
             {
               id: 'c5',
               title: 'Introduction au Piano',
+              content: 'Leçon complète sur l\'introduction au piano. Cette leçon couvre les bases essentielles pour débuter au piano...',
               description: 'Premiers pas et posture',
               thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
               isDownloaded: false,
               dateAdded: new Date(),
-              fileSize: 5.2
+              createdAt: new Date(),
+              lastModified: new Date(),
+              isPublic: true,
+              author: 'Prof. Marie Dubois'
             },
             {
               id: 'c6',
               title: 'Les Accords de Base',
+              content: 'Leçon détaillée sur les accords majeurs, mineurs et septième. Apprenez la théorie et la pratique...',
               description: 'Majeurs, mineurs et septième',
               thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
               isDownloaded: true,
               dateAdded: new Date(),
-              fileSize: 8.7
+              createdAt: new Date(),
+              lastModified: new Date(),
+              isPublic: true,
+              author: 'Prof. Marie Dubois'
             },
             {
               id: 'c7',
               title: 'Exercices Pratiques',
+              content: 'Série d\'exercices pratiques incluant gammes et arpèges. Techniques pour améliorer votre dextérité...',
               description: 'Gammes et arpèges',
               thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
               isDownloaded: false,
               dateAdded: new Date(),
-              fileSize: 4.3
+              createdAt: new Date(),
+              lastModified: new Date(),
+              isPublic: true,
+              author: 'Prof. Marie Dubois'
             }
           ]
         },
@@ -320,15 +408,20 @@ export const useAppStore = create<AppState>((set, get) => ({
           courseCount: 4,
           categoryId: '5',
           createdAt: new Date(),
+          author: 'Jean-Paul Martin',
           courses: [
             {
               id: 'c8',
               title: 'Accords Ouverts',
+              content: 'Guide complet des accords ouverts à la guitare. Apprenez les positions de base et les transitions...',
               description: 'Les accords de base en position ouverte',
               thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
               isDownloaded: true,
               dateAdded: new Date(),
-              fileSize: 3.8
+              createdAt: new Date(),
+              lastModified: new Date(),
+              isPublic: true,
+              author: 'Jean-Paul Martin'
             }
           ]
         },
@@ -340,15 +433,20 @@ export const useAppStore = create<AppState>((set, get) => ({
           courseCount: 3,
           categoryId: '5',
           createdAt: new Date(),
+          author: 'Pierre Trumpet',
           courses: [
             {
               id: 'c9',
               title: 'Embouchure et Respiration',
+              content: 'Techniques fondamentales de la trompette. Maîtrisez l\'embouchure et les techniques de respiration...',
               description: 'Fondamentaux de la trompette',
               thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
               isDownloaded: false,
               dateAdded: new Date(),
-              fileSize: 6.1
+              createdAt: new Date(),
+              lastModified: new Date(),
+              isPublic: true,
+              author: 'Pierre Trumpet'
             }
           ]
         }
@@ -363,7 +461,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setCurrentCategory: (category) => set({ 
     currentCategory: category,
     currentFolder: null,
-    navigationLevel: category ? 'folders' : 'categories'
+    navigationLevel: category ? (category.hasDirectCourses ? 'courses' : 'folders') : 'categories'
   }),
   
   setCurrentFolder: (folder) => set({ 
@@ -374,23 +472,40 @@ export const useAppStore = create<AppState>((set, get) => ({
   setNavigationLevel: (level) => set({ navigationLevel: level }),
   
   // Course actions
-  downloadCourse: (courseId, folderId) => set((state) => ({
-    categories: state.categories.map(cat => ({
-      ...cat,
-      folders: cat.folders.map(folder => 
-        folder.id === folderId 
-          ? {
-              ...folder,
-              courses: folder.courses.map(course =>
-                course.id === courseId 
-                  ? { ...course, isDownloaded: true }
-                  : course
-              )
-            }
-          : folder
-      )
-    }))
-  })),
+  downloadCourse: (courseId, folderId) => set((state) => {
+    if (folderId) {
+      // Cours dans un dossier
+      return {
+        categories: state.categories.map(cat => ({
+          ...cat,
+          folders: cat.folders.map(folder => 
+            folder.id === folderId 
+              ? {
+                  ...folder,
+                  courses: folder.courses.map(course =>
+                    course.id === courseId 
+                      ? { ...course, isDownloaded: true }
+                      : course
+                  )
+                }
+              : folder
+          )
+        }))
+      };
+    } else {
+      // Cours direct dans une catégorie
+      return {
+        categories: state.categories.map(cat => ({
+          ...cat,
+          courses: cat.courses?.map(course =>
+            course.id === courseId 
+              ? { ...course, isDownloaded: true }
+              : course
+          )
+        }))
+      };
+    }
+  }),
   
   // Partitions (conservées pour compatibilité)
   sheetMusic: [
