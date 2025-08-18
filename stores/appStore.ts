@@ -90,7 +90,9 @@ interface AppState {
   // Connection Status
   isOnline: boolean;
   setOnline: (online: boolean) => void;
-  
+    
+    // Dans l'interface AppState, ajouter :
+  logout: () => void;
   // App Settings - NOUVEAU
   settings: {
     notifications: boolean;
@@ -154,7 +156,7 @@ export const useAppStore = create<AppState>()(
         storageLimit: 100,
       },
       setUser: (user) => set({ user, isAuthenticated: !!user }),
-      isAuthenticated: true,
+      isAuthenticated: false,
       setAuthenticated: (authenticated) => set({ isAuthenticated: authenticated }),
       
       // Theme Management - Défaut sur dark
@@ -163,7 +165,18 @@ export const useAppStore = create<AppState>()(
         themeMode: mode,
         settings: { ...get().settings, darkMode: mode === 'dark' }
       }),
-      
+      // Dans l'implémentation du store, ajouter :
+      logout: () => set({ 
+        user: null, 
+        isAuthenticated: false,
+        // Optionnel : réinitialiser d'autres états
+        currentCategory: null,
+        currentFolder: null,
+        navigationLevel: 'categories',
+        searchQuery: '',
+        isDrawerOpen: false,
+        isDrawerOpene: false,
+      }),
       // Connection Status
       isOnline: false,
       setOnline: (online) => set({ isOnline: online }),

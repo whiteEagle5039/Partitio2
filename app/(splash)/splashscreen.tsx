@@ -1,15 +1,19 @@
-// (splash)/splashscreen
+// (splash)/splashscreen.tsx
 
 import TextComponent from "@/components/TextComponent";
 import { useRouter } from "expo-router";
 import { useEffect, useRef } from "react";
 import { StyleSheet, View, Animated, Easing } from "react-native";
 import { useThemeColors } from "@/hooks/useThemeColors";
+import { useAppStore } from "@/stores/appStore";
 import SplashScreenIcon from "@/components/SplashScreenIcon";
 
 export default function SplashScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  
+  // Récupérer l'état d'authentification depuis le store
+  const { isAuthenticated, user } = useAppStore();
   
   // Animations refs
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -114,13 +118,20 @@ export default function SplashScreen() {
 
     startAnimations();
 
-    // Navigation automatique (optionnel)
+    // Navigation avec vérification d'authentification
     const timer = setTimeout(() => {
-      router.replace("/homescreen"); 
-    }, 4000); 
+      // Vérifier si l'utilisateur est authentifié
+      if (isAuthenticated && user) {
+        // Utilisateur connecté -> aller vers homescreen
+        router.replace("/homescreen");
+      } else {
+        // Utilisateur non connecté -> aller vers l'authentification
+        router.replace("/email");
+      }
+    }, 4000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [isAuthenticated, user, router]);
 
   const rotateInterpolate = rotateAnim.interpolate({
     inputRange: [0, 1],
