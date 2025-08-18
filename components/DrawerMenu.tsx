@@ -163,7 +163,7 @@ export function DrawerMenu() {
           <TextComponent variante="body2" color={colors.text2} style={{ marginBottom: 4 }}>
             Stockage utilisé
           </TextComponent>
-          <TextComponent variante="body4" color={colors.primary2}>
+          <TextComponent variante="body4" color={colors.blueSingle}>
             {user?.storageUsed || 0} MB / {user?.storageLimit || 100} MB
           </TextComponent>
           <View style={styles.storageBar}>
