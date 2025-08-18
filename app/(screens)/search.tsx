@@ -105,10 +105,8 @@ export default function SearchScreen() {
                         sheet.composer.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesGenre = !searchFilters.genre || searchFilters.genre === 'Tous' || 
                         sheet.genre === searchFilters.genre;
-    const matchesDifficulty = !searchFilters.difficulty || searchFilters.difficulty === 'Tous' || 
-                             sheet.difficulty === searchFilters.difficulty;
-    
-    return matchesQuery && matchesGenre && matchesDifficulty;
+   
+    return matchesQuery && matchesGenre;
   });
 
   return (
@@ -170,30 +168,6 @@ export default function SearchScreen() {
               </View>
             </ScrollView>
 
-            <TextComponent variante="subtitle3" style={{ marginBottom: 12, marginTop: 16 }}>
-              Difficulté
-            </TextComponent>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.filterRow}>
-                {difficulties.map((difficulty) => (
-                  <TouchableOpacity
-                    key={difficulty}
-                    style={[
-                      styles.filterChip,
-                      searchFilters.difficulty === difficulty && styles.filterChipActive
-                    ]}
-                    onPress={() => setSearchFilters({ difficulty: difficulty === 'Tous' ? '' : difficulty })}
-                  >
-                    <TextComponent 
-                      variante="body2" 
-                      color={searchFilters.difficulty === difficulty ? colors.primaryForeground : colors.text}
-                    >
-                      {difficulty}
-                    </TextComponent>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
           </View>
         )}
 

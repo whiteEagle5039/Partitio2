@@ -9,7 +9,6 @@ import {
   BookOpen, 
   Edit3, 
   Users, 
-  Clock,
   Play,
   FileText
 } from 'lucide-react-native';

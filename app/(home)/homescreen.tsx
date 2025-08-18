@@ -186,10 +186,10 @@ export default function HomeScreen() {
         </TextComponent>
         {actionText && onActionPress && (
           <TouchableOpacity 
-            style={[styles.emptyStateButton, { backgroundColor: colors.primary }]}
+            style={[styles.emptyStateButton, { backgroundColor: colors.cardForeground }]}
             onPress={onActionPress}
           >
-            <TextComponent variante="body3" color="#FFFFFF">
+            <TextComponent variante="body3" color={colors.primaryForeground}>
               {actionText}
             </TextComponent>
           </TouchableOpacity>

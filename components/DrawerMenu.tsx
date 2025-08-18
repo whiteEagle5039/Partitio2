@@ -102,7 +102,7 @@ export function DrawerMenu() {
     },
     storageProgress: {
       height: '100%',
-      backgroundColor: colors.primary,
+      backgroundColor: colors.cardForeground,
       borderRadius: 2,
     },
   });
