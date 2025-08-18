@@ -34,9 +34,15 @@ export interface User {
 
 // Store principal
 interface AppState {
-  // User
+  // User & Authentication
   user: User | null;
-  setUser: (user: User) => void;
+  setUser: (user: User | null) => void;
+  isAuthenticated: boolean;
+  setAuthenticated: (authenticated: boolean) => void;
+  
+  // Connection Status
+  isOnline: boolean;
+  setOnline: (online: boolean) => void;
   
   // Partitions
   sheetMusic: SheetMusic[];
@@ -70,7 +76,7 @@ interface AppState {
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
-  // User
+  // User & Authentication
   user: {
     id: '1',
     name: 'Owen',
@@ -78,7 +84,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     storageUsed: 25.2,
     storageLimit: 100,
   },
-  setUser: (user) => set({ user }),
+  setUser: (user) => set({ user, isAuthenticated: !!user }),
+  isAuthenticated: true, // Défini automatiquement selon la présence de user
+  setAuthenticated: (authenticated) => set({ isAuthenticated: authenticated }),
+  
+  // Connection Status
+  isOnline: false,
+  setOnline: (online) => set({ isOnline: online }),
   
   // Partitions
   sheetMusic: [
