@@ -1,6 +1,7 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
-// Types
+// Types existants...
 export interface SheetMusic {
   id: string;
   title: string;
@@ -32,7 +33,7 @@ export interface User {
   storageLimit: number;
 }
 
-// Nouvelle structure hiérarchique
+// Structure hiérarchique existante...
 export interface Course {
   id: string;
   title: string;
@@ -46,7 +47,7 @@ export interface Course {
   dateAdded: Date;
   fileSize?: number;
   composer?: string;
-  author?: string; // Pour les leçons et packages
+  author?: string;
 }
 
 export interface Folder {
@@ -58,7 +59,7 @@ export interface Folder {
   courses: Course[];
   categoryId: string;
   createdAt: Date;
-  author?: string; // Auteur du package/dossier
+  author?: string;
 }
 
 export interface Category {
@@ -70,11 +71,11 @@ export interface Category {
   folderCount: number;
   totalCourses: number;
   folders: Folder[];
-  hasDirectCourses?: boolean; // Pour les catégories comme "Chansons"
-  courses?: Course[]; // Cours directs sans dossier
+  hasDirectCourses?: boolean;
+  courses?: Course[];
 }
 
-// Store principal
+// Store principal avec ajout du thème
 interface AppState {
   // User & Authentication
   user: User | null;
@@ -82,11 +83,23 @@ interface AppState {
   isAuthenticated: boolean;
   setAuthenticated: (authenticated: boolean) => void;
   
+  // Theme Management - NOUVEAU
+  themeMode: 'light' | 'dark' | null; // null = utilise le système
+  setThemeMode: (mode: 'light' | 'dark' | null) => void;
+  
   // Connection Status
   isOnline: boolean;
   setOnline: (online: boolean) => void;
   
-  // Nouvelle structure hiérarchique
+  // App Settings - NOUVEAU
+  settings: {
+    notifications: boolean;
+    autoDownload: boolean;
+    darkMode: boolean; // Pour compatibilité avec le composant setting
+  };
+  updateSettings: (settings: Partial<AppState['settings']>) => void;
+  
+  // Structure hiérarchique existante...
   categories: Category[];
   currentCategory: Category | null;
   currentFolder: Folder | null;
@@ -97,7 +110,7 @@ interface AppState {
   navigationLevel: 'categories' | 'folders' | 'courses';
   setNavigationLevel: (level: 'categories' | 'folders' | 'courses') => void;
   
-  // Partitions (conservées pour compatibilité)
+  // Partitions
   sheetMusic: SheetMusic[];
   downloadedSheets: SheetMusic[];
   addSheetMusic: (sheet: SheetMusic) => void;
@@ -129,454 +142,506 @@ interface AppState {
   setSearchFilters: (filters: Partial<AppState['searchFilters']>) => void;
 }
 
-export const useAppStore = create<AppState>((set, get) => ({
-  // User & Authentication
-  user: {
-    id: '1',
-    name: 'Owen',
-    email: 'user@partitio.com',
-    storageUsed: 25.2,
-    storageLimit: 100,
-  },
-  setUser: (user) => set({ user, isAuthenticated: !!user }),
-  isAuthenticated: true,
-  setAuthenticated: (authenticated) => set({ isAuthenticated: authenticated }),
-  
-  // Connection Status
-  isOnline: false,
-  setOnline: (online) => set({ isOnline: online }),
-  
-  // Nouvelle structure hiérarchique
-  categories: [
-    {
-      id: '1',
-      name: 'Tous',
-      description: 'Toutes les catégories disponibles',
-      icon: 'Library',
-      color: '#8B5CF6',
-      folderCount: 0,
-      totalCourses: 0,
-      folders: []
-    },
-    {
-      id: '2',
-      name: 'Cantiques',
-      description: 'Partitions de cantiques et hymnes',
-      icon: 'Music',
-      color: '#10B981',
-      folderCount: 2,
-      totalCourses: 8,
-      folders: [
+export const useAppStore = create<AppState>()(
+  persist(
+    (set, get) => ({
+      // User & Authentication
+      user: {
+        id: '1',
+        name: 'Owen',
+        email: 'user@partitio.com',
+        storageUsed: 25.2,
+        storageLimit: 100,
+      },
+      setUser: (user) => set({ user, isAuthenticated: !!user }),
+      isAuthenticated: true,
+      setAuthenticated: (authenticated) => set({ isAuthenticated: authenticated }),
+      
+      // Theme Management - Défaut sur dark
+      themeMode: 'dark', // Par défaut sur dark
+      setThemeMode: (mode) => set({ 
+        themeMode: mode,
+        settings: { ...get().settings, darkMode: mode === 'dark' }
+      }),
+      
+      // Connection Status
+      isOnline: false,
+      setOnline: (online) => set({ isOnline: online }),
+      
+      // App Settings - Paramètres par défaut
+      settings: {
+        notifications: true,
+        autoDownload: false,
+        darkMode: true, // Par défaut sur dark
+      },
+      updateSettings: (newSettings) => set((state) => {
+        const updatedSettings = { ...state.settings, ...newSettings };
+        
+        // Si darkMode change, mettre à jour themeMode
+        if ('darkMode' in newSettings) {
+          return {
+            settings: updatedSettings,
+            themeMode: newSettings.darkMode ? 'dark' : 'light'
+          };
+        }
+        
+        return { settings: updatedSettings };
+      }),
+      
+      // Catégories existantes (données inchangées)
+      categories: [
         {
-          id: 'f1',
-          name: 'Cantiques Classiques',
-          description: 'Collection des cantiques traditionnels',
-          thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
-          courseCount: 5,
-          categoryId: '2',
-          createdAt: new Date(),
-          author: 'John Newton',
-          courses: [
+          id: '1',
+          name: 'Tous',
+          description: 'Toutes les catégories disponibles',
+          icon: 'Library',
+          color: '#8B5CF6',
+          folderCount: 0,
+          totalCourses: 0,
+          folders: []
+        },
+        {
+          id: '2',
+          name: 'Cantiques',
+          description: 'Partitions de cantiques et hymnes',
+          icon: 'Music',
+          color: '#10B981',
+          folderCount: 2,
+          totalCourses: 8,
+          folders: [
             {
-              id: 'c1',
-              title: 'Amazing Grace',
-              content: 'Contenu de la partition Amazing Grace...',
-              description: 'Partition complète avec variations',
+              id: 'f1',
+              name: 'Cantiques Classiques',
+              description: 'Collection des cantiques traditionnels',
               thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
-              isDownloaded: true,
-              dateAdded: new Date(),
+              courseCount: 5,
+              categoryId: '2',
               createdAt: new Date(),
-              lastModified: new Date(),
-              isPublic: true,
-              fileSize: 2.4,
-              composer: 'John Newton'
-            },
-            {
-              id: 'c2',
-              title: 'How Great Thou Art',
-              content: 'Contenu de la partition How Great Thou Art...',
-              description: 'Arrangement pour piano solo',
-              thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
-              isDownloaded: false,
-              dateAdded: new Date(),
-              createdAt: new Date(),
-              lastModified: new Date(),
-              isPublic: true,
-              fileSize: 1.8,
-              composer: 'Carl Boberg'
-            }
-          ]
-        },
-        {
-          id: 'f2',
-          name: 'Cantiques Modernes',
-          description: 'Cantiques contemporains et louange',
-          thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
-          courseCount: 3,
-          categoryId: '2',
-          createdAt: new Date(),
-          author: 'Matt Redman',
-          courses: [
-            {
-              id: 'c3',
-              title: '10,000 Reasons',
-              content: 'Contenu de la partition 10,000 Reasons...',
-              description: 'Partition moderne avec accords',
-              thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
-              isDownloaded: true,
-              dateAdded: new Date(),
-              createdAt: new Date(),
-              lastModified: new Date(),
-              isPublic: true,
-              fileSize: 3.1,
-              composer: 'Matt Redman'
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: '3',
-      name: 'Mes compositions',
-      description: 'Vos créations personnelles',
-      icon: 'Edit3',
-      color: '#F59E0B',
-      folderCount: 1,
-      totalCourses: 3,
-      folders: [
-        {
-          id: 'f3',
-          name: 'Compositions 2024',
-          description: 'Mes créations de cette année',
-          thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
-          courseCount: 3,
-          categoryId: '3',
-          createdAt: new Date(),
-          author: 'Owen',
-          courses: [
-            {
-              id: 'c4',
-              title: 'Ma première composition',
-              content: 'Contenu de ma première composition...',
-              description: 'Mélodie originale en Do majeur',
-              thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
-              isDownloaded: true,
-              dateAdded: new Date(),
-              createdAt: new Date(),
-              lastModified: new Date(),
-              isPublic: false,
-              fileSize: 1.2
-            }
-          ]
-        }
-      ]
-    },
-    {
-      id: '4',
-      name: 'Chansons',
-      description: 'Arrangements pour chœur',
-      icon: 'Users',
-      color: '#EF4444',
-      folderCount: 0,
-      totalCourses: 4,
-      hasDirectCourses: true,
-      folders: [],
-      courses: [
-        {
-          id: 'ch1',
-          title: 'Hallelujah',
-          content: 'Contenu de Hallelujah arrangement SATB...',
-          description: 'Arrangement pour chœur à 4 voix',
-          thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
-          isDownloaded: true,
-          dateAdded: new Date(),
-          createdAt: new Date(),
-          lastModified: new Date(),
-          isPublic: true,
-          composer: 'Leonard Cohen',
-          author: 'Arrangement SATB'
-        },
-        {
-          id: 'ch2',
-          title: 'Ave Maria',
-          content: 'Contenu de Ave Maria arrangement choral...',
-          description: 'Arrangement choral classique',
-          thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
-          isDownloaded: false,
-          dateAdded: new Date(),
-          createdAt: new Date(),
-          lastModified: new Date(),
-          isPublic: true,
-          composer: 'Franz Schubert',
-          author: 'Arrangement Choral'
-        },
-        {
-          id: 'ch3',
-          title: 'Amazing Grace Choral',
-          content: 'Contenu de Amazing Grace arrangement choral...',
-          description: 'Version chorale traditionnelle',
-          thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
-          isDownloaded: true,
-          dateAdded: new Date(),
-          createdAt: new Date(),
-          lastModified: new Date(),
-          isPublic: true,
-          composer: 'John Newton',
-          author: 'Arrangement Traditionnel'
-        },
-        {
-          id: 'ch4',
-          title: 'How Great Thou Art Choir',
-          content: 'Contenu de How Great Thou Art arrangement choir...',
-          description: 'Arrangement pour grand chœur',
-          thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
-          isDownloaded: false,
-          dateAdded: new Date(),
-          createdAt: new Date(),
-          lastModified: new Date(),
-          isPublic: true,
-          composer: 'Carl Boberg',
-          author: 'Arrangement Grand Chœur'
-        }
-      ]
-    },
-    {
-      id: '5',
-      name: 'Leçons',
-      description: 'Cours et tutoriels',
-      icon: 'BookOpen',
-      color: '#3B82F6',
-      folderCount: 3,
-      totalCourses: 15,
-      folders: [
-        {
-          id: 'f5',
-          name: 'Cours de Piano',
-          description: 'Apprentissage complet du piano',
-          thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
-          courseCount: 8,
-          categoryId: '5',
-          createdAt: new Date(),
-          author: 'Prof. Marie Dubois',
-          courses: [
-            {
-              id: 'c5',
-              title: 'Introduction au Piano',
-              content: 'Leçon complète sur l\'introduction au piano. Cette leçon couvre les bases essentielles pour débuter au piano...',
-              description: 'Premiers pas et posture',
-              thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
-              isDownloaded: false,
-              dateAdded: new Date(),
-              createdAt: new Date(),
-              lastModified: new Date(),
-              isPublic: true,
-              author: 'Prof. Marie Dubois'
-            },
-            {
-              id: 'c6',
-              title: 'Les Accords de Base',
-              content: 'Leçon détaillée sur les accords majeurs, mineurs et septième. Apprenez la théorie et la pratique...',
-              description: 'Majeurs, mineurs et septième',
-              thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
-              isDownloaded: true,
-              dateAdded: new Date(),
-              createdAt: new Date(),
-              lastModified: new Date(),
-              isPublic: true,
-              author: 'Prof. Marie Dubois'
-            },
-            {
-              id: 'c7',
-              title: 'Exercices Pratiques',
-              content: 'Série d\'exercices pratiques incluant gammes et arpèges. Techniques pour améliorer votre dextérité...',
-              description: 'Gammes et arpèges',
-              thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
-              isDownloaded: false,
-              dateAdded: new Date(),
-              createdAt: new Date(),
-              lastModified: new Date(),
-              isPublic: true,
-              author: 'Prof. Marie Dubois'
-            }
-          ]
-        },
-        {
-          id: 'f6',
-          name: 'Cours de Guitare',
-          description: 'Techniques de guitare acoustique',
-          thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
-          courseCount: 4,
-          categoryId: '5',
-          createdAt: new Date(),
-          author: 'Jean-Paul Martin',
-          courses: [
-            {
-              id: 'c8',
-              title: 'Accords Ouverts',
-              content: 'Guide complet des accords ouverts à la guitare. Apprenez les positions de base et les transitions...',
-              description: 'Les accords de base en position ouverte',
-              thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
-              isDownloaded: true,
-              dateAdded: new Date(),
-              createdAt: new Date(),
-              lastModified: new Date(),
-              isPublic: true,
-              author: 'Jean-Paul Martin'
-            }
-          ]
-        },
-        {
-          id: 'f7',
-          name: 'Cours de Trompette',
-          description: 'Techniques de cuivre et respiration',
-          thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
-          courseCount: 3,
-          categoryId: '5',
-          createdAt: new Date(),
-          author: 'Pierre Trumpet',
-          courses: [
-            {
-              id: 'c9',
-              title: 'Embouchure et Respiration',
-              content: 'Techniques fondamentales de la trompette. Maîtrisez l\'embouchure et les techniques de respiration...',
-              description: 'Fondamentaux de la trompette',
-              thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
-              isDownloaded: false,
-              dateAdded: new Date(),
-              createdAt: new Date(),
-              lastModified: new Date(),
-              isPublic: true,
-              author: 'Pierre Trumpet'
-            }
-          ]
-        }
-      ]
-    }
-  ],
-  
-  currentCategory: null,
-  currentFolder: null,
-  navigationLevel: 'categories',
-  
-  setCurrentCategory: (category) => set({ 
-    currentCategory: category,
-    currentFolder: null,
-    navigationLevel: category ? (category.hasDirectCourses ? 'courses' : 'folders') : 'categories'
-  }),
-  
-  setCurrentFolder: (folder) => set({ 
-    currentFolder: folder,
-    navigationLevel: folder ? 'courses' : 'folders'
-  }),
-  
-  setNavigationLevel: (level) => set({ navigationLevel: level }),
-  
-  // Course actions
-  downloadCourse: (courseId, folderId) => set((state) => {
-    if (folderId) {
-      // Cours dans un dossier
-      return {
-        categories: state.categories.map(cat => ({
-          ...cat,
-          folders: cat.folders.map(folder => 
-            folder.id === folderId 
-              ? {
-                  ...folder,
-                  courses: folder.courses.map(course =>
-                    course.id === courseId 
-                      ? { ...course, isDownloaded: true }
-                      : course
-                  )
+              author: 'John Newton',
+              courses: [
+                {
+                  id: 'c1',
+                  title: 'Amazing Grace',
+                  content: 'Contenu de la partition Amazing Grace...',
+                  description: 'Partition complète avec variations',
+                  thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
+                  isDownloaded: true,
+                  dateAdded: new Date(),
+                  createdAt: new Date(),
+                  lastModified: new Date(),
+                  isPublic: true,
+                  fileSize: 2.4,
+                  composer: 'John Newton'
+                },
+                {
+                  id: 'c2',
+                  title: 'How Great Thou Art',
+                  content: 'Contenu de la partition How Great Thou Art...',
+                  description: 'Arrangement pour piano solo',
+                  thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
+                  isDownloaded: false,
+                  dateAdded: new Date(),
+                  createdAt: new Date(),
+                  lastModified: new Date(),
+                  isPublic: true,
+                  fileSize: 1.8,
+                  composer: 'Carl Boberg'
                 }
-              : folder
-          )
-        }))
-      };
-    } else {
-      // Cours direct dans une catégorie
-      return {
-        categories: state.categories.map(cat => ({
-          ...cat,
-          courses: cat.courses?.map(course =>
-            course.id === courseId 
-              ? { ...course, isDownloaded: true }
-              : course
-          )
-        }))
-      };
-    }
-  }),
-  
-  // Partitions (conservées pour compatibilité)
-  sheetMusic: [
+              ]
+            },
+            {
+              id: 'f2',
+              name: 'Cantiques Modernes',
+              description: 'Cantiques contemporains et louange',
+              thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
+              courseCount: 3,
+              categoryId: '2',
+              createdAt: new Date(),
+              author: 'Matt Redman',
+              courses: [
+                {
+                  id: 'c3',
+                  title: '10,000 Reasons',
+                  content: 'Contenu de la partition 10,000 Reasons...',
+                  description: 'Partition moderne avec accords',
+                  thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
+                  isDownloaded: true,
+                  dateAdded: new Date(),
+                  createdAt: new Date(),
+                  lastModified: new Date(),
+                  isPublic: true,
+                  fileSize: 3.1,
+                  composer: 'Matt Redman'
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: '3',
+          name: 'Mes compositions',
+          description: 'Vos créations personnelles',
+          icon: 'Edit3',
+          color: '#F59E0B',
+          folderCount: 1,
+          totalCourses: 3,
+          folders: [
+            {
+              id: 'f3',
+              name: 'Compositions 2024',
+              description: 'Mes créations de cette année',
+              thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
+              courseCount: 3,
+              categoryId: '3',
+              createdAt: new Date(),
+              author: 'Owen',
+              courses: [
+                {
+                  id: 'c4',
+                  title: 'Ma première composition',
+                  content: 'Contenu de ma première composition...',
+                  description: 'Mélodie originale en Do majeur',
+                  thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
+                  isDownloaded: true,
+                  dateAdded: new Date(),
+                  createdAt: new Date(),
+                  lastModified: new Date(),
+                  isPublic: false,
+                  fileSize: 1.2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: '4',
+          name: 'Chansons',
+          description: 'Arrangements pour chœur',
+          icon: 'Users',
+          color: '#EF4444',
+          folderCount: 0,
+          totalCourses: 4,
+          hasDirectCourses: true,
+          folders: [],
+          courses: [
+            {
+              id: 'ch1',
+              title: 'Hallelujah',
+              content: 'Contenu de Hallelujah arrangement SATB...',
+              description: 'Arrangement pour chœur à 4 voix',
+              thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
+              isDownloaded: true,
+              dateAdded: new Date(),
+              createdAt: new Date(),
+              lastModified: new Date(),
+              isPublic: true,
+              composer: 'Leonard Cohen',
+              author: 'Arrangement SATB'
+            },
+            {
+              id: 'ch2',
+              title: 'Ave Maria',
+              content: 'Contenu de Ave Maria arrangement choral...',
+              description: 'Arrangement choral classique',
+              thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
+              isDownloaded: false,
+              dateAdded: new Date(),
+              createdAt: new Date(),
+              lastModified: new Date(),
+              isPublic: true,
+              composer: 'Franz Schubert',
+              author: 'Arrangement Choral'
+            },
+            {
+              id: 'ch3',
+              title: 'Amazing Grace Choral',
+              content: 'Contenu de Amazing Grace arrangement choral...',
+              description: 'Version chorale traditionnelle',
+              thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
+              isDownloaded: true,
+              dateAdded: new Date(),
+              createdAt: new Date(),
+              lastModified: new Date(),
+              isPublic: true,
+              composer: 'John Newton',
+              author: 'Arrangement Traditionnel'
+            },
+            {
+              id: 'ch4',
+              title: 'How Great Thou Art Choir',
+              content: 'Contenu de How Great Thou Art arrangement choir...',
+              description: 'Arrangement pour grand chœur',
+              thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
+              isDownloaded: false,
+              dateAdded: new Date(),
+              createdAt: new Date(),
+              lastModified: new Date(),
+              isPublic: true,
+              composer: 'Carl Boberg',
+              author: 'Arrangement Grand Chœur'
+            }
+          ]
+        },
+        {
+          id: '5',
+          name: 'Leçons',
+          description: 'Cours et tutoriels',
+          icon: 'BookOpen',
+          color: '#3B82F6',
+          folderCount: 3,
+          totalCourses: 15,
+          folders: [
+            {
+              id: 'f5',
+              name: 'Cours de Piano',
+              description: 'Apprentissage complet du piano',
+              thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
+              courseCount: 8,
+              categoryId: '5',
+              createdAt: new Date(),
+              author: 'Prof. Marie Dubois',
+              courses: [
+                {
+                  id: 'c5',
+                  title: 'Introduction au Piano',
+                  content: 'Leçon complète sur l\'introduction au piano. Cette leçon couvre les bases essentielles pour débuter au piano...',
+                  description: 'Premiers pas et posture',
+                  thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
+                  isDownloaded: false,
+                  dateAdded: new Date(),
+                  createdAt: new Date(),
+                  lastModified: new Date(),
+                  isPublic: true,
+                  author: 'Prof. Marie Dubois'
+                },
+                {
+                  id: 'c6',
+                  title: 'Les Accords de Base',
+                  content: 'Leçon détaillée sur les accords majeurs, mineurs et septième. Apprenez la théorie et la pratique...',
+                  description: 'Majeurs, mineurs et septième',
+                  thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
+                  isDownloaded: true,
+                  dateAdded: new Date(),
+                  createdAt: new Date(),
+                  lastModified: new Date(),
+                  isPublic: true,
+                  author: 'Prof. Marie Dubois'
+                },
+                {
+                  id: 'c7',
+                  title: 'Exercices Pratiques',
+                  content: 'Série d\'exercices pratiques incluant gammes et arpèges. Techniques pour améliorer votre dextérité...',
+                  description: 'Gammes et arpèges',
+                  thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
+                  isDownloaded: false,
+                  dateAdded: new Date(),
+                  createdAt: new Date(),
+                  lastModified: new Date(),
+                  isPublic: true,
+                  author: 'Prof. Marie Dubois'
+                }
+              ]
+            },
+            {
+              id: 'f6',
+              name: 'Cours de Guitare',
+              description: 'Techniques de guitare acoustique',
+              thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
+              courseCount: 4,
+              categoryId: '5',
+              createdAt: new Date(),
+              author: 'Jean-Paul Martin',
+              courses: [
+                {
+                  id: 'c8',
+                  title: 'Accords Ouverts',
+                  content: 'Guide complet des accords ouverts à la guitare. Apprenez les positions de base et les transitions...',
+                  description: 'Les accords de base en position ouverte',
+                  thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
+                  isDownloaded: true,
+                  dateAdded: new Date(),
+                  createdAt: new Date(),
+                  lastModified: new Date(),
+                  isPublic: true,
+                  author: 'Jean-Paul Martin'
+                }
+              ]
+            },
+            {
+              id: 'f7',
+              name: 'Cours de Trompette',
+              description: 'Techniques de cuivre et respiration',
+              thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
+              courseCount: 3,
+              categoryId: '5',
+              createdAt: new Date(),
+              author: 'Pierre Trumpet',
+              courses: [
+                {
+                  id: 'c9',
+                  title: 'Embouchure et Respiration',
+                  content: 'Techniques fondamentales de la trompette. Maîtrisez l\'embouchure et les techniques de respiration...',
+                  description: 'Fondamentaux de la trompette',
+                  thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
+                  isDownloaded: false,
+                  dateAdded: new Date(),
+                  createdAt: new Date(),
+                  lastModified: new Date(),
+                  isPublic: true,
+                  author: 'Pierre Trumpet'
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      
+      currentCategory: null,
+      currentFolder: null,
+      navigationLevel: 'categories',
+      
+      setCurrentCategory: (category) => set({ 
+        currentCategory: category,
+        currentFolder: null,
+        navigationLevel: category ? (category.hasDirectCourses ? 'courses' : 'folders') : 'categories'
+      }),
+      
+      setCurrentFolder: (folder) => set({ 
+        currentFolder: folder,
+        navigationLevel: folder ? 'courses' : 'folders'
+      }),
+      
+      setNavigationLevel: (level) => set({ navigationLevel: level }),
+      
+      // Course actions (inchangées)
+      downloadCourse: (courseId, folderId) => set((state) => {
+        if (folderId) {
+          return {
+            categories: state.categories.map(cat => ({
+              ...cat,
+              folders: cat.folders.map(folder => 
+                folder.id === folderId 
+                  ? {
+                      ...folder,
+                      courses: folder.courses.map(course =>
+                        course.id === courseId 
+                          ? { ...course, isDownloaded: true }
+                          : course
+                      )
+                    }
+                  : folder
+              )
+            }))
+          };
+        } else {
+          return {
+            categories: state.categories.map(cat => ({
+              ...cat,
+              courses: cat.courses?.map(course =>
+                course.id === courseId 
+                  ? { ...course, isDownloaded: true }
+                  : course
+              )
+            }))
+          };
+        }
+      }),
+      
+      // Partitions (inchangées)
+      sheetMusic: [
+        {
+          id: '1',
+          title: 'Clair de Lune',
+          composer: 'Claude Debussy',
+          genre: 'Classique',
+          thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
+          isDownloaded: true,
+          dateAdded: new Date(),
+          fileSize: 2.4,
+        }
+      ],
+      downloadedSheets: [],
+      addSheetMusic: (sheet) => set((state) => ({ 
+        sheetMusic: [...state.sheetMusic, sheet] 
+      })),
+      downloadSheet: (sheetId) => set((state) => ({
+        sheetMusic: state.sheetMusic.map(sheet => 
+          sheet.id === sheetId ? { ...sheet, isDownloaded: true } : sheet
+        ),
+        downloadedSheets: [
+          ...state.downloadedSheets,
+          state.sheetMusic.find(s => s.id === sheetId)!
+        ]
+      })),
+      removeDownload: (sheetId) => set((state) => ({
+        sheetMusic: state.sheetMusic.map(sheet => 
+          sheet.id === sheetId ? { ...sheet, isDownloaded: false } : sheet
+        ),
+        downloadedSheets: state.downloadedSheets.filter(s => s.id !== sheetId)
+      })),
+      
+      // Compositions (inchangées)
+      compositions: [
+        {
+          id: '1',
+          title: 'Ma première composition',
+          content: 'C G Am F',
+          createdAt: new Date(),
+          lastModified: new Date(),
+          isPublic: false,
+        }
+      ],
+      addComposition: (composition) => set((state) => ({ 
+        compositions: [...state.compositions, composition] 
+      })),
+      updateComposition: (id, updates) => set((state) => ({
+        compositions: state.compositions.map(comp => 
+          comp.id === id ? { ...comp, ...updates, lastModified: new Date() } : comp
+        )
+      })),
+      deleteComposition: (id) => set((state) => ({
+        compositions: state.compositions.filter(comp => comp.id !== id)
+      })),
+      
+      // UI State (inchangées)
+      isDrawerOpen: false,
+      setDrawerOpen: (open) => set({ isDrawerOpen: open }),
+      isDrawerOpene: false,
+      setDrawerOpene: (open) => set({ isDrawerOpene: open }),
+      
+      // Search (inchangées)
+      searchQuery: '',
+      setSearchQuery: (query) => set({ searchQuery: query }),
+      searchFilters: {
+        genre: '',
+        composer: '',
+      },
+      setSearchFilters: (filters) => set((state) => ({
+        searchFilters: { ...state.searchFilters, ...filters }
+      })),
+    }),
     {
-      id: '1',
-      title: 'Clair de Lune',
-      composer: 'Claude Debussy',
-      genre: 'Classique',
-      thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
-      isDownloaded: true,
-      dateAdded: new Date(),
-      fileSize: 2.4,
+      name: 'partitio-store', // nom unique pour le stockage
+      storage: createJSONStorage(() => ({
+        // Vous pouvez utiliser AsyncStorage pour React Native
+        getItem: async (name: string) => {
+          // Pour l'instant, on utilise null - vous devrez implémenter AsyncStorage
+          return null;
+        },
+        setItem: async (name: string, value: string) => {
+          // Implémentation AsyncStorage à ajouter
+        },
+        removeItem: async (name: string) => {
+          // Implémentation AsyncStorage à ajouter
+        },
+      })),
+      // Persister seulement les paramètres importants
+      partialize: (state) => ({
+        themeMode: state.themeMode,
+        settings: state.settings,
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
-  ],
-  downloadedSheets: [],
-  addSheetMusic: (sheet) => set((state) => ({ 
-    sheetMusic: [...state.sheetMusic, sheet] 
-  })),
-  downloadSheet: (sheetId) => set((state) => ({
-    sheetMusic: state.sheetMusic.map(sheet => 
-      sheet.id === sheetId ? { ...sheet, isDownloaded: true } : sheet
-    ),
-    downloadedSheets: [
-      ...state.downloadedSheets,
-      state.sheetMusic.find(s => s.id === sheetId)!
-    ]
-  })),
-  removeDownload: (sheetId) => set((state) => ({
-    sheetMusic: state.sheetMusic.map(sheet => 
-      sheet.id === sheetId ? { ...sheet, isDownloaded: false } : sheet
-    ),
-    downloadedSheets: state.downloadedSheets.filter(s => s.id !== sheetId)
-  })),
-  
-  // Compositions
-  compositions: [
-    {
-      id: '1',
-      title: 'Ma première composition',
-      content: 'C G Am F',
-      createdAt: new Date(),
-      lastModified: new Date(),
-      isPublic: false,
-    }
-  ],
-  addComposition: (composition) => set((state) => ({ 
-    compositions: [...state.compositions, composition] 
-  })),
-  updateComposition: (id, updates) => set((state) => ({
-    compositions: state.compositions.map(comp => 
-      comp.id === id ? { ...comp, ...updates, lastModified: new Date() } : comp
-    )
-  })),
-  deleteComposition: (id) => set((state) => ({
-    compositions: state.compositions.filter(comp => comp.id !== id)
-  })),
-  
-  // UI State
-  isDrawerOpen: false,
-  setDrawerOpen: (open) => set({ isDrawerOpen: open }),
-  isDrawerOpene: false,
-  setDrawerOpene: (open) => set({ isDrawerOpene: open }),
-  
-  // Search
-  searchQuery: '',
-  setSearchQuery: (query) => set({ searchQuery: query }),
-  searchFilters: {
-    genre: '',
-    composer: '',
-  },
-  setSearchFilters: (filters) => set((state) => ({
-    searchFilters: { ...state.searchFilters, ...filters }
-  })),
-}));
+  )
+);

@@ -1,4 +1,4 @@
-import React, { useState, Dispatch, SetStateAction } from 'react';
+import React from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react-native';
 import { TextComponent } from '@/components/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
 
 /** Types discriminés pour les paramètres */
@@ -25,7 +26,7 @@ type SwitchItem = {
   description: string;
   type: 'switch';
   value: boolean;
-  onValueChange: Dispatch<SetStateAction<boolean>>;
+  onValueChange: (value: boolean) => void;
 };
 
 type NavigationItem = {
@@ -55,9 +56,8 @@ export default function SettingsScreen() {
   const colors = useThemeColors();
   const router = useRouter();
   
-  const [darkMode, setDarkMode] = useState(false);
-  const [notifications, setNotifications] = useState(true);
-  const [autoDownload, setAutoDownload] = useState(false);
+  // Utiliser le store pour les paramètres
+  const { settings, updateSettings, setThemeMode, themeMode } = useAppStore();
 
   const styles = StyleSheet.create({
     container: {
@@ -143,8 +143,10 @@ export default function SettingsScreen() {
           title: 'Mode sombre',
           description: 'Activer le thème sombre',
           type: 'switch',
-          value: darkMode,
-          onValueChange: setDarkMode,
+          value: settings.darkMode,
+          onValueChange: (value) => {
+            updateSettings({ darkMode: value });
+          },
         },
       ],
     },
@@ -156,8 +158,10 @@ export default function SettingsScreen() {
           title: 'Notifications push',
           description: 'Recevoir des notifications',
           type: 'switch',
-          value: notifications,
-          onValueChange: setNotifications,
+          value: settings.notifications,
+          onValueChange: (value) => {
+            updateSettings({ notifications: value });
+          },
         },
       ],
     },
@@ -167,10 +171,12 @@ export default function SettingsScreen() {
         {
           icon: Download,
           title: 'Téléchargement automatique',
-          description: 'Télécharger automatiquement les nouvelles partitions proposé par Partitio',
+          description: 'Télécharger automatiquement les nouvelles partitions proposées par Partitio',
           type: 'switch',
-          value: autoDownload,
-          onValueChange: setAutoDownload,
+          value: settings.autoDownload,
+          onValueChange: (value) => {
+            updateSettings({ autoDownload: value });
+          },
         },
       ],
     },
@@ -212,7 +218,14 @@ export default function SettingsScreen() {
       icon: RefreshCw,
       title: 'Réinitialiser les paramètres',
       description: 'Remettre tous les paramètres par défaut',
-      onPress: () => console.log('Réinitialiser'),
+      onPress: () => {
+        updateSettings({
+          notifications: true,
+          autoDownload: false,
+          darkMode: true, // Par défaut sur dark
+        });
+        console.log('Paramètres réinitialisés');
+      },
     },
     {
       icon: Trash2,
