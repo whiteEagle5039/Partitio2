@@ -10,7 +10,7 @@ import {
   PenTool, 
   Music,
 } from 'lucide-react-native';
-import { TextComponent } from '@/components/TextComponent';
+import { TextComponent, TextComponentHeading } from '@/components/TextComponent';
 import { SheetMusicCard } from '@/components/SheetMusicCard';
 import { WrapperComponent } from '@/components/WrapperComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -141,9 +141,11 @@ export default function HomeScreen() {
               <Music size={24} color="#FFFFFF" />
             </LinearGradient> */}
               {/* <Music size={24} color="#333" /> */}
-            <TextComponent style={styles.logoText} variante="subtitle1">
+            <TextComponent variante='body1' >
               Partitio
             </TextComponent>
+            
+
           </View>
           
           <TouchableOpacity 
