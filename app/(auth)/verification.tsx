@@ -26,7 +26,7 @@ const PartitioIcon = ({ size = 32, color }: { size?: number; color: string }) =>
     justifyContent: 'center',
     alignItems: 'center',
   }}>
-    <TextComponent variante="body3" color="#FFFFFF" style={{ fontWeight: 'bold' }}>
+    <TextComponent variante="body0" color="#FFFFFF" style={{ fontWeight: 'bold' }}>
       P
     </TextComponent>
   </View>
@@ -161,8 +161,6 @@ export default function VerificationCodeScreen() {
     title: {
       textAlign: 'center',
       marginBottom: 40,
-      fontSize: 24,
-      fontWeight: '500',
     },
     codeInputContainer: {
       marginBottom: 40,
@@ -239,7 +237,6 @@ export default function VerificationCodeScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle={colors.text === '#F5F3F0' ? 'light-content' : 'dark-content'} />
       
       <SafeAreaView style={styles.container}>
         {/* Header avec bouton retour */}
@@ -262,7 +259,7 @@ export default function VerificationCodeScreen() {
           </View>
 
           {/* Titre */}
-          <TextComponent style={styles.title} color={colors.text}>
+          <TextComponent style={styles.title} color={colors.text} variante='body1'>
             Entrez le code que nous avons envoyé à votre email
           </TextComponent>
 
@@ -304,7 +301,7 @@ export default function VerificationCodeScreen() {
             <View style={styles.mailIcon}>
               <Mail size={24} color={colors.primary} />
             </View>
-            <TextComponent variante="body3" style={styles.emailText}>
+            <TextComponent variante="body2" style={styles.emailText}>
               Nous avons envoyé un email à
             </TextComponent>
             <TextComponent variante="subtitle2" style={styles.emailAddress} color={colors.text}>
@@ -314,7 +311,7 @@ export default function VerificationCodeScreen() {
               style={styles.changeEmailButton}
               onPress={handleChangeEmail}
             >
-              <TextComponent variante="body3" style={styles.changeEmailText}>
+              <TextComponent variante="body2" style={styles.changeEmailText}>
                 Changer l'adresse email
               </TextComponent>
             </TouchableOpacity>

@@ -192,19 +192,8 @@ export default function EmailAuthScreen() {
 
   return (
     <View style={styles.container}>
-      {/* <StatusBar barStyle={colors.text === '#F5F3F0' ? 'light-content' : 'dark-content'} /> */}
       
       <SafeAreaView style={styles.container}>
-        {/* Header avec bouton retour
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <ArrowLeft size={24} color={colors.icon} />
-          </TouchableOpacity>
-        </View> */}
-
         <KeyboardAvoidingView 
           style={styles.content}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
