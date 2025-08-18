@@ -4,7 +4,7 @@ import { DrawerMenu } from './DrawerMenu';
 import { useAppStore } from '@/stores/appStore';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const DRAWER_WIDTH = 220;
+const DRAWER_WIDTH = 230;
 
 interface WrapperComponentProps {
   children: React.ReactNode;

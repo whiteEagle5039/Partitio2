@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { 
   Menu, 
+  TableConfig,
   Search, 
   Library, 
   PenTool, 
@@ -15,6 +16,7 @@ import { WrapperComponent } from '@/components/WrapperComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
+import EmptyIcon from '@/components/EmptyIcon';
 
 export default function HomeScreen() {
   const colors = useThemeColors();
@@ -69,11 +71,9 @@ export default function HomeScreen() {
       flexDirection: 'row',
       alignItems: 'center',
       textAlign: 'center',
-      elevation: 2,
-      shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+      borderColor: colors.border,
+      borderWidth:0.5,
+
     },
     quickActionIcon: {
       marginBottom: 8,
@@ -94,13 +94,22 @@ export default function HomeScreen() {
     horizontalScroll: {
       paddingLeft: 20,
     },
+    emptyWrapper: {
+      width: '100%',         
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 20,
+      flexDirection:'row', 
+      gap:'20'
+    },
+    
   });
 
   const quickActions = [
     {
       icon: Search,
       label: 'Rechercher',
-      color: colors.primary,
+      color: colors.primary2,
       onPress: () => router.push('/search'),
     },
     {
@@ -112,7 +121,7 @@ export default function HomeScreen() {
     {
       icon: Library,
       label: 'Bibliothèque',
-      color: colors.primary3,
+      color: colors.primary2,
       onPress: () => router.push('/library'),
     },
   ];
@@ -125,12 +134,13 @@ export default function HomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.logo}>
-            <LinearGradient
+            {/* <LinearGradient
               colors={[colors.primary, colors.primary2]}
               style={{ borderRadius: 8, padding: 8 }}
             >
               <Music size={24} color="#FFFFFF" />
-            </LinearGradient>
+            </LinearGradient> */}
+              {/* <Music size={24} color="#333" /> */}
             <TextComponent style={styles.logoText} variante="subtitle1">
               Partitio
             </TextComponent>
@@ -140,7 +150,7 @@ export default function HomeScreen() {
             style={styles.menuButton}
             onPress={() => setDrawerOpen(!isDrawerOpen)}
           >
-            <Menu size={24} color={colors.icon} />
+            <Menu size={32} color={colors.icon} />
           </TouchableOpacity>
         </View>
 
@@ -154,49 +164,15 @@ export default function HomeScreen() {
                 onPress={action.onPress}
               >
                 <action.icon 
-                  size={28} 
+                  size={32} 
                   color={action.color} 
                   style={styles.quickActionIcon} 
                 />
-                <TextComponent variante="body4" style={{ textAlign: 'center' }}>
+                <TextComponent variante="subtitle1" style={{ textAlign: 'center' }}>
                   {action.label}
                 </TextComponent>
               </TouchableOpacity>
             ))}
-          </View>
-
-          {/* Partitions récentes */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <TextComponent variante="subtitle1">
-                Récemment ajoutées
-              </TextComponent>
-              <TouchableOpacity 
-                style={styles.seeAllButton}
-                onPress={() => router.push('/library')}
-              >
-                <TextComponent variante="body4" color={colors.primary}>
-                  Voir tout
-                </TextComponent>
-              </TouchableOpacity>
-            </View>
-            
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              style={styles.horizontalScroll}
-            >
-              {recentSheets.map((sheet: any) => (
-                <SheetMusicCard
-                  key={sheet.id}
-                  title={sheet.title}
-                  composer={sheet.composer}
-                  thumbnail={sheet.thumbnail}
-                  isDownloaded={sheet.isDownloaded}
-                  onPress={() => console.log(`Ouvrir ${sheet.title}`)}
-                />
-              ))}
-            </ScrollView>
           </View>
 
           {/* Partitions populaires */}
@@ -230,6 +206,49 @@ export default function HomeScreen() {
                   onPress={() => console.log(`Ouvrir ${sheet.title}`)}
                 />
               ))}
+            </ScrollView>
+          </View>
+
+           {/* Partitions récentes */}
+           <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <TextComponent variante="subtitle1">
+                Récemment ajoutées
+              </TextComponent>
+              {/* <TouchableOpacity 
+                style={styles.seeAllButton}
+                onPress={() => router.push('/library')}
+              >
+                <TextComponent variante="body4" color={colors.primary}>
+                  Voir tout
+                </TextComponent>
+              </TouchableOpacity> */}
+            </View>
+            
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              style={styles.horizontalScroll}
+            >
+              {recentSheets && recentSheets.length > 0 ? (
+                recentSheets.map((sheet: any) => (
+                  <SheetMusicCard
+                    key={sheet.id}
+                    title={sheet.title}
+                    composer={sheet.composer}
+                    thumbnail={sheet.thumbnail}
+                    isDownloaded={sheet.isDownloaded}
+                    onPress={() => console.log(`Ouvrir ${sheet.title}`)}
+                  />
+                ))
+              ) : (
+                <View style={styles.emptyWrapper}>
+                  <EmptyIcon width={64} height={64}/>
+                  <TextComponent variante="body3" color={colors.primary} style={{ marginTop: 8 }}>
+                    Aucune partition récente
+                  </TextComponent>
+                </View>
+              )}
             </ScrollView>
           </View>
         </ScrollView>

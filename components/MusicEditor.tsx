@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, TextInput, Dimensions } from 'react-native';
 import { TextComponent } from '@/components/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Section {
   id: string;
@@ -51,7 +52,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     },
     sectionsContainer: {
       flex: 1,
-      paddingTop: 20,
+      paddingTop: 0,
     },
     sectionContainer: {
       marginVertical: 8,
@@ -93,22 +94,22 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       backgroundColor: colors.card,
       borderRadius: 12,
       margin: 8,
-      padding: 16,
-      elevation: 2,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
+      padding: 10,
+      // elevation: 2,
+      // shadowColor: '#000',
+      // shadowOffset: { width: 0, height: 2 },
+      // shadowOpacity: 0.1,
+      // shadowRadius: 4,
       minHeight: 200,
     },
     activeStaffContainer: {
       borderWidth: 2,
       borderColor: colors.primary + '40',
-      backgroundColor: colors.primary + '05',
+      // backgroundColor: colors.primary + '05',
     },
     staffSystem: {
       position: 'relative',
-      paddingTop: 8,
+      // paddingTop: 8,
     },
     staffLine: {
       flexDirection: 'row',
@@ -134,8 +135,8 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     },
     voiceLabelText: {
       fontWeight: 'bold',
-      fontSize: 18,
-      color: colors.primary,
+      fontSize: 15,
+      color: colors.cardForeground,
     },
     activeLabelText: {
       color: colors.primaryForeground,
@@ -149,25 +150,26 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       color: colors.text,
       fontFamily: 'monospace',
       minHeight: 48,
-      paddingVertical: 12,
-      paddingHorizontal: 16,
+      paddingVertical: 10,
+      paddingHorizontal: 5,
       backgroundColor: colors.background2,
-      borderRadius: 10,
-      borderWidth: 2,
-      borderColor: 'transparent',
+      // borderRadius: 10,
+      borderBottomWidth: 2,
+      // borderColor: colors.border,
+      borderColor: colors.muted,
     },
     activeStaff: {
-      borderColor: colors.primary,
-      backgroundColor: colors.primary + '10',
+      borderColor: colors.blueSingle + '70',
+      // backgroundColor: colors.primary + '10',
     },
     focusedStaff: {
       borderColor: colors.primary,
       backgroundColor: colors.primary + '15',
-      elevation: 1,
-      shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.2,
-      shadowRadius: 2,
+      // elevation: 1,
+      // shadowColor: colors.primary,
+      // shadowOffset: { width: 0, height: 1 },
+      // shadowOpacity: 0.2,
+      // shadowRadius: 2,
     },
     measureOverlay: {
       position: 'absolute',
@@ -383,7 +385,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                     onStaffFocus?.(voice.key as 'S' | 'A' | 'T' | 'B', section.id);
 
                   }}
-                  placeholder={`${voice.name} : do re mi fa | sol la si do |`}
+                  placeholder={`${voice.name} : do re mi fa | sol`}
                   placeholderTextColor={colors.text2}
                   multiline={false}
                   scrollEnabled={false}
@@ -421,7 +423,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Sections avec portées */}
       <ScrollView 
         ref={scrollViewRef}
@@ -450,6 +452,6 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
           </View>
         ))}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };

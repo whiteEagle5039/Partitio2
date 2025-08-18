@@ -1,142 +1,142 @@
 /**
  * Palette de couleurs moderne pour Partitio
- * Thème musical avec des tons sophistiqués
+ * Basée exactement sur les couleurs de Claude d'Anthropic
  */
-const tintColorLight = '#6366F1';
-const tintColorDark = '#A5B4FC';
+const tintColorLight = '#D97757';
+const tintColorDark = '#E8A288';
 
 export const color = {
   light: {
     // Arrière-plans
-    background: "#FAFAFA",
-    background2: "#F8FAFC", 
-    foreground: "#1E293B",
+    background2: "#FEFDFB",
+    background: "#F8F6F4", 
+    foreground: "#2D2A26",
     
     // Cartes
     card: "#FFFFFF",
-    card2: "#F1F5F9",
-    cardForeground: "#334155",
-    validated: '#10B981',
+    card2: "#F8F6F4",
+    cardForeground: "#2D2A26",
+    validated: '#059669',
     
     // Popover
     popover: "#FFFFFF",
-    popoverForeground: "#1E293B",
+    popoverForeground: "#2D2A26",
     
-    // Couleurs principales - Thème musical
-    primary: "#6366F1",      // Indigo moderne
-    primary2: "#8B5CF6",     // Violet
-    primary3: "#EC4899",     // Rose
-    blueSingle: "#06B6D4",   // Cyan
+    // Couleurs principales - Exactement comme Claude
+    primary: "#D97757",      // Primary de Claude
+    primary2: "#CC6B43",     // Primary Dark de Claude
+    primary3: "#E8A288",     // Primary Light de Claude
+    blueSingle: "#8B7355",   // Secondary de Claude
     primaryForeground: "#FFFFFF",
     
     // Secondaire
-    secondary: "#F1F5F9",
-    secondaryForeground: "#475569",
+    secondary: "#F0EDE8",
+    secondaryForeground: "#6B6660",
     
     // Muted
-    muted: "#F8FAFC",
-    mutedForeground: "#64748B",
+    muted: "#F0EDE8",
+    mutedForeground: "#6B6660",
     
     // Accent
-    accent: "#EEF2FF",
-    accentForeground: "#4338CA",
+    accent: "#E07B4A",
+    accentForeground: "#FFFFFF",
     
     // Destructive
-    destructive: "#EF4444",
+    destructive: "#DC2626",
     destructiveForeground: "#FFFFFF",
     
     // Bordures et inputs
-    border: "#E2E8F0",
-    borderGreen: "#10B981",
-    input: "#F1F5F9",
-    submit: "#6366F1",
-    ring: "#A5B4FC",
+    border: "#E6E2DC",
+    borderGreen: "#059669",
+    input: "#F8F6F4",
+    submit: "#D97757",
+    ring: "#E8A288",
     
     radius: 12,
     
     // Texte
-    text: '#1E293B',
-    text2: '#64748B',
+    text: '#2D2A26',
+    text2: '#6B6660',
     tint: tintColorLight,
-    icon: '#64748B',
-    tabIconDefault: '#94A3B8',
+    icon: '#6B6660',
+    tabIconDefault: '#8B7355',
     tabIconSelected: tintColorLight,
     
     // Couleurs d'accent
-    orange: "#F97316",
-    jaune: "#EAB308", 
-    pink: "#EC4899",
+    orange: "#D4652F",
+    jaune: "#E07B4A", 
+    pink: "#E89B72",
     
     // Couleurs spécifiques à l'app musicale
-    note: "#6366F1",
-    staff: "#E2E8F0",
+    note: "#D97757",
+    staff: "#E6E2DC",
     sharp: "#059669",
     flat: "#DC2626"
   },
   dark: {
     // Arrière-plans
-    background: "#0F172A",
-    background2: "#1E293B",
-    foreground: "#F1F5F9",
+    background: "#1A1A1A",
+    background2: "#262626",
+    foreground: "#F5F3F0",
     
     // Cartes
-    card: "#1E293B",
-    card2: "#334155",
-    cardForeground: "#F1F5F9",
+    card: "#262626",
+    card2: "#333333",
+    cardForeground: "#F5F3F0",
     validated: '#10B981',
     
     // Popover
-    popover: "#1E293B",
-    popoverForeground: "#F1F5F9",
+    popover: "#262626",
+    popoverForeground: "#F5F3F0",
     
-    // Couleurs principales
-    primary: "#8B5CF6",
-    primary2: "#A855F7",
-    primary3: "#F472B6",
-    blueSingle: "#22D3EE",
-    primaryForeground: "#0F172A",
+    // Couleurs principales - Version dark de Claude
+    primary: "#D97757",
+    primary2: "#E8A288",
+    primary3: "#F2C4AB",
+    blueSingle: "#A68D73",
+    primaryForeground: "#1A1A1A",
     
     // Secondaire
-    secondary: "#334155",
-    secondaryForeground: "#CBD5E1",
+    secondary: "#333333",
+    secondaryForeground: "#B8B5B0",
     
     // Muted
-    muted: "#334155",
-    mutedForeground: "#94A3B8",
+    muted: "#333333",
+    mutedForeground: "#B8B5B0",
     
     // Accent
-    accent: "#312E81",
-    accentForeground: "#C7D2FE",
+    accent: "#F2A366",
+    accentForeground: "#1A1A1A",
     
     // Destructive
-    destructive: "#DC2626",
-    destructiveForeground: "#F1F5F9",
+    destructive: "#EF4444",
+    destructiveForeground: "#F5F3F0",
     
     // Bordures et inputs
-    border: "#475569",
-    borderGreen: "#10B981",
-    input: "#334155",
-    submit: "#8B5CF6",
-    ring: "#A5B4FC",
+    border: "#404040",
+    borderGreen: '#10B981',
+    input: "#333333",
+    submit: "#E8A288",
+    ring: "#F2C4AB",
     
     radius: 12,
     
     // Texte
-    text: '#F1F5F9',
-    text2: '#94A3B8',
+    text: '#F5F3F0',
+    text2: '#B8B5B0',
     tint: tintColorDark,
-    icon: '#94A3B8',
-    tabIconDefault: '#64748B',
+    icon: '#B8B5B0',
+    tabIconDefault: '#8B7355',
     tabIconSelected: tintColorDark,
     
     // Couleurs d'accent
-    orange: "#FB923C",
-    jaune: "#FDE047", 
-    pink: "#F472B6",
+    orange: "#E8914A",
+    jaune: "#F5B885", 
+    pink: "#F2A366",
     
     // Couleurs spécifiques à l'app musicale
-    note: "#A5B4FC",
-    staff: "#475569",
+    note: "#F2A366",
+    staff: "#404040",
     sharp: "#34D399",
     flat: "#F87171"
   }

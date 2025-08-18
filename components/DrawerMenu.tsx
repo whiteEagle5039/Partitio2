@@ -16,7 +16,7 @@ import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const DRAWER_WIDTH = 276;
+const DRAWER_WIDTH = 300;
 
 export function DrawerMenu() {
   const colors = useThemeColors();
@@ -61,6 +61,7 @@ export function DrawerMenu() {
     },
     userInfo: {
       flex: 1,
+      flexDirection:'row'
     },
     closeButton: {
       padding: 8,
@@ -93,7 +94,7 @@ export function DrawerMenu() {
       borderTopColor: colors.border,
     },
     storageBar: {
-      height: 4,
+      height: 6,
       backgroundColor: colors.muted,
       borderRadius: 2,
       marginTop: 8,
@@ -129,15 +130,16 @@ export function DrawerMenu() {
             style={styles.closeButton}
             onPress={() => setDrawerOpen(false)}
           >
-            <X size={24} color={colors.icon} />
+            <X size={32} color={colors.icon} />
           </TouchableOpacity>
           <View style={styles.userInfo} >
-            <TextComponent variante="subtitle2">
+            <TextComponent variante="subtitle0" color={colors.blueSingle}>
               {user?.name || 'Utilisateur'}
             </TextComponent>
-            <TextComponent variante="caption" color={colors.text2}>
+            <TextComponent variante="subtitle0">'s Work</TextComponent>
+            {/* <TextComponent variante="caption" color={colors.text2}>
               {user?.email || 'user@partitio.com'}
-            </TextComponent>
+            </TextComponent> */}
           </View>
         </View>
 
@@ -148,8 +150,8 @@ export function DrawerMenu() {
               style={styles.menuItem}
               onPress={() => handleMenuItemPress(item.route)}
             >
-              <item.icon size={24} color={colors.icon} style={styles.menuIcon} />
-              <TextComponent variante="body2">
+              <item.icon size={32} color={colors.primary} style={styles.menuIcon} />
+              <TextComponent variante="subtitle1">
                 {item.label}
               </TextComponent>
             </TouchableOpacity>
@@ -157,10 +159,10 @@ export function DrawerMenu() {
         </ScrollView>
 
         <View style={styles.storageSection}>
-          <TextComponent variante="subtitle3" style={{ marginBottom: 4 }}>
+          <TextComponent variante="body2" color={colors.text2} style={{ marginBottom: 4 }}>
             Stockage utilisé
           </TextComponent>
-          <TextComponent variante="caption" color={colors.text2}>
+          <TextComponent variante="body4" color={colors.primary2}>
             {user?.storageUsed || 0} MB / {user?.storageLimit || 100} MB
           </TextComponent>
           <View style={styles.storageBar}>

@@ -31,6 +31,6 @@ export function TextComponent({ variante, color, style, ...rest }: Props) {
     });
 
     return (
-        <Text style={[ stylles[variante ?? "body3"], { color: color ?? colors.text },style]} {...rest}/>
+        <Text style={[ stylles[variante ?? "body3"], { color: color ?? colors.text2 },style]} {...rest}/>
     );
 }
