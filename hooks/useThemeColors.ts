@@ -7,10 +7,11 @@ export function useThemeColors(){
     const { themeMode } = useAppStore()
     
     // Utiliser le thème système par défaut
-    const systemTheme = useColorScheme() ?? 'dark'
+    const systemTheme = useColorScheme() ?? 'light'
     
     // Si themeMode est défini dans le store, l'utiliser, sinon utiliser le système
-    const currentTheme = themeMode || systemTheme
+    const currentTheme = systemTheme
+    // const currentTheme = themeMode || systemTheme
     
     return color[currentTheme]
 }

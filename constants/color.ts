@@ -56,7 +56,7 @@ export const color = {
     
     // Texte
     text: '#2D2A26',
-    text2: '#6B6660',
+    text2: '#2D2A26',
     tint: tintColorLight,
     icon: '#6B6660',
     tabIconDefault: '#8B7355',

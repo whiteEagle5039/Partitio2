@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Music, User, Play } from 'lucide-react-native';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -8,15 +8,49 @@ import { Course } from '@/stores/appStore';
 interface ChansonsViewProps {
   content: Course[];
   onCoursePress: (course: Course) => void;
+  onBack: () => void;
 }
 
-export const ChansonsView: React.FC<ChansonsViewProps> = ({ content, onCoursePress }) => {
+export const ChansonsView: React.FC<ChansonsViewProps> = ({ 
+  content, 
+  onCoursePress, 
+  onBack 
+}) => {
   const colors = useThemeColors();
 
   const styles = StyleSheet.create({
     container: {
-      paddingHorizontal: 20,
+      flex: 1,
     },
+    scrollContainer: {
+      paddingHorizontal: 20,
+      paddingBottom: 20,
+    },
+    // Stats Container
+    statsContainer: {
+      flexDirection: 'row',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      gap: 12,
+    },
+    statCard: {
+      flex: 1,
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 16,
+      alignItems: 'center',
+      borderColor: colors.border,
+      borderWidth: 1,
+    },
+    statIcon: {
+      marginBottom: 8,
+      width: 50,
+      height: 50,
+      borderRadius: 30,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    // List Items
     listItem: {
       flexDirection: 'row',
       backgroundColor: colors.card,
@@ -65,15 +99,83 @@ export const ChansonsView: React.FC<ChansonsViewProps> = ({ content, onCoursePre
       borderRadius: 2,
       backgroundColor: colors.text2,
     },
+    // Empty State
+    emptyStateCard: {
+      marginHorizontal: 20,
+      padding: 32,
+      borderRadius: 16,
+      borderWidth: 1,
+      alignItems: 'center',
+      backgroundColor: colors.card,
+      borderColor: colors.border,
+    },
+    emptyStateIcon: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 20,
+    },
+    emptyStateTitle: {
+      textAlign: 'center',
+      marginBottom: 8,
+    },
+    emptyStateSubtitle: {
+      textAlign: 'center',
+      marginBottom: 20,
+      lineHeight: 20,
+    },
+    emptyStateButton: {
+      paddingHorizontal: 24,
+      paddingVertical: 12,
+      borderRadius: 24,
+      marginTop: 8,
+      backgroundColor: colors.primary,
+    },
   });
 
-  return (
-    <View style={styles.container}>
+  // Gestionnaire pour l'ouverture d'une chanson
+  const handleCoursePress = (course: Course) => {
+    console.log(`Ouvrir la chanson: ${course.title}`);
+    onCoursePress(course);
+  };
+
+  // Composant pour l'état vide
+  const EmptyStateCard = () => (
+    <View style={styles.emptyStateCard}>
+      <View style={[styles.emptyStateIcon, { backgroundColor: `${colors.primary}15` }]}>
+        <Music size={40} color={colors.primary2} />
+      </View>
+      <TextComponent variante="subtitle2" style={styles.emptyStateTitle}>
+        Aucune chanson disponible
+      </TextComponent>
+      <TextComponent variante="body3" color={colors.text2} style={styles.emptyStateSubtitle}>
+        La collection de chansons ne contient pas encore de contenu. Explorez d'autres catégories ou revenez plus tard.
+      </TextComponent>
+      <TouchableOpacity 
+        style={styles.emptyStateButton}
+        onPress={onBack}
+      >
+        <TextComponent variante="body3" color="#FFFFFF">
+          Retour aux catégories
+        </TextComponent>
+      </TouchableOpacity>
+    </View>
+  );
+
+  // Rendu de la liste des chansons
+  const renderChansons = () => (
+    <ScrollView 
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.scrollContainer}
+    >
       {content.map((course: Course) => (
         <TouchableOpacity
           key={course.id}
           style={styles.listItem}
-          onPress={() => onCoursePress(course)}
+          onPress={() => handleCoursePress(course)}
         >
           <View style={[styles.listThumbnail, { backgroundColor: `${colors.primary}15` }]}>
             <Play size={24} color={colors.primary2} />
@@ -108,14 +210,28 @@ export const ChansonsView: React.FC<ChansonsViewProps> = ({ content, onCoursePre
                         {course.composer}
                       </TextComponent>
                     </View>
-                    <View style={styles.infoSeparator} />
+                    {/* {course.duration && <View style={styles.infoSeparator} />} */}
                   </>
                 )}
+
+                {/* {course.duration && (
+                  <View style={styles.metricItem}>
+                    <TextComponent variante="caption" color={colors.text2}>
+                      {course.duration}
+                    </TextComponent>
+                  </View>
+                )} */}
               </View>
             </View>
           </View>
         </TouchableOpacity>
       ))}
+    </ScrollView>
+  );
+
+  return (
+    <View style={styles.container}>
+      {content.length === 0 ? <EmptyStateCard /> : renderChansons()}
     </View>
   );
 };

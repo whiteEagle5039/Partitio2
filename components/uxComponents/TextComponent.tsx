@@ -169,7 +169,7 @@ export function TextComponentHeading({ variante = "headline", color, style, ...r
         <Text 
             style={[
                 headingStyles[variante],
-                { color: color ?? colors.text },
+                { color: color ?? colors.text2 },
                 style
             ]} 
             {...rest}

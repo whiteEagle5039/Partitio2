@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Folder, Music, Library, BookOpen, Edit3, Users, User} from 'lucide-react-native';
+import { ArrowLeft, Library, Folder } from 'lucide-react-native';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { WrapperComponent } from '@/components/WrapperComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -18,7 +18,14 @@ import { LeconsView } from '@/components/libraryComponents/LeconsView';
 export default function LibraryScreen() {
   const colors = useThemeColors();
   const router = useRouter();
-  const { categories, currentCategory, currentFolder, navigationLevel,setCurrentCategory,setCurrentFolder,} = useAppStore();
+  const { 
+    categories, 
+    currentCategory, 
+    currentFolder, 
+    navigationLevel,
+    setCurrentCategory,
+    setCurrentFolder,
+  } = useAppStore();
 
   const styles = StyleSheet.create({
     container: {
@@ -60,6 +67,30 @@ export default function LibraryScreen() {
       flex: 1,
       paddingTop: 10,
     },
+    // Categories styles
+    statsContainer: {
+      flexDirection: 'row',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      gap: 12,
+    },
+    statCard: {
+      flex: 1,
+      backgroundColor: colors.card,
+      borderRadius: 16,
+      padding: 16,
+      alignItems: 'center',
+      borderColor: colors.border,
+      borderWidth: 1,
+    },
+    statIcon: {
+      marginBottom: 8,
+      width: 50,
+      height: 50,
+      borderRadius: 30,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     listContainer: {
       paddingHorizontal: 20,
     },
@@ -86,29 +117,6 @@ export default function LibraryScreen() {
     },
     listTitle: {
       marginBottom: 4,
-    },
-    statsContainer: {
-      flexDirection: 'row',
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      gap: 12,
-    },
-    statCard: {
-      flex: 1,
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 16,
-      alignItems: 'center',
-      borderColor: colors.border,
-      borderWidth: 1,
-    },
-    statIcon: {
-      marginBottom: 8,
-      width: 50,
-      height: 50,
-      borderRadius: 30,
-      alignItems: 'center',
-      justifyContent: 'center',
     },
     emptyStateCard: {
       marginHorizontal: 20,
@@ -141,6 +149,7 @@ export default function LibraryScreen() {
       paddingVertical: 12,
       borderRadius: 24,
       marginTop: 8,
+      backgroundColor: colors.primary,
     },
   });
 
@@ -148,59 +157,69 @@ export default function LibraryScreen() {
   const getIconComponent = (iconName: string) => {
     const iconMap: { [key: string]: any } = {
       Library: Library,
-      Music: Music,
-      Edit3: Edit3,
-      Users: Users,
-      BookOpen: BookOpen,
+      Music: require('lucide-react-native').Music,
+      Edit3: require('lucide-react-native').Edit3,
+      Users: require('lucide-react-native').Users,
+      BookOpen: require('lucide-react-native').BookOpen,
       Folder: Folder,
     };
     return iconMap[iconName] || Folder;
   };
 
-  // Gestionnaire pour l'ouverture d'un cours
+  // Gestionnaires d'événements simplifiés
   const handleCoursePress = (course: Course) => {
-    console.log(`Ouvrir le cours: ${course.title}`);
-    // Ici vous pouvez naviguer vers l'écran de détail du cours
+    console.log(`Naviguer vers le cours: ${course.title}`);
+    // Navigation vers le détail du cours
     // router.push(`/course/${course.id}`);
   };
 
-  // Gestionnaire pour l'ouverture d'un dossier
   const handleFolderPress = (folder: FolderType) => {
     setCurrentFolder(folder);
   };
 
-  // Composant pour l'état vide
+  // Fonction pour gérer le retour
+  const handleBack = () => {
+    if (navigationLevel === 'content' && currentFolder) {
+      setCurrentFolder(null);
+    } else if (navigationLevel === 'content' && currentCategory?.hasDirectcontent) {
+      setCurrentCategory(null);
+    } else if (navigationLevel === 'folders') {
+      setCurrentCategory(null);
+    } else {
+      router.back();
+    }
+  };
+
+  // Composant pour l'état vide des catégories
   const EmptyStateCard = ({ 
     icon: IconComponent, 
     title, 
     subtitle, 
     actionText, 
     onActionPress 
-  }: any) => {
-    return (
-      <View style={styles.emptyStateCard}>
-        <View style={[styles.emptyStateIcon, { backgroundColor: `${colors.primary}15` }]}>
-          <IconComponent size={40} color={colors.primary2} />
-        </View>
-        <TextComponent variante="subtitle2" style={styles.emptyStateTitle}>
-          {title}
-        </TextComponent>
-        <TextComponent variante="body3" color={colors.text2} style={styles.emptyStateSubtitle}>
-          {subtitle}
-        </TextComponent>
-        {actionText && onActionPress && (
-          <TouchableOpacity 
-            style={[styles.emptyStateButton, { backgroundColor: colors.primary }]}
-            onPress={onActionPress}
-          >
-            <TextComponent variante="body3" color="#FFFFFF">
-              {actionText}
-            </TextComponent>
-          </TouchableOpacity>
-        )}
+  }: any) => (
+    <View style={styles.emptyStateCard}>
+      <View style={[styles.emptyStateIcon, { backgroundColor: `${colors.primary}15` }]}>
+        <IconComponent size={40} color={colors.primary2} />
       </View>
-    );
-  };
+      <TextComponent variante="subtitle2" style={styles.emptyStateTitle}>
+        {title}
+      </TextComponent>
+      <TextComponent variante="body3" color={colors.text2} style={styles.emptyStateSubtitle}>
+        {subtitle}
+      </TextComponent>
+      {actionText && onActionPress && (
+        <TouchableOpacity 
+          style={styles.emptyStateButton}
+          onPress={onActionPress}
+        >
+          <TextComponent variante="body3" color="#FFFFFF">
+            {actionText}
+          </TextComponent>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
 
   // Composant Breadcrumb
   const Breadcrumb = () => {
@@ -260,105 +279,12 @@ export default function LibraryScreen() {
       );
     }
 
+    // Statistiques pour les catégories
+    const totalCategories = filteredCategories.length;
+    const totalFolders = categories.reduce((sum, cat) => sum + cat.folderCount, 0);
+
     return (
-      <View style={styles.listContainer}>
-        {filteredCategories.map((category: Category) => {
-          const IconComponent = getIconComponent(category.icon);
-          
-          return (
-            <TouchableOpacity
-              key={category.id}
-              style={styles.listItem}
-              onPress={() => setCurrentCategory(category)}
-            >
-              <View style={[styles.listThumbnail, { backgroundColor: `${category.color}15` }]}>
-                <IconComponent size={24} color={category.color} />
-              </View>
-              <View style={styles.listContent}>
-                <TextComponent variante="subtitle2" style={styles.listTitle}>
-                  {category.name}
-                </TextComponent>
-                <TextComponent variante="body4" color={colors.text2}>
-                  {category.description}
-                </TextComponent>
-              </View>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-    );
-  };
-
-  // Rendu du contenu selon la catégorie
-  const renderContent = () => {
-    if (!currentCategory) return null;
-
-    // Vérifier si c'est une catégorie avec contenu direct
-    if (currentCategory.hasDirectcontent && !currentFolder) {
-      const content = currentCategory.content || [];
-      
-      if (content.length === 0) {
-        let emptyTitle = "Aucun contenu";
-        let emptySubtitle = `La catégorie "${currentCategory.name}" ne contient pas encore de contenu.`;
-        
-        return (
-          <EmptyStateCard
-            icon={Music}
-            title={emptyTitle}
-            subtitle={emptySubtitle}
-            actionText="Retour aux catégories"
-            onActionPress={() => setCurrentCategory(null)}
-          />
-        );
-      }
-
-        // Utiliser le bon composant selon la catégorie
-      switch (currentCategory.id) {
-        case '2': // Cantiques
-          return <CantiquesView content={content} onCoursePress={handleCoursePress} />;
-        case '3': // Compositions
-          return <CompositionsView content={content} onCoursePress={handleCoursePress} />;
-        case '4': // Chansons
-          return <ChansonsView content={content} onCoursePress={handleCoursePress} />;
-        default:
-          return <CantiquesView content={content} onCoursePress={handleCoursePress} />;
-      }
-    }
-
-    // Si c'est la catégorie Leçons (avec logique de folders)
-    if (currentCategory.id === '5') {
-      if (currentCategory.folders.length === 0) {
-        return (
-          <EmptyStateCard
-            icon={Folder}
-            title="Aucun dossier"
-            subtitle={`La catégorie "${currentCategory.name}" ne contient pas encore de dossiers.`}
-            actionText="Explorer d'autres catégories"
-            onActionPress={() => setCurrentCategory(null)}
-          />
-        );
-      }
-
-      return (
-        <LeconsView 
-          category={currentCategory}
-          currentFolder={currentFolder}
-          onFolderPress={handleFolderPress}
-          onCoursePress={handleCoursePress}
-        />
-      );
-    }
-
-    return null;
-  };
-
-  // Statistiques selon le niveau de navigation
-  const renderStats = () => {
-    if (navigationLevel === 'categories') {
-      const totalCategories = categories.filter(cat => cat.id !== '1').length;
-      const totalFolders = categories.reduce((sum, cat) => sum + cat.folderCount, 0);
-
-      return (
+      <>
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
             <View style={[styles.statIcon, { backgroundColor: `${colors.primary}15` }]}>
@@ -375,68 +301,66 @@ export default function LibraryScreen() {
             <TextComponent variante="body2" color={colors.text2}>Dossiers</TextComponent>
           </View>
         </View>
-      );
-    } else if (navigationLevel === 'folders' && currentCategory) {
-      return (
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: `${currentCategory.color}15` }]}>
-              <Folder size={20} color={currentCategory.color} />
-            </View>
-            <TextComponent variante="subtitle1">{currentCategory.folderCount}</TextComponent>
-            <TextComponent variante="body4" color={colors.text2}>Dossiers</TextComponent>
-          </View>
-        </View>
-      );
-    } else if (navigationLevel === 'content') {
-      let contentCount = 0;
-      let authorName = "";
 
-      if (currentCategory?.hasDirectcontent && !currentFolder) {
-        // Cas des chansons, cantiques, compositions (cours directs)
-        contentCount = currentCategory.content?.length || 0;
-        authorName = currentCategory.id === '3' ? "Vous" : "Divers arrangements";
-      } else if (currentFolder) {
-        // Cas des cours dans un dossier (leçons)
-        contentCount = currentFolder.courseCount;
-        authorName = currentFolder.author || "Auteur";
-      }
-
-      return (
-        <View style={styles.statsContainer}>
-          <View style={[styles.statCard, { flex: 2 }]}>
-            <View style={[styles.statIcon, { backgroundColor: `${colors.primary}15` }]}>
-              <User size={20} color={colors.primary} />
-            </View>
-            <TextComponent variante="body3" color={colors.text2}>Auteur</TextComponent>
-            <TextComponent variante="subtitle3">{authorName}</TextComponent>
-          </View>
-          
-          <View style={[styles.statCard, { flex: 1 }]}>
-            <View style={[styles.statIcon, { backgroundColor: `${colors.primary}15` }]}>
-              <Music size={20} color={colors.primary} />
-            </View>
-            <TextComponent variante="subtitle1">{contentCount}</TextComponent>
-            <TextComponent variante="body4" color={colors.text2}>
-              {currentCategory?.id === '5' ? 'Cours' : 'Éléments'}
-            </TextComponent>
-          </View>
+        <View style={styles.listContainer}>
+          {filteredCategories.map((category: Category) => {
+            const IconComponent = getIconComponent(category.icon);
+            
+            return (
+              <TouchableOpacity
+                key={category.id}
+                style={styles.listItem}
+                onPress={() => setCurrentCategory(category)}
+              >
+                <View style={[styles.listThumbnail, { backgroundColor: `${category.color}15` }]}>
+                  <IconComponent size={24} color={category.color} />
+                </View>
+                <View style={styles.listContent}>
+                  <TextComponent variante="subtitle2" style={styles.listTitle}>
+                    {category.name}
+                  </TextComponent>
+                  <TextComponent variante="body4" color={colors.text2}>
+                    {category.description}
+                  </TextComponent>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
         </View>
-      );
-    }
-    return null;
+      </>
+    );
   };
 
-  // Fonction pour gérer le retour
-  const handleBack = () => {
-    if (navigationLevel === 'content' && currentFolder) {
-      setCurrentFolder(null);
-    } else if (navigationLevel === 'content' && currentCategory?.hasDirectcontent) {
-      setCurrentCategory(null);
-    } else if (navigationLevel === 'folders') {
-      setCurrentCategory(null);
-    } else {
-      router.back();
+  // Rendu du contenu selon la catégorie
+  const renderContent = () => {
+    if (!currentCategory) return null;
+
+    const content = currentCategory.content || [];
+    const commonProps = {
+      onCoursePress: handleCoursePress,
+      onBack: () => setCurrentCategory(null),
+    };
+
+    // Utiliser le bon composant selon la catégorie
+    switch (currentCategory.id) {
+      case '2': // Cantiques
+        return <CantiquesView content={content} {...commonProps} />;
+      case '3': // Compositions
+        return <CompositionsView content={content} {...commonProps} />;
+      case '4': // Chansons
+        return <ChansonsView content={content} {...commonProps} />;
+      case '5': // Leçons
+        return (
+          <LeconsView 
+            category={currentCategory}
+            currentFolder={currentFolder}
+            onFolderPress={handleFolderPress}
+            onCoursePress={handleCoursePress}
+            onBack={() => setCurrentCategory(null)}
+          />
+        );
+      default:
+        return <CantiquesView content={content} {...commonProps} />;
     }
   };
 
@@ -475,9 +399,6 @@ export default function LibraryScreen() {
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           {/* Breadcrumb */}
           <Breadcrumb />
-
-          {/* Statistiques */}
-          {renderStats()}
 
           {/* Contenu */}
           <View style={styles.content}>
