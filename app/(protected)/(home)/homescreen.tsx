@@ -372,15 +372,26 @@ export default function HomeScreen() {
                 onPress={action.onPress}
               >
                 <action.icon 
-                  size={32} 
+                  size={24} 
                   color={action.color} 
                   style={styles.quickActionIcon} 
                 />
-                <TextComponent variante="subtitle1" style={{ textAlign: 'center' }}>
+                <TextComponent variante="subtitle2" style={{ textAlign: 'center' }}>
                   {action.label}
                 </TextComponent>
               </TouchableOpacity>
             ))}
+          </View>
+
+           {/* Partitions récentes */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <TextComponent variante="subtitle1">
+                Récents
+              </TextComponent>
+            </View>
+            
+            {renderRecentSection()}
           </View>
 
           {/* Partitions populaires */}
@@ -404,16 +415,7 @@ export default function HomeScreen() {
             {renderTrendingSection()}
           </View>
 
-          {/* Partitions récentes */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <TextComponent variante="subtitle1">
-                Récemment ajoutées
-              </TextComponent>
-            </View>
-            
-            {renderRecentSection()}
-          </View>
+         
         </ScrollView>
       </SafeAreaView>
     </WrapperComponent>

@@ -385,8 +385,8 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                     onStaffFocus?.(voice.key as 'S' | 'A' | 'T' | 'B', section.id);
 
                   }}
-                  placeholder={`${voice.name} : do re mi fa | sol`}
-                  placeholderTextColor={colors.text2}
+                  placeholder={`${voice.name}`}
+                  placeholderTextColor={colors.card2}
                   multiline={false}
                   scrollEnabled={false}
 
