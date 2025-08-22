@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Music } from 'lucide-react-native';
-import { TextComponent } from './TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { Music } from 'lucide-react-native';
+import React from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { TextComponent } from './uxComponents/TextComponent';
 
 export function Header() {
   const colors = useThemeColors();

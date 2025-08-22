@@ -1,26 +1,13 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  Menu, 
-  TableConfig,
-  Search, 
-  Library, 
-  PenTool, 
-  Music,
-  WifiOff,
-  CloudOff,
-  Heart,
-  TrendingUp,
-  Clock
-} from 'lucide-react-native';
-import { TextComponent, TextComponentHeading } from '@/components/TextComponent';
 import { SheetMusicCard } from '@/components/SheetMusicCard';
+import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { WrapperComponent } from '@/components/WrapperComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
+import {Clock,Heart,Library,Menu,PenTool,Search,TrendingUp,WifiOff} from 'lucide-react-native';
+import React from 'react';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const colors = useThemeColors();
@@ -89,6 +76,8 @@ export default function HomeScreen() {
       backgroundColor: colors.card,
       borderRadius: 16,
       padding: 15,
+      // paddingTop: 10,
+      // paddingBotto: 10,
       gap: 12,
       flexDirection: 'row',
       alignItems: 'center',

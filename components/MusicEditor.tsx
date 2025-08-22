@@ -1,8 +1,8 @@
 // components/MusicEditor.tsx
-import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, TextInput, Dimensions } from 'react-native';
-import { TextComponent } from '@/components/TextComponent';
+import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import React, { useRef } from 'react';
+import { Dimensions, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Section {

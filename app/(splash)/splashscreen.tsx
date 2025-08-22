@@ -1,12 +1,12 @@
 // (splash)/splashscreen.tsx
 
-import TextComponent from "@/components/TextComponent";
-import { useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
-import { StyleSheet, View, Animated, Easing } from "react-native";
+import SplashScreenIcon from "@/components/uxComponents/SplashScreenIcon";
+import TextComponent from "@/components/uxComponents/TextComponent";
 import { useThemeColors } from "@/hooks/useThemeColors";
 import { useAppStore } from "@/stores/appStore";
-import SplashScreenIcon from "@/components/SplashScreenIcon";
+import { useRouter } from "expo-router";
+import { useEffect, useRef } from "react";
+import { Animated, Easing, StyleSheet, View } from "react-native";
 
 export default function SplashScreen() {
   const router = useRouter();

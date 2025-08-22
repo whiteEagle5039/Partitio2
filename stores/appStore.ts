@@ -56,7 +56,7 @@ export interface Folder {
   description: string;
   thumbnail: string;
   courseCount: number;
-  courses: Course[];
+  content: Course[];
   categoryId: string;
   createdAt: Date;
   author?: string;
@@ -69,10 +69,10 @@ export interface Category {
   icon: string;
   color: string;
   folderCount: number;
-  totalCourses: number;
+  totalcontent: number;
   folders: Folder[];
-  hasDirectCourses?: boolean;
-  courses?: Course[];
+  hasDirectcontent?: boolean;
+  content?: Course[];
 }
 
 // Store principal avec ajout du thème
@@ -109,8 +109,8 @@ interface AppState {
   setCurrentFolder: (folder: Folder | null) => void;
   
   // Navigation state
-  navigationLevel: 'categories' | 'folders' | 'courses';
-  setNavigationLevel: (level: 'categories' | 'folders' | 'courses') => void;
+  navigationLevel: 'categories' | 'folders' | 'content';
+  setNavigationLevel: (level: 'categories' | 'folders' | 'content') => void;
   
   // Partitions
   sheetMusic: SheetMusic[];
@@ -156,7 +156,7 @@ export const useAppStore = create<AppState>()(
         storageLimit: 100,
       },
       setUser: (user) => set({ user, isAuthenticated: !!user }),
-      isAuthenticated: false,
+      isAuthenticated: true,
       setAuthenticated: (authenticated) => set({ isAuthenticated: authenticated }),
       
       // Theme Management - Défaut sur dark
@@ -210,7 +210,7 @@ export const useAppStore = create<AppState>()(
           icon: 'Library',
           color: '#8B5CF6',
           folderCount: 0,
-          totalCourses: 0,
+          totalcontent: 0,
           folders: []
         },
         {
@@ -219,74 +219,38 @@ export const useAppStore = create<AppState>()(
           description: 'Partitions de cantiques et hymnes',
           icon: 'Music',
           color: '#10B981',
-          folderCount: 2,
-          totalCourses: 8,
-          folders: [
+          folderCount: 0,
+          hasDirectcontent: true,
+          totalcontent: 8,
+          folders: [],
+          content: [
             {
-              id: 'f1',
-              name: 'Cantiques Classiques',
-              description: 'Collection des cantiques traditionnels',
+              id: 'c1',
+              title: 'Amazing Grace',
+              content: 'Contenu de la partition Amazing Grace...',
+              description: 'Partition complète avec variations',
               thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
-              courseCount: 5,
-              categoryId: '2',
+              isDownloaded: true,
+              dateAdded: new Date(),
               createdAt: new Date(),
-              author: 'John Newton',
-              courses: [
-                {
-                  id: 'c1',
-                  title: 'Amazing Grace',
-                  content: 'Contenu de la partition Amazing Grace...',
-                  description: 'Partition complète avec variations',
-                  thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
-                  isDownloaded: true,
-                  dateAdded: new Date(),
-                  createdAt: new Date(),
-                  lastModified: new Date(),
-                  isPublic: true,
-                  fileSize: 2.4,
-                  composer: 'John Newton'
-                },
-                {
-                  id: 'c2',
-                  title: 'How Great Thou Art',
-                  content: 'Contenu de la partition How Great Thou Art...',
-                  description: 'Arrangement pour piano solo',
-                  thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
-                  isDownloaded: false,
-                  dateAdded: new Date(),
-                  createdAt: new Date(),
-                  lastModified: new Date(),
-                  isPublic: true,
-                  fileSize: 1.8,
-                  composer: 'Carl Boberg'
-                }
-              ]
+              lastModified: new Date(),
+              isPublic: true,
+              fileSize: 2.4,
+              composer: 'John Newton'
             },
             {
-              id: 'f2',
-              name: 'Cantiques Modernes',
-              description: 'Cantiques contemporains et louange',
-              thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
-              courseCount: 3,
-              categoryId: '2',
+              id: 'c2',
+              title: 'How Great Thou Art',
+              content: 'Contenu de la partition How Great Thou Art...',
+              description: 'Arrangement pour piano solo',
+              thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
+              isDownloaded: false,
+              dateAdded: new Date(),
               createdAt: new Date(),
-              author: 'Matt Redman',
-              courses: [
-                {
-                  id: 'c3',
-                  title: '10,000 Reasons',
-                  content: 'Contenu de la partition 10,000 Reasons...',
-                  description: 'Partition moderne avec accords',
-                  thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
-                  isDownloaded: true,
-                  dateAdded: new Date(),
-                  createdAt: new Date(),
-                  lastModified: new Date(),
-                  isPublic: true,
-                  fileSize: 3.1,
-                  composer: 'Matt Redman'
-                }
-              ]
+              lastModified: new Date(),
+              isPublic: true,
+              fileSize: 1.8,
+              composer: 'Carl Boberg'
             }
           ]
         },
@@ -296,33 +260,23 @@ export const useAppStore = create<AppState>()(
           description: 'Vos créations personnelles',
           icon: 'Edit3',
           color: '#F59E0B',
-          folderCount: 1,
-          totalCourses: 3,
-          folders: [
+          hasDirectcontent: true,
+          folderCount: 0,
+          totalcontent: 3,
+          folders: [],
+          content: [
             {
-              id: 'f3',
-              name: 'Compositions 2024',
-              description: 'Mes créations de cette année',
-              thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
-              courseCount: 3,
-              categoryId: '3',
+              id: 'c4',
+              title: 'Ma première composition',
+              content: 'Contenu de ma première composition...',
+              description: 'Mélodie originale en Do majeur',
+              thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
+              isDownloaded: true,
+              dateAdded: new Date(),
               createdAt: new Date(),
-              author: 'Owen',
-              courses: [
-                {
-                  id: 'c4',
-                  title: 'Ma première composition',
-                  content: 'Contenu de ma première composition...',
-                  description: 'Mélodie originale en Do majeur',
-                  thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
-                  isDownloaded: true,
-                  dateAdded: new Date(),
-                  createdAt: new Date(),
-                  lastModified: new Date(),
-                  isPublic: false,
-                  fileSize: 1.2
-                }
-              ]
+              lastModified: new Date(),
+              isPublic: false,
+              fileSize: 1.2
             }
           ]
         },
@@ -333,10 +287,10 @@ export const useAppStore = create<AppState>()(
           icon: 'Users',
           color: '#EF4444',
           folderCount: 0,
-          totalCourses: 4,
-          hasDirectCourses: true,
+          totalcontent: 4,
+          hasDirectcontent: true,
           folders: [],
-          courses: [
+          content: [
             {
               id: 'ch1',
               title: 'Hallelujah',
@@ -402,7 +356,7 @@ export const useAppStore = create<AppState>()(
           icon: 'BookOpen',
           color: '#3B82F6',
           folderCount: 3,
-          totalCourses: 15,
+          totalcontent: 15,
           folders: [
             {
               id: 'f5',
@@ -413,7 +367,7 @@ export const useAppStore = create<AppState>()(
               categoryId: '5',
               createdAt: new Date(),
               author: 'Prof. Marie Dubois',
-              courses: [
+              content: [
                 {
                   id: 'c5',
                   title: 'Introduction au Piano',
@@ -464,7 +418,7 @@ export const useAppStore = create<AppState>()(
               categoryId: '5',
               createdAt: new Date(),
               author: 'Jean-Paul Martin',
-              courses: [
+              content: [
                 {
                   id: 'c8',
                   title: 'Accords Ouverts',
@@ -489,7 +443,7 @@ export const useAppStore = create<AppState>()(
               categoryId: '5',
               createdAt: new Date(),
               author: 'Pierre Trumpet',
-              courses: [
+              content: [
                 {
                   id: 'c9',
                   title: 'Embouchure et Respiration',
@@ -516,12 +470,12 @@ export const useAppStore = create<AppState>()(
       setCurrentCategory: (category) => set({ 
         currentCategory: category,
         currentFolder: null,
-        navigationLevel: category ? (category.hasDirectCourses ? 'courses' : 'folders') : 'categories'
+        navigationLevel: category ? (category.hasDirectcontent ? 'content' : 'folders') : 'categories'
       }),
       
       setCurrentFolder: (folder) => set({ 
         currentFolder: folder,
-        navigationLevel: folder ? 'courses' : 'folders'
+        navigationLevel: folder ? 'content' : 'folders'
       }),
       
       setNavigationLevel: (level) => set({ navigationLevel: level }),
@@ -536,7 +490,7 @@ export const useAppStore = create<AppState>()(
                 folder.id === folderId 
                   ? {
                       ...folder,
-                      courses: folder.courses.map(course =>
+                      content: folder.content.map(course =>
                         course.id === courseId 
                           ? { ...course, isDownloaded: true }
                           : course
@@ -550,7 +504,7 @@ export const useAppStore = create<AppState>()(
           return {
             categories: state.categories.map(cat => ({
               ...cat,
-              courses: cat.courses?.map(course =>
+              content: cat.content?.map(course =>
                 course.id === courseId 
                   ? { ...course, isDownloaded: true }
                   : course

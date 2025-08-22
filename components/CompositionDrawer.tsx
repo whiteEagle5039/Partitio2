@@ -1,12 +1,20 @@
 // components/CompositionDrawer.tsx
-import React, { useState, useRef, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, Animated, Dimensions } from 'react-native';
-import { TextComponent } from '@/components/TextComponent';
+import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { 
-  Plus, Trash2, Edit3, ChevronUp, ChevronDown,
-  X, Copy, Music, FileText, Settings2
+import {
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  Edit3,
+  FileText,
+  Music,
+  Plus,
+  Settings2,
+  Trash2,
+  X
 } from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, Animated, Dimensions, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 
 interface Section {
   id: string;

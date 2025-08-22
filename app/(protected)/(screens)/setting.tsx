@@ -1,23 +1,23 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  ArrowLeft, 
-  Moon, 
-  Bell, 
-  Download, 
-  Shield,
-  HelpCircle,
-  Info,
-  ChevronRight,
-  Trash2,
-  RefreshCw,
-  LucideIcon
-} from 'lucide-react-native';
-import { TextComponent } from '@/components/TextComponent';
+import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
+import {
+  ArrowLeft,
+  Bell,
+  ChevronRight,
+  Download,
+  HelpCircle,
+  Info,
+  LucideIcon,
+  Moon,
+  RefreshCw,
+  Shield,
+  Trash2
+} from 'lucide-react-native';
+import React from 'react';
+import { ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 /** Types discriminés pour les paramètres */
 type SwitchItem = {

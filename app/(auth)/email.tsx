@@ -1,20 +1,18 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  StyleSheet, 
-  TouchableOpacity, 
-  TextInput, 
-  KeyboardAvoidingView, 
-  Platform,
-  StatusBar,
-  Animated,
-  Easing
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft } from 'lucide-react-native';
-import { TextComponent } from '@/components/TextComponent';
+import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import {
+  Animated,
+  Easing,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Composant pour l'icône Partitio (remplace l'étoile Claude)
 const PartitioIcon = ({ size = 32, color }: { size?: number; color: string }) => (

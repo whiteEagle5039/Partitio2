@@ -1,21 +1,23 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  ArrowLeft, 
-  Edit, 
-  Music, 
-  Download, 
-  Share2,
+import {
+  ArrowLeft,
   Award,
   Calendar,
-  Mail,
+  Download,
+  Edit,
   File as FileIcon // ✅ Renommé pour éviter le conflit avec File natif
+  ,
+
+  Mail,
+  Music,
+  Share2
 } from 'lucide-react-native';
+import React from 'react';
+import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LucideIcon } from 'lucide-react-native'; // ✅ Import du type
 
-import { TextComponent } from '@/components/TextComponent';
+import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';

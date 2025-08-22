@@ -1,20 +1,19 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { 
-  View, 
-  StyleSheet, 
-  TouchableOpacity, 
-  StatusBar,
-  Animated,
-  Easing,
-  Vibration,
-  TextInput
+import { TextComponent } from '@/components/uxComponents/TextComponent';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { useAppStore } from '@/stores/appStore';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { ArrowLeft, Mail } from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+    Animated,
+    Easing,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    Vibration,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Mail, Check, X } from 'lucide-react-native';
-import { TextComponent } from '@/components/TextComponent';
-import { useThemeColors } from '@/hooks/useThemeColors';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { useAppStore } from '@/stores/appStore';
 
 // Composant pour l'icône Partitio
 const PartitioIcon = ({ size = 32, color }: { size?: number; color: string }) => (

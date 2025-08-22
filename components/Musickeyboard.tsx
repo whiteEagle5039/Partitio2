@@ -1,21 +1,14 @@
 // components/MusicKeyboard.tsx
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { TextComponent } from '@/components/TextComponent';
+import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { 
-  Music, 
-  BarChart3, 
-  Pause, 
+import {
   ArrowLeft,
-  ArrowRight,
+  BarChart3,
   Trash2,
-  Hash,
-  Square,
-  Circle,
-  Triangle,
   X
 } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface MusicKeyboardProps {
   activeVoice: 'S' | 'A' | 'T' | 'B';

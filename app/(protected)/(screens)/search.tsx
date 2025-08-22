@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, ScrollView, TextInput, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Search, Filter, ArrowLeft, Music, Play, User, FileText, WifiOff, CloudOff } from 'lucide-react-native';
-import { TextComponent } from '@/components/TextComponent';
+import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { Course, useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
+import { ArrowLeft, FileText, Filter, Play, Search, User, WifiOff } from 'lucide-react-native';
+import React, { useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Interface pour les résultats de recherche enrichis
 interface SearchResult extends Course {
@@ -289,13 +289,13 @@ export default function SearchScreen() {
       cat.folders.forEach(folder => {
         if (folder.author) authors.add(folder.author);
         // Auteurs des cours dans les dossiers
-        folder.courses.forEach(course => {
+        folder.content.forEach(course => {
           if (course.author) authors.add(course.author);
           if (course.composer) authors.add(course.composer);
         });
       });
       // Auteurs des cours directs
-      cat.courses?.forEach(course => {
+      cat.content?.forEach(course => {
         if (course.author) authors.add(course.author);
         if (course.composer) authors.add(course.composer);
       });
@@ -311,8 +311,8 @@ export default function SearchScreen() {
       if (category.id === '1') return; // Exclure "Tous"
       
       // Cours directs dans la catégorie
-      if (category.courses) {
-        category.courses.forEach(course => {
+      if (category.content) {
+        category.content.forEach(course => {
           results.push({
             ...course,
             categoryName: category.name,
@@ -324,7 +324,7 @@ export default function SearchScreen() {
       
       // Cours dans les dossiers
       category.folders.forEach(folder => {
-        folder.courses.forEach(course => {
+        folder.content.forEach(course => {
           results.push({
             ...course,
             categoryName: category.name,

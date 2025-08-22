@@ -1,19 +1,19 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView, Animated, Dimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  User, 
-  Settings, 
-  HardDrive, 
-  Library, 
-  PenTool,
-  Search,
-  X
-} from 'lucide-react-native';
-import { TextComponent } from './TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
+import {
+  HardDrive,
+  Library,
+  PenTool,
+  Search,
+  Settings,
+  User,
+  X
+} from 'lucide-react-native';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Dimensions, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { TextComponent } from './uxComponents/TextComponent';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const DRAWER_WIDTH = 300;
@@ -134,10 +134,10 @@ export function DrawerMenu() {
             <X size={32} color={colors.icon} />
           </TouchableOpacity>
           <View style={styles.userInfo} >
-            <TextComponent variante="body0" color={colors.blueSingle}>
+            <TextComponent variante="body1" color={colors.blueSingle}>
               {user?.name || 'Utilisateur'}
             </TextComponent>
-            <TextComponent variante="body0">'s Work</TextComponent>
+            <TextComponent variante="body1">'s Work</TextComponent>
             {/* <TextComponent variante="caption" color={colors.text2}>
               {user?.email || 'user@partitio.com'}
             </TextComponent> */}
@@ -152,7 +152,7 @@ export function DrawerMenu() {
               onPress={() => handleMenuItemPress(item.route)}
             >
               <item.icon size={32} color={colors.primary} style={styles.menuIcon} />
-              <TextComponent variante="subtitle1">
+              <TextComponent variante="subtitle2">
                 {item.label}
               </TextComponent>
             </TouchableOpacity>

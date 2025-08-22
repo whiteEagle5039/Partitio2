@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert, BackHandler, Animated } from 'react-native';
-import { TextComponent } from '@/components/TextComponent';
+import { CompositionDrawer } from '@/components/CompositionDrawer';
+import { MusicEditor } from '@/components/MusicEditor';
+import { MusicKeyboard } from '@/components/Musickeyboard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
-import { MusicEditor } from '@/components/MusicEditor';
-import { MusicKeyboard } from '@/components/Musickeyboard';
-import { CompositionDrawer } from '@/components/CompositionDrawer';
-import { Settings, Settings2 } from 'lucide-react-native';
+import { Settings2 } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { Animated, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 
 interface Section {

@@ -130,12 +130,12 @@ export function TextComponent({ variante = "body3", color, style, ...rest }: Pro
     // Chargement des polices personnalisées
     const [fontsLoaded] = useFonts({
         // Si vous avez les vraies polices Styrene et Tiempos
-        'Styrene-Regular': require('../assets/fonts/StyreneB-Regular-Trial-BF63f6cbe9db1d5.otf'),
-        'Styrene-Medium': require('../assets/fonts/StyreneB-Medium-Trial-BF63f6cc85760c2.otf'),
-        'Styrene-Bold': require('../assets/fonts/StyreneB-Bold-Trial-BF63f6cbe9f13bb.otf'),
-        'Tiempos-Regular': require('../assets/fonts/TestTiemposText-Regular-BF66457a50cd521.otf'),
-        'Tiempos-Medium': require('../assets/fonts/TestTiemposText-Medium-BF66457a508489a.otf'),
-        'Tiempos-Bold': require('../assets/fonts/TestTiemposText-Bold-BF66457a4f03c40.otf'),
+        'Styrene-Regular': require('../../assets/fonts/StyreneB-Regular-Trial-BF63f6cbe9db1d5.otf'),
+        'Styrene-Medium': require('../../assets/fonts/StyreneB-Medium-Trial-BF63f6cc85760c2.otf'),
+        'Styrene-Bold': require('../../assets/fonts/StyreneB-Bold-Trial-BF63f6cbe9f13bb.otf'),
+        'Tiempos-Regular': require('../../assets/fonts/TestTiemposText-Regular-BF66457a50cd521.otf'),
+        'Tiempos-Medium': require('../../assets/fonts/TestTiemposText-Medium-BF66457a508489a.otf'),
+        'Tiempos-Bold': require('../../assets/fonts/TestTiemposText-Bold-BF66457a4f03c40.otf'),
     });
 
     // Utilise les styles avec polices personnalisées si chargées, sinon fallback
@@ -158,9 +158,9 @@ export function TextComponentHeading({ variante = "headline", color, style, ...r
     const colors = useThemeColors();
     
     const [fontsLoaded] = useFonts({
-        'Styrene-Regular': require('../assets/fonts/StyreneB-Regular-Trial-BF63f6cbe9db1d5.otf'),
-        'Styrene-Medium': require('../assets/fonts/StyreneB-Medium-Trial-BF63f6cc85760c2.otf'),
-        'Styrene-Bold': require('../assets/fonts/StyreneB-BoldItalic-Trial-BF63f6cbe6863e6.otf'),
+        'Styrene-Regular': require('../../assets/fonts/StyreneB-Regular-Trial-BF63f6cbe9db1d5.otf'),
+        'Styrene-Medium': require('../../assets/fonts/StyreneB-Medium-Trial-BF63f6cc85760c2.otf'),
+        'Styrene-Bold': require('../../assets/fonts/StyreneB-BoldItalic-Trial-BF63f6cbe6863e6.otf'),
     });
 
     const headingStyles = fontsLoaded ? styles : fallbackStyles;
@@ -169,7 +169,7 @@ export function TextComponentHeading({ variante = "headline", color, style, ...r
         <Text 
             style={[
                 headingStyles[variante],
-                { color: color ?? colors.text1 },
+                { color: color ?? colors.text },
                 style
             ]} 
             {...rest}

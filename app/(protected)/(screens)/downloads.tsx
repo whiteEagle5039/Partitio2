@@ -1,14 +1,11 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Download, Trash2, FolderOpen, HardDrive } from 'lucide-react-native';
-import { TextComponent } from '@/components/TextComponent';
+import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { useAppStore } from '@/stores/appStore';
+import { SheetMusic, useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
-import { SheetMusic
-
- } from '@/stores/appStore';
+import { ArrowLeft, Download, HardDrive, Trash2 } from 'lucide-react-native';
+import React from 'react';
+import { Alert, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 export default function DownloadsScreen() {
   const colors = useThemeColors();
   const router = useRouter();

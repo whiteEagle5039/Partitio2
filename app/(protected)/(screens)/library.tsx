@@ -1,35 +1,24 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { 
-  ArrowLeft, 
-  Folder, 
-  Music, 
-  Library, 
-  BookOpen, 
-  Edit3, 
-  Users, 
-  Play,
-  User
-} from 'lucide-react-native';
-import { TextComponent } from '@/components/TextComponent';
+import { ArrowLeft, Folder, Music, Library, BookOpen, Edit3, Users, User} from 'lucide-react-native';
+import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { WrapperComponent } from '@/components/WrapperComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
 import { Category, Folder as FolderType, Course } from '@/stores/appStore';
 
+// Imports des composants spécialisés
+import { CantiquesView } from '@/components/libraryComponents/CantiquesView';
+import { ChansonsView } from '@/components/libraryComponents/ChansonsView';
+import { CompositionsView } from '@/components/libraryComponents/CompositionsView';
+import { LeconsView } from '@/components/libraryComponents/LeconsView';
+
 export default function LibraryScreen() {
   const colors = useThemeColors();
   const router = useRouter();
-  const { 
-    categories, 
-    currentCategory, 
-    currentFolder, 
-    navigationLevel,
-    setCurrentCategory,
-    setCurrentFolder,
-  } = useAppStore();
+  const { categories, currentCategory, currentFolder, navigationLevel,setCurrentCategory,setCurrentFolder,} = useAppStore();
 
   const styles = StyleSheet.create({
     container: {
@@ -98,48 +87,6 @@ export default function LibraryScreen() {
     listTitle: {
       marginBottom: 4,
     },
-    listMetrics: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginTop: 8,
-      gap: 12,
-    },
-    metricItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    courseStatus: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      marginTop: 8,
-    },
-    statusBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 12,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    difficultyBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 12,
-    },
-    courseActions: {
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: 8,
-    },
-    actionButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
     statsContainer: {
       flexDirection: 'row',
       paddingHorizontal: 20,
@@ -195,23 +142,6 @@ export default function LibraryScreen() {
       borderRadius: 24,
       marginTop: 8,
     },
-    // Nouveau style pour les détails des packages
-    packageDetails: {
-      marginTop: 4,
-    },
-    packageInfo: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      alignItems: 'center',
-      gap: 8,
-      marginTop: 8,
-    },
-    infoSeparator: {
-      width: 4,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: colors.text2,
-    },
   });
 
   // Fonction pour obtenir l'icône selon le type
@@ -225,6 +155,18 @@ export default function LibraryScreen() {
       Folder: Folder,
     };
     return iconMap[iconName] || Folder;
+  };
+
+  // Gestionnaire pour l'ouverture d'un cours
+  const handleCoursePress = (course: Course) => {
+    console.log(`Ouvrir le cours: ${course.title}`);
+    // Ici vous pouvez naviguer vers l'écran de détail du cours
+    // router.push(`/course/${course.id}`);
+  };
+
+  // Gestionnaire pour l'ouverture d'un dossier
+  const handleFolderPress = (folder: FolderType) => {
+    setCurrentFolder(folder);
   };
 
   // Composant pour l'état vide
@@ -304,7 +246,7 @@ export default function LibraryScreen() {
 
   // Rendu des catégories
   const renderCategories = () => {
-    const filteredCategories = categories.filter(cat => cat.id !== '1'); // Exclure "Tous"
+    const filteredCategories = categories.filter(cat => cat.id !== '1');
 
     if (filteredCategories.length === 0) {
       return (
@@ -339,22 +281,6 @@ export default function LibraryScreen() {
                 <TextComponent variante="body4" color={colors.text2}>
                   {category.description}
                 </TextComponent>
-                <View style={styles.listMetrics}>
-                  {!category.hasDirectCourses && (
-                    <View style={styles.metricItem}>
-                      <Folder size={16} color={colors.blueSingle} />
-                      <TextComponent variante="body4" color={colors.text2}>
-                        {category.folderCount} dossiers
-                      </TextComponent>
-                    </View>
-                  )}
-                  <View style={styles.metricItem}>
-                    <Music size={16} color={colors.blueSingle} />
-                    <TextComponent variante="body3" color={colors.text2}>
-                      {category.totalCourses} contenues
-                    </TextComponent>
-                  </View>
-                </View>
               </View>
             </TouchableOpacity>
           );
@@ -363,165 +289,67 @@ export default function LibraryScreen() {
     );
   };
 
-  // Rendu des dossiers
-  const renderFolders = () => {
-    if (!currentCategory || currentCategory.folders.length === 0) {
+  // Rendu du contenu selon la catégorie
+  const renderContent = () => {
+    if (!currentCategory) return null;
+
+    // Vérifier si c'est une catégorie avec contenu direct
+    if (currentCategory.hasDirectcontent && !currentFolder) {
+      const content = currentCategory.content || [];
+      
+      if (content.length === 0) {
+        let emptyTitle = "Aucun contenu";
+        let emptySubtitle = `La catégorie "${currentCategory.name}" ne contient pas encore de contenu.`;
+        
+        return (
+          <EmptyStateCard
+            icon={Music}
+            title={emptyTitle}
+            subtitle={emptySubtitle}
+            actionText="Retour aux catégories"
+            onActionPress={() => setCurrentCategory(null)}
+          />
+        );
+      }
+
+        // Utiliser le bon composant selon la catégorie
+      switch (currentCategory.id) {
+        case '2': // Cantiques
+          return <CantiquesView content={content} onCoursePress={handleCoursePress} />;
+        case '3': // Compositions
+          return <CompositionsView content={content} onCoursePress={handleCoursePress} />;
+        case '4': // Chansons
+          return <ChansonsView content={content} onCoursePress={handleCoursePress} />;
+        default:
+          return <CantiquesView content={content} onCoursePress={handleCoursePress} />;
+      }
+    }
+
+    // Si c'est la catégorie Leçons (avec logique de folders)
+    if (currentCategory.id === '5') {
+      if (currentCategory.folders.length === 0) {
+        return (
+          <EmptyStateCard
+            icon={Folder}
+            title="Aucun dossier"
+            subtitle={`La catégorie "${currentCategory.name}" ne contient pas encore de dossiers.`}
+            actionText="Explorer d'autres catégories"
+            onActionPress={() => setCurrentCategory(null)}
+          />
+        );
+      }
+
       return (
-        <EmptyStateCard
-          icon={Folder}
-          title="Aucun dossier"
-          subtitle={`La catégorie "${currentCategory?.name}" ne contient pas encore de dossiers.`}
-          actionText="Explorer d'autres catégories"
-          onActionPress={() => setCurrentCategory(null)}
+        <LeconsView 
+          category={currentCategory}
+          currentFolder={currentFolder}
+          onFolderPress={handleFolderPress}
+          onCoursePress={handleCoursePress}
         />
       );
     }
 
-    return (
-      <View style={styles.listContainer}>
-        {currentCategory.folders.map((folder: FolderType) => (
-          <TouchableOpacity
-            key={folder.id}
-            style={styles.listItem}
-            onPress={() => setCurrentFolder(folder)}
-          >
-            <View style={[styles.listThumbnail, { backgroundColor: `${colors.primary}15` }]}>
-              <Folder size={24} color={colors.primary2} />
-            </View>
-            <View style={styles.listContent}>
-              <TextComponent variante="subtitle2" style={styles.listTitle}>
-                {folder.name}
-              </TextComponent>
-              <TextComponent variante="body4" color={colors.text2}>
-                {folder.description}
-              </TextComponent>
-              
-              <View style={styles.packageDetails}>
-                <View style={styles.packageInfo}>
-                  {folder.author && (
-                    <>
-                      <View style={styles.metricItem}>
-                        <User size={14} color={colors.blueSingle} />
-                        <TextComponent variante="body4" color={colors.text2}>
-                          {folder.author}
-                        </TextComponent>
-                      </View>
-                      <View style={styles.infoSeparator} />
-                    </>
-                  )}
-                  <View style={styles.metricItem}>
-                    <Music size={14} color={colors.blueSingle} />
-                    <TextComponent variante="body4" color={colors.text2}>
-                      {folder.courseCount} contenues
-                    </TextComponent>
-                  </View>
-                </View>
-              </View>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
-  };
-
-  // Rendu des cours (pour les catégories directes comme Chansons ET pour les dossiers)
-  const renderCourses = () => {
-    let coursesToDisplay: Course[] = [];
-    let emptyTitle = "Aucun cours";
-    let emptySubtitle = "";
-    let emptyActionText = "";
-    let emptyAction = () => {};
-
-    if (currentCategory?.hasDirectCourses && !currentFolder) {
-      // Cas des chansons (cours directs)
-      coursesToDisplay = currentCategory.courses || [];
-      emptyTitle = "Aucune chanson";
-      emptySubtitle = `La catégorie "${currentCategory?.name}" ne contient pas encore de chansons.`;
-      emptyActionText = "Retour aux catégories";
-      emptyAction = () => setCurrentCategory(null);
-    } else if (currentFolder) {
-      // Cas des cours dans un dossier
-      coursesToDisplay = currentFolder.courses || [];
-      emptyTitle = "Aucun cours";
-      emptySubtitle = `Le dossier "${currentFolder?.name}" ne contient pas encore de cours.`;
-      emptyActionText = "Retour aux dossiers";
-      emptyAction = () => setCurrentFolder(null);
-    }
-
-    if (coursesToDisplay.length === 0) {
-      return (
-        <EmptyStateCard
-          icon={Music}
-          title={emptyTitle}
-          subtitle={emptySubtitle}
-          actionText={emptyActionText}
-          onActionPress={emptyAction}
-        />
-      );
-    }
-
-    const isLessonCategory = currentCategory?.id === '5' || currentFolder?.categoryId === '5';
-
-    return (
-      <View style={styles.listContainer}>
-        {coursesToDisplay.map((course: Course) => (
-          <TouchableOpacity
-            key={course.id}
-            style={styles.listItem}
-            onPress={() => console.log(`Ouvrir le cours: ${course.title}`)}
-          >
-            <View style={[styles.listThumbnail, { backgroundColor: `${colors.primary}15` }]}>
-              <Play size={24} color={colors.primary2} />
-            </View>
-            <View style={styles.listContent}>
-              <TextComponent variante="subtitle3" style={styles.listTitle}>
-                {course.title}
-              </TextComponent>
-              <TextComponent variante="body4" color={colors.text2}>
-                {course.description}
-              </TextComponent>
-              
-              <View style={styles.courseStatus}>
-                <View style={styles.packageInfo}>
-                  {course.author && (
-                    <>
-                      <View style={styles.metricItem}>
-                        <User size={12} color={colors.text2} />
-                        <TextComponent variante="caption" color={colors.text2}>
-                          {course.author}
-                        </TextComponent>
-                      </View>
-                      <View style={styles.infoSeparator} />
-                    </>
-                  )}
-                  
-                  {course.composer && (
-                    <>
-                      <View style={styles.metricItem}>
-                        <Music size={12} color={colors.text2} />
-                        <TextComponent variante="caption" color={colors.text2}>
-                          {course.composer}
-                        </TextComponent>
-                      </View>
-                      <View style={styles.infoSeparator} />
-                    </>
-                  )}
-                  
-                  {/* Afficher la taille seulement si ce n'est PAS une leçon */}
-                  {!isLessonCategory && course.fileSize && (
-                    <View style={styles.metricItem}>
-                      <TextComponent variante="caption" color={colors.text2}>
-                        {course.fileSize} MB
-                      </TextComponent>
-                    </View>
-                  )}
-                </View>
-              </View>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
-    );
+    return null;
   };
 
   // Statistiques selon le niveau de navigation
@@ -560,24 +388,18 @@ export default function LibraryScreen() {
           </View>
         </View>
       );
-    } else if (navigationLevel === 'courses') {
-      let coursesCount = 0;
+    } else if (navigationLevel === 'content') {
+      let contentCount = 0;
       let authorName = "";
-      let title = "";
-      let description = "";
 
-      if (currentCategory?.hasDirectCourses && !currentFolder) {
-        // Cas des chansons (cours directs)
-        coursesCount = currentCategory.courses?.length || 0;
-        authorName = "Divers arrangements";
-        title = currentCategory.name;
-        description = currentCategory.description;
+      if (currentCategory?.hasDirectcontent && !currentFolder) {
+        // Cas des chansons, cantiques, compositions (cours directs)
+        contentCount = currentCategory.content?.length || 0;
+        authorName = currentCategory.id === '3' ? "Vous" : "Divers arrangements";
       } else if (currentFolder) {
-        // Cas des cours dans un dossier
-        coursesCount = currentFolder.courseCount;
+        // Cas des cours dans un dossier (leçons)
+        contentCount = currentFolder.courseCount;
         authorName = currentFolder.author || "Auteur";
-        title = currentFolder.name;
-        description = currentFolder.description;
       }
 
       return (
@@ -594,8 +416,10 @@ export default function LibraryScreen() {
             <View style={[styles.statIcon, { backgroundColor: `${colors.primary}15` }]}>
               <Music size={20} color={colors.primary} />
             </View>
-            <TextComponent variante="subtitle1">{coursesCount}</TextComponent>
-            <TextComponent variante="caption" color={colors.text2}>Contenues</TextComponent>
+            <TextComponent variante="subtitle1">{contentCount}</TextComponent>
+            <TextComponent variante="body4" color={colors.text2}>
+              {currentCategory?.id === '5' ? 'Cours' : 'Éléments'}
+            </TextComponent>
           </View>
         </View>
       );
@@ -605,9 +429,9 @@ export default function LibraryScreen() {
 
   // Fonction pour gérer le retour
   const handleBack = () => {
-    if (navigationLevel === 'courses' && currentFolder) {
+    if (navigationLevel === 'content' && currentFolder) {
       setCurrentFolder(null);
-    } else if (navigationLevel === 'courses' && currentCategory?.hasDirectCourses) {
+    } else if (navigationLevel === 'content' && currentCategory?.hasDirectcontent) {
       setCurrentCategory(null);
     } else if (navigationLevel === 'folders') {
       setCurrentCategory(null);
@@ -621,9 +445,9 @@ export default function LibraryScreen() {
     switch (navigationLevel) {
       case 'categories': return 'Ma Bibliothèque';
       case 'folders': return currentCategory?.name || 'Dossiers';
-      case 'courses': 
+      case 'content': 
         if (currentFolder) return currentFolder.name;
-        if (currentCategory?.hasDirectCourses) return currentCategory.name;
+        if (currentCategory?.hasDirectcontent) return currentCategory.name;
         return 'Cours';
       default: return 'Ma Bibliothèque';
     }
@@ -658,8 +482,7 @@ export default function LibraryScreen() {
           {/* Contenu */}
           <View style={styles.content}>
             {navigationLevel === 'categories' && renderCategories()}
-            {navigationLevel === 'folders' && renderFolders()}
-            {navigationLevel === 'courses' && renderCourses()}
+            {(navigationLevel === 'folders' || navigationLevel === 'content') && renderContent()}
           </View>
         </ScrollView>
       </SafeAreaView>
