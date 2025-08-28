@@ -7,7 +7,7 @@ import {
   Trash2,
   X
 } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface MusicKeyboardProps {
@@ -18,9 +18,17 @@ interface MusicKeyboardProps {
   onInsertMeasure: () => void;
   onDeleteLast: () => void;
   onClose?: () => void;
+  currentContent?: string; // Pour analyser le contexte actuel
 }
 
 type KeyboardMode = 'notes' | 'alterations' | 'rhythms' | 'punctuation';
+
+interface Suggestion {
+  symbol: string;
+  display: string;
+  name: string;
+  priority: number;
+}
 
 export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
   activeVoice,
@@ -30,9 +38,12 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
   onInsertMeasure,
   onDeleteLast,
   onClose,
+  currentContent = '',
 }) => {
   const colors = useThemeColors();
   const [keyboardMode, setKeyboardMode] = useState<KeyboardMode>('notes');
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [lastInsertedType, setLastInsertedType] = useState<'note' | 'symbol' | null>(null);
 
   const styles = StyleSheet.create({
     container: {
@@ -40,44 +51,62 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
       borderTopWidth: 1,
       borderTopColor: colors.border,
     },
-    // Suggestions de voix (comme les suggestions de mots)
-    voiceSuggestions: {
+    // Suggestions intelligentes (remplace les boutons de voix)
+    suggestionsContainer: {
       flexDirection: 'row',
       paddingHorizontal: 16,
       paddingVertical: 8,
       backgroundColor: colors.background,
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
+      minHeight: 50,
     },
-    voiceButton: {
+    suggestionButton: {
       backgroundColor: colors.background2,
-      borderRadius: 5,
-      paddingHorizontal: 20,
+      borderRadius: 8,
+      paddingHorizontal: 16,
       paddingVertical: 2,
       marginRight: 8,
       borderWidth: 1,
       borderColor: colors.border,
-      justifyContent:'center'
+      justifyContent: 'center',
+      alignItems: 'center',
+      minWidth: 60,
     },
-    activeVoiceButton: {
-      backgroundColor: colors.primary,
-      borderColor: colors.primary,
+    prioritySuggestion: {
+      backgroundColor: colors.primary + '20',
+      borderColor: colors.primary + '50',
     },
-    voiceButtonText: {
-      fontSize: 14,
+    suggestionText: {
+      fontSize: 16,
       color: colors.text,
       fontWeight: '500',
-      textAlign:'center'
     },
-    activeVoiceButtonText: {
-      color: colors.primaryForeground,
+    prioritySuggestionText: {
+      color: colors.primary,
+      fontWeight: '600',
     },
-    voiceLabel: {
+    suggestionLabel: {
       fontSize: 10,
       color: colors.text2,
+      marginTop: 2,
     },
-    activeVoiceLabel: {
-      color: colors.primaryForeground + '80',
+    prioritySuggestionLabel: {
+      color: colors.primary + '80',
+    },
+    voiceIndicator: {
+      position: 'absolute',
+      right: 16,
+      top: 12,
+      backgroundColor: colors.primary,
+      borderRadius: 12,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    voiceIndicatorText: {
+      color: colors.primaryForeground,
+      fontSize: 12,
+      fontWeight: 'bold',
     },
     
     // Onglets de mode
@@ -185,7 +214,6 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
       borderColor: colors.border,
       minWidth: 50,
     },
-     // Bouton de fermeture
     closeButton: {
       position: 'absolute',
       top: 8,
@@ -199,7 +227,73 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
       zIndex: 10,
     },
   });
-  
+
+  // Fonction pour générer des suggestions intelligentes
+  const generateSuggestions = (content: string, lastType: 'note' | 'symbol' | null): Suggestion[] => {
+    const suggestions: Suggestion[] = [];
+    
+    // Analyse du contexte actuel
+    const lastChars = content.slice(-5).toLowerCase();
+    const hasRecentNote = /[a-g]/.test(lastChars);
+    const hasRecentSpace = content.endsWith(' ');
+    const measureCount = (content.match(/\|/g) || []).length;
+    
+    // Suggestions après insertion d'une note
+    if (lastType === 'note' || hasRecentNote) {
+      suggestions.push(
+        { symbol: ' ', display: '⎵', name: 'Espace', priority: 9 },
+        { symbol: '.', display: '.', name: 'Point', priority: 8 },
+        { symbol: ',', display: ',', name: 'Virgule', priority: 7 },
+        { symbol: ':', display: ':', name: '2 points', priority: 6 },
+        { symbol: ';', display: ';', name: 'Point virgule', priority: 5 },
+        { symbol: ' | ', display: '|', name: 'Mesure', priority: 4 },
+      );
+    }
+    
+    // Suggestions après un espace
+    if (hasRecentSpace) {
+      suggestions.push(
+        { symbol: '| ', display: '|', name: 'Mesure', priority: 9 },
+        { symbol: '(', display: '(', name: 'Parenthèse', priority: 6 },
+        { symbol: '♩', display: '♩', name: 'Noire', priority: 5 },
+      );
+    }
+    
+    // Suggestions de base toujours présentes
+    suggestions.push(
+      { symbol: ' | ', display: '|', name: 'Mesure', priority: 4 },
+      { symbol: '♪', display: '♪', name: 'Croche', priority: 3 },
+      { symbol: '♭', display: '♭', name: 'Bémol', priority: 2 },
+      { symbol: '♯', display: '♯', name: 'Dièse', priority: 1 },
+    );
+    
+    // Retourner les 6 meilleures suggestions triées par priorité
+    return suggestions
+      .sort((a, b) => b.priority - a.priority)
+      .slice(0, 6);
+  };
+
+  // Mise à jour des suggestions basées sur le contexte
+  useEffect(() => {
+    const newSuggestions = generateSuggestions(currentContent, lastInsertedType);
+    setSuggestions(newSuggestions);
+  }, [currentContent, lastInsertedType]);
+
+  // Gestionnaires avec tracking du type d'insertion
+  const handleInsertNote = (note: string) => {
+    onInsertNote(note);
+    setLastInsertedType('note');
+  };
+
+  const handleInsertSymbol = (symbol: string) => {
+    onInsertSymbol(symbol);
+    setLastInsertedType('symbol');
+  };
+
+  const handleInsertMeasure = () => {
+    onInsertMeasure();
+    setLastInsertedType('symbol');
+  };
 
   const voices = [
     { key: 'S', label: 'S', name: 'Soprano' },
@@ -215,7 +309,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
     { key: 'punctuation', label: 'Punct.' },
   ] as const;
 
-  // Disposition des notes naturelles (3 rangées comme un clavier)
+  // Disposition des notes naturelles
   const notesLayout = [
     [
       { note: 'do', display: 'do' },
@@ -245,7 +339,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
     ],
   ];
 
-  // Symboles rythmiques organisés
+  // Symboles rythmiques
   const rhythmsLayout = [
     [
       { symbol: '♩', name: 'Noire' },
@@ -264,7 +358,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
     ],
   ];
 
-  // Ponctuation organisée
+  // Ponctuation
   const punctuationLayout = [
     [
       { symbol: '.', display: '.', name: 'Point' },
@@ -291,7 +385,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
                   <TouchableOpacity
                     key={index}
                     style={styles.key}
-                    onPress={() => onInsertNote(item.note)}
+                    onPress={() => handleInsertNote(item.note)}
                   >
                     <TextComponent style={styles.keyText}>
                       {item.display}
@@ -312,7 +406,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
                   <TouchableOpacity
                     key={index}
                     style={styles.key}
-                    onPress={() => onInsertNote(item.note)}
+                    onPress={() => handleInsertNote(item.note)}
                   >
                     <TextComponent style={styles.keyText}>
                       {item.display}
@@ -333,7 +427,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
                   <TouchableOpacity
                     key={index}
                     style={styles.key}
-                    onPress={() => onInsertSymbol(item.symbol)}
+                    onPress={() => handleInsertSymbol(item.symbol)}
                   >
                     <TextComponent style={styles.keyText}>
                       {item.symbol}
@@ -357,7 +451,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
                   <TouchableOpacity
                     key={index}
                     style={styles.key}
-                    onPress={() => onInsertSymbol(item.symbol)}
+                    onPress={() => handleInsertSymbol(item.symbol)}
                   >
                     <TextComponent style={styles.keyText}>
                       {item.display}
@@ -377,6 +471,8 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
     }
   };
 
+  const currentVoice = voices.find(v => v.key === activeVoice);
+
   return (
     <View style={styles.container}>
       {/* Bouton de fermeture */}
@@ -386,35 +482,42 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
         </TouchableOpacity>
       )}
 
-      {/* Suggestions de voix (comme les suggestions de mots) */}
-      <View style={styles.voiceSuggestions}>
-        {voices.map((voice) => (
+      {/* Suggestions intelligentes avec indicateur de voix */}
+      <View style={styles.suggestionsContainer}>
+        {suggestions.map((suggestion, index) => (
           <TouchableOpacity
-            key={voice.key}
+            key={index}
             style={[
-              styles.voiceButton,
-              activeVoice === voice.key && styles.activeVoiceButton,
+              styles.suggestionButton,
+              index < 2 && styles.prioritySuggestion, // Les 2 premières sont prioritaires
             ]}
-            onPress={() => onVoiceChange(voice.key)}
+            onPress={() => handleInsertSymbol(suggestion.symbol)}
           >
             <TextComponent
               style={[
-                styles.voiceButtonText,
-                activeVoice === voice.key && styles.activeVoiceButtonText,
+                styles.suggestionText,
+                index < 2 && styles.prioritySuggestionText,
               ]}
             >
-              {voice.label}
+              {suggestion.display}
             </TextComponent>
             <TextComponent
               style={[
-                styles.voiceLabel,
-                activeVoice === voice.key && styles.activeVoiceLabel,
+                styles.suggestionLabel,
+                index < 2 && styles.prioritySuggestionLabel,
               ]}
             >
-              {voice.name}
+              {suggestion.name}
             </TextComponent>
           </TouchableOpacity>
         ))}
+        
+        {/* Indicateur de voix active */}
+        <View style={styles.voiceIndicator}>
+          <TextComponent style={styles.voiceIndicatorText}>
+            {currentVoice?.label} - {currentVoice?.name}
+          </TextComponent>
+        </View>
       </View>
 
       {/* Onglets pour switcher les modes */}
@@ -448,7 +551,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
         <View style={styles.actionRow}>
           <TouchableOpacity
             style={[styles.actionButton, styles.measureKey]}
-            onPress={onInsertMeasure}
+            onPress={handleInsertMeasure}
           >
             <BarChart3 size={16} color={colors.primary} />
             <TextComponent style={[styles.keySubText, styles.measureKeyText]}>
@@ -458,7 +561,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
           
           <TouchableOpacity
             style={[styles.actionButton, styles.spaceKey]}
-            onPress={() => onInsertSymbol(' ')}
+            onPress={() => handleInsertSymbol(' ')}
           >
             <TextComponent style={styles.keyText}>
               espace
@@ -467,7 +570,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
           
           <TouchableOpacity
             style={[styles.actionButton]}
-            onPress={() => onInsertSymbol('\n')}
+            onPress={() => handleInsertSymbol('\n')}
           >
             <ArrowLeft size={16} color={colors.text} />
             <TextComponent style={styles.keySubText}>
