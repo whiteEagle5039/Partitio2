@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Music, User, Play } from 'lucide-react-native';
+import { Music, User, Play, FileText, File, BookOpen } from 'lucide-react-native';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { Course } from '@/stores/appStore';
@@ -178,7 +178,8 @@ export const CantiquesView: React.FC<CantiquesViewProps> = ({
           onPress={() => handleCoursePress(course)}
         >
           <View style={[styles.listThumbnail, { backgroundColor: `${colors.primary}15` }]}>
-            <Play size={24} color={colors.primary2} />
+            {/* <BookOpen size={24} color={colors.primary2} /> */}
+            <TextComponent variante='body1' color={colors.primary2}>{course.id} </TextComponent>
           </View>
             <TextComponent variante="subtitle3" style={styles.listTitle}>
               {course.title}

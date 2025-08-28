@@ -27,7 +27,50 @@ export default function SplashScreen() {
   const icon2Scale = useRef(new Animated.Value(0)).current;
   const icon3Scale = useRef(new Animated.Value(0)).current;
   const icon4Scale = useRef(new Animated.Value(0)).current;
-
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    titleContainer: {
+      marginBottom: 40,
+    },
+    iconsContainer: {
+      alignItems: "center",
+      justifyContent: "center",
+      marginBottom: 60,
+    },
+    iconRow: {
+      flexDirection: "row",
+      gap: 12,
+      marginVertical: 6,
+    },
+    iconWrapper: {
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.3,
+      shadowRadius: 8,
+      elevation: 5,
+    },
+    loadingIndicator: {
+      flexDirection: "row",
+      gap: 8,
+      position: "absolute",
+      bottom: 80,
+    },
+    loadingDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      opacity: 0.7,
+    },
+  });
+  
   useEffect(() => {
     // Animation séquentielle
     const startAnimations = () => {
@@ -252,46 +295,3 @@ export default function SplashScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#1a1a1a",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  titleContainer: {
-    marginBottom: 40,
-  },
-  iconsContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 60,
-  },
-  iconRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginVertical: 6,
-  },
-  iconWrapper: {
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  loadingIndicator: {
-    flexDirection: "row",
-    gap: 8,
-    position: "absolute",
-    bottom: 80,
-  },
-  loadingDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    opacity: 0.7,
-  },
-});

@@ -4,7 +4,7 @@ import { WrapperComponent } from '@/components/WrapperComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
-import {Clock,Heart,Library,Menu,PenTool,Search,TrendingUp,WifiOff} from 'lucide-react-native';
+import {Clock,Heart,Library,Menu,PenTool,Search,TrendingUp,WifiOff, BookOpen} from 'lucide-react-native';
 import React from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -224,11 +224,18 @@ export default function HomeScreen() {
       onPress: () => router.push('/compose'),
     },
     {
+      icon: BookOpen,
+      label: 'Cantiques',
+      color: colors.primary2,
+      onPress: () => router.push('/library'),
+    },
+    {
       icon: Library,
       label: 'Bibliothèque',
       color: colors.primary2,
       onPress: () => router.push('/library'),
     },
+    
   ];
 
   const recentSheets = sheetMusic.slice(0, 5);
