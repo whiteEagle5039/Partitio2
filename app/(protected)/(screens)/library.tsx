@@ -70,14 +70,14 @@ export default function LibraryScreen() {
     // Categories styles
     statsContainer: {
       flexDirection: 'row',
-      paddingHorizontal: 20,
+      paddingHorizontal: 15,
       paddingVertical: 16,
       gap: 12,
     },
     statCard: {
       flex: 1,
       backgroundColor: colors.card,
-      borderRadius: 16,
+      borderRadius: 12,
       padding: 16,
       alignItems: 'center',
       borderColor: colors.border,
@@ -92,12 +92,12 @@ export default function LibraryScreen() {
       justifyContent: 'center',
     },
     listContainer: {
-      paddingHorizontal: 20,
+      paddingHorizontal: 15,
     },
     listItem: {
       flexDirection: 'row',
       backgroundColor: colors.card,
-      borderRadius: 16,
+      borderRadius: 12,
       padding: 16,
       marginBottom: 12,
       alignItems: 'center',

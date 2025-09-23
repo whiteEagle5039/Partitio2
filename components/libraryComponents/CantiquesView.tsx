@@ -23,7 +23,7 @@ export const CantiquesView: React.FC<CantiquesViewProps> = ({
       flex: 1,
     },
     scrollContainer: {
-      paddingHorizontal: 20,
+      paddingHorizontal: 15,
       paddingBottom: 20,
     },
     // Stats Container
@@ -54,16 +54,16 @@ export const CantiquesView: React.FC<CantiquesViewProps> = ({
     listItem: {
       flexDirection: 'row',
       backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 16,
+      borderRadius: 12,
+      padding: 12,
       marginBottom: 12,
       alignItems: 'center',
       borderColor: colors.border,
       borderWidth: 1,
     },
     listThumbnail: {
-      width: 60,
-      height: 60,
+      width: 50,
+      height: 50,
       borderRadius: 12,
       marginRight: 16,
       alignItems: 'center',
