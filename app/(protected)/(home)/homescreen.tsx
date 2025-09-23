@@ -23,7 +23,8 @@ export default function HomeScreen() {
     isOnline,           // ✅ Du store
     setOnline,          // ✅ Du store
     isAuthenticated,    // ✅ Du store
-    setAuthenticated    // ✅ Du store
+    setAuthenticated,
+    categories, setCurrentCategory  // ✅ Du store
   } = useAppStore();
 
   const styles = StyleSheet.create({
@@ -211,32 +212,42 @@ export default function HomeScreen() {
   };
 
   const quickActions = [
-    {
-      icon: Search,
-      label: 'Rechercher',
-      color: colors.primary2,
-      onPress: () => router.push('/search'),
+  {
+    icon: Search,
+    label: 'Rechercher',
+    color: colors.primary2,
+    onPress: () => router.push('/search'),
+  },
+  {
+    icon: PenTool,
+    label: 'Composer',
+    color: colors.primary2,
+    onPress: () => router.push('/compose'),
+  },
+  {
+    icon: BookOpen,
+    label: 'Cantiques',
+    color: colors.primary2,
+    onPress: () => {
+      // Trouve et sélectionne directement la catégorie Cantiques
+      const cantiquesCategory = categories.find(cat => cat.id === '2');
+      if (cantiquesCategory) {
+        setCurrentCategory(cantiquesCategory);
+      }
+      router.push('/library');
     },
-    {
-      icon: PenTool,
-      label: 'Composer',
-      color: colors.primary2,
-      onPress: () => router.push('/compose'),
+  },
+  {
+    icon: Library,
+    label: 'Bibliothèque',
+    color: colors.primary2,
+    onPress: () => {
+      // Reset pour afficher la liste des catégories
+      setCurrentCategory(null);
+      router.push('/library');
     },
-    {
-      icon: BookOpen,
-      label: 'Cantiques',
-      color: colors.primary2,
-      onPress: () => router.push('/library'),
-    },
-    {
-      icon: Library,
-      label: 'Bibliothèque',
-      color: colors.primary2,
-      onPress: () => router.push('/library'),
-    },
-    
-  ];
+  },
+];
 
   const recentSheets = sheetMusic.slice(0, 5);
   const hasTrendingContent = sheetMusic && sheetMusic.length > 0;

@@ -3,14 +3,14 @@ import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Edit3, Play } from 'lucide-react-native';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { Course } from '@/stores/appStore';
+import { Content } from '@/stores/appStore';
 
 interface CompositionsViewProps {
-  content: Course[];
-  onCoursePress: (course: Course) => void;
+  content: Content[];
+  onContentPress: (content: Content) => void;
 }
 
-export const CompositionsView: React.FC<CompositionsViewProps> = ({ content, onCoursePress }) => {
+export const CompositionsView: React.FC<CompositionsViewProps> = ({ content, onContentPress }) => {
   const colors = useThemeColors();
 
   const styles = StyleSheet.create({
@@ -75,37 +75,37 @@ export const CompositionsView: React.FC<CompositionsViewProps> = ({ content, onC
 
   return (
     <View style={styles.container}>
-      {content.map((course: Course) => (
+      {content.map((content: Content) => (
         <TouchableOpacity
-          key={course.id}
+          key={content.id}
           style={styles.listItem}
-          onPress={() => onCoursePress(course)}
+          onPress={() => onContentPress(content)}
         >
           <View style={[styles.listThumbnail, { backgroundColor: `${colors.primary}15` }]}>
             <Edit3 size={24} color={colors.primary2} />
           </View>
           <View style={styles.listContent}>
             <TextComponent variante="subtitle3" style={styles.listTitle}>
-              {course.title}
+              {content.title}
             </TextComponent>
             <TextComponent variante="body4" color={colors.text2}>
-              {course.description}
+              {content.description}
             </TextComponent>
             
             <View style={styles.contentStatus}>
               <View style={styles.packageInfo}>
                 <View style={styles.statusBadge}>
                   <TextComponent variante="caption" color="white">
-                    {course.isPublic ? 'Public' : 'Privé'}
+                    {content.isPublic ? 'Public' : 'Privé'}
                   </TextComponent>
                 </View>
-                
-                {course.fileSize && (
+
+                {content.fileSize && (
                   <>
                     <View style={styles.infoSeparator} />
                     <View style={styles.metricItem}>
                       <TextComponent variante="caption" color={colors.text2}>
-                        {course.fileSize} MB
+                        {content.fileSize} MB
                       </TextComponent>
                     </View>
                   </>
@@ -114,7 +114,7 @@ export const CompositionsView: React.FC<CompositionsViewProps> = ({ content, onC
                 <View style={styles.infoSeparator} />
                 <View style={styles.metricItem}>
                   <TextComponent variante="caption" color={colors.text2}>
-                    Modifiée le {new Date(course.lastModified).toLocaleDateString()}
+                    Modifiée le {new Date(content.lastModified).toLocaleDateString()}
                   </TextComponent>
                 </View>
               </View>

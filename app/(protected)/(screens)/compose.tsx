@@ -8,7 +8,6 @@ import { Settings2 } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Animated, StyleSheet, TouchableOpacity, View } from 'react-native';
 
-
 interface Section {
   id: string;
   name: string;
@@ -32,7 +31,7 @@ export default function ComposeScreen() {
   
   // État principal de la composition
   const [composition, setComposition] = useState<Composition>({
-    title: '',
+    title: 'Nouvelle Composition',
     tempo: '4/4',
     key: 'Do M',
     sections: [
@@ -53,19 +52,16 @@ export default function ComposeScreen() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showKeyboard, setShowKeyboard] = useState(false);
   const [drawerAnimation] = useState(new Animated.Value(0));
-  
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.background,
     },
-
     backButton: {
       marginRight: 16,
       padding: 8,
     },
-
     actionButton: {
       padding: 8,
     },
@@ -82,7 +78,7 @@ export default function ComposeScreen() {
       width: 56,
       height: 56,
       borderRadius: 28,
-      backgroundColor: colors.primary + 'CC', // Semi-transparent
+      backgroundColor: colors.primary + 'CC',
       justifyContent: 'center',
       alignItems: 'center',
       elevation: 6,
@@ -92,26 +88,6 @@ export default function ComposeScreen() {
       shadowRadius: 6,
     },
   });
-
-  // // Gestion de la sauvegarde
-  // const handleSave = async () => {
-  //   if (!composition.title.trim()) {
-  //     Alert.alert('Erreur', 'Veuillez saisir un titre pour votre composition');
-  //     return;
-  //   }
-
-  //   const newComposition = {
-  //     id: Date.now().toString(),
-  //     title: composition.title.trim(),
-  //     content: formatCompositionAsText(composition),
-  //     createdAt: new Date(),
-  //     lastModified: new Date(),
-  //     isPublic: false,
-  //   };
-
-  //   addComposition(newComposition);
-  //   Alert.alert('Succès', 'Votre composition a été sauvegardée !');
-  // };
 
   // Formatage de la composition en texte structuré
   const formatCompositionAsText = (comp: Composition): string => {
@@ -129,15 +105,6 @@ export default function ComposeScreen() {
 
     return text;
   };
-
-  // // Gestion de l'export PDF
-  // const handleExportPDF = () => {
-  //   Alert.alert(
-  //     'Exporter en PDF',
-  //     'Cette fonctionnalité sera bientôt disponible',
-  //     [{ text: 'OK' }]
-  //   );
-  // };
 
   // Gestion de la navigation vers une section
   const handleSectionSelect = (sectionId: string) => {
@@ -194,7 +161,8 @@ export default function ComposeScreen() {
       )
     }));
   };
-// Gestion du focus sur les lignes de partition
+
+  // Gestion du focus sur les lignes de partition
   const handleStaffFocus = (voice: 'S' | 'A' | 'T' | 'B', sectionId: string) => {
     setActiveVoice(voice);
     setActiveSectionId(sectionId);
@@ -202,87 +170,77 @@ export default function ComposeScreen() {
   };
 
   // Animation du drawer
-    const toggleDrawer = () => {
-      const toValue = isDrawerOpen ? 0 : 1;
-      setIsDrawerOpen(!isDrawerOpen);
-      
-      Animated.timing(drawerAnimation, {
-        toValue,
-        duration: 300,
-        useNativeDriver: false,
-      }).start();
-    };
-  // // Gestion de la fermeture avec confirmation
-  // const handleGoBack = () => {
-  //   const hasContent = composition.sections.some(section => 
-  //     section.soprano || section.alto || section.tenor || section.bass
-  //   ) || composition.title.trim();
+  const toggleDrawer = () => {
+    const toValue = isDrawerOpen ? 0 : 1;
+    setIsDrawerOpen(!isDrawerOpen);
+    
+    Animated.timing(drawerAnimation, {
+      toValue,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
 
-  //   if (hasContent) {
-  //     Alert.alert(
-  //       'Quitter la composition',
-  //       'Vous avez des modifications non sauvegardées. Voulez-vous vraiment quitter ?',
-  //       [
-  //         { text: 'Annuler', style: 'cancel' },
-  //         { text: 'Sauvegarder et quitter', onPress: () => { handleSave(); router.back(); } },
-  //         { text: 'Quitter sans sauvegarder', style: 'destructive', onPress: () => router.back() },
-  //       ]
-  //     );
-  //   } else {
-  //     router.back();
-  //   }
-  // };
+  // Fonction pour gérer les changements de composition (ajout/suppression de sections)
+  const handleCompositionChange = (newComposition: Composition) => {
+    setComposition(newComposition);
+    
+    // Vérifier si la section active existe encore
+    const activeExists = newComposition.sections.some(s => s.id === activeSectionId);
+    if (!activeExists && newComposition.sections.length > 0) {
+      setActiveSectionId(newComposition.sections[0].id);
+    }
+  };
 
   return (
     <View style={styles.container}>
-        {/* Éditeur de partition */}
-        <View style={styles.editorContainer}>
-          <MusicEditor
-            composition={composition}
-            onCompositionChange={setComposition}
-            activeVoice={activeVoice}
-            activeSectionId={activeSectionId}
-            onVoiceChange={setActiveVoice}
-            onSectionChange={setActiveSectionId}
-            onStaffFocus={handleStaffFocus}
+      {/* Éditeur de partition */}
+      <View style={styles.editorContainer}>
+        <MusicEditor
+          composition={composition}
+          onCompositionChange={handleCompositionChange}
+          activeVoice={activeVoice}
+          activeSectionId={activeSectionId}
+          onVoiceChange={setActiveVoice}
+          onSectionChange={setActiveSectionId}
+          onStaffFocus={handleStaffFocus}
+        />
+      </View>
 
+      {/* Clavier musical */}
+      {showKeyboard && (
+        <View style={styles.keyboardContainer}>
+          <MusicKeyboard
+            activeVoice={activeVoice}
+            onVoiceChange={setActiveVoice}
+            onInsertNote={handleInsertNote}
+            onInsertSymbol={handleInsertSymbol}
+            onInsertMeasure={handleInsertMeasure}
+            onDeleteLast={handleDeleteLast}
+            onClose={() => setShowKeyboard(false)}
           />
         </View>
+      )}
 
-        {/* Clavier musical */}
-          {showKeyboard && (
-            <View style={styles.keyboardContainer}>
-              <MusicKeyboard
-                activeVoice={activeVoice}
-                onVoiceChange={setActiveVoice}
-                onInsertNote={handleInsertNote}
-                onInsertSymbol={handleInsertSymbol}
-                onInsertMeasure={handleInsertMeasure}
-                onDeleteLast={handleDeleteLast}
-                onClose={() => setShowKeyboard(false)}
-              />
-            </View>)}
+      {/* Bouton de configuration flottant */}
+      {!showKeyboard && (
+        <TouchableOpacity 
+          style={styles.floatingConfigButton}
+          onPress={toggleDrawer}
+        >
+          <Settings2 size={24} color={colors.primaryForeground} />
+        </TouchableOpacity>
+      )}
 
-            {/* Bouton de configuration flottant */}
-          {!showKeyboard && (
-            <TouchableOpacity 
-              style={styles.floatingConfigButton}
-              onPress={toggleDrawer}
-            >
-              <Settings2 size={24} color={colors.primaryForeground} />
-              
-            </TouchableOpacity>
-          )}
-
-        {/* Drawer de configuration */}
-        <CompositionDrawer
-          isOpen={isDrawerOpen}
-          onClose={() => setIsDrawerOpen(false)}
-          composition={composition}
-          onCompositionChange={setComposition}
-          onSectionSelect={handleSectionSelect}
-          activeSectionId={activeSectionId}
-        />
+      {/* Drawer de configuration */}
+      <CompositionDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        composition={composition}
+        onCompositionChange={setComposition}
+        onSectionSelect={handleSectionSelect}
+        activeSectionId={activeSectionId}
+      />
     </View>
   );
 }

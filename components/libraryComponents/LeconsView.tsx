@@ -3,13 +3,13 @@ import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Folder, Music, User, Play } from 'lucide-react-native';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { Course, Folder as FolderType, Category } from '@/stores/appStore';
+import { Content, Folder as FolderType, Category } from '@/stores/appStore';
 
 interface LeconsViewProps {
   category: Category;
   currentFolder: FolderType | null;
   onFolderPress: (folder: FolderType) => void;
-  onCoursePress: (course: Course) => void;
+  onContentPress: (content: Content) => void;
   onBack: () => void;
 }
 
@@ -17,7 +17,7 @@ export const LeconsView: React.FC<LeconsViewProps> = ({
   category, 
   currentFolder, 
   onFolderPress, 
-  onCoursePress,
+  onContentPress,
   onBack
 }) => {
   const colors = useThemeColors();
@@ -148,9 +148,9 @@ export const LeconsView: React.FC<LeconsViewProps> = ({
     onFolderPress(folder);
   };
 
-  const handleCoursePress = (course: Course) => {
-    console.log(`Ouvrir le cours: ${course.title}`);
-    onCoursePress(course);
+  const handleContentPress = (content: Content) => {
+    console.log(`Ouvrir le contenu: ${content.title}`);
+    onContentPress(content);
   };
 
   // Composants pour l'état vide
@@ -298,40 +298,40 @@ export const LeconsView: React.FC<LeconsViewProps> = ({
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
       >
-        {currentFolder.content.map((course: Course) => (
+        {currentFolder.content.map((content: Content) => (
           <TouchableOpacity
-            key={course.id}
+            key={content.id}
             style={styles.listItem}
-            onPress={() => handleCoursePress(course)}
+            onPress={() => handleContentPress(content)}
           >
             <View style={[styles.listThumbnail, { backgroundColor: `${colors.primary}15` }]}>
               <Play size={24} color={colors.primary2} />
             </View>
             <View style={styles.listContent}>
               <TextComponent variante="subtitle3" style={styles.listTitle}>
-                {course.title}
+                {content.title}
               </TextComponent>
               <TextComponent variante="body4" color={colors.text2}>
-                {course.description}
+                {content.description}
               </TextComponent>
               
               <View style={styles.contentStatus}>
                 <View style={styles.packageInfo}>
-                  {course.author && (
+                  {content.author && (
                     <View style={styles.metricItem}>
                       <User size={12} color={colors.text2} />
                       <TextComponent variante="caption" color={colors.text2}>
-                        {course.author}
+                        {content.author}
                       </TextComponent>
                     </View>
                   )}
 
-                  {/* {course.duration && (
+                  {/* {content.duration && (
                     <>
-                      {course.author && <View style={styles.infoSeparator} />}
+                      {content.author && <View style={styles.infoSeparator} />}
                       <View style={styles.metricItem}>
                         <TextComponent variante="caption" color={colors.text2}>
-                          {course.duration}
+                          {content.duration}
                         </TextComponent>
                       </View>
                     </>

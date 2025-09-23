@@ -34,7 +34,7 @@ export interface User {
 }
 
 // Structure hiérarchique existante...
-export interface Course {
+export interface Content {
   id: string;
   title: string;
   content: string;
@@ -56,7 +56,7 @@ export interface Folder {
   description: string;
   thumbnail: string;
   courseCount: number;
-  content: Course[];
+  content: Content[];
   categoryId: string;
   createdAt: Date;
   author?: string;
@@ -72,7 +72,7 @@ export interface Category {
   totalcontent: number;
   folders: Folder[];
   hasDirectcontent?: boolean;
-  content?: Course[];
+  content?: Content[];
 }
 
 // Store principal avec ajout du thème

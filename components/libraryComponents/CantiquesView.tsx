@@ -3,17 +3,17 @@ import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Music, User, Play, FileText, File, BookOpen } from 'lucide-react-native';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { Course } from '@/stores/appStore';
+import { Content } from '@/stores/appStore';
 
 interface CantiquesViewProps {
-  content: Course[];
-  onCoursePress: (course: Course) => void;
+  content: Content[];
+  onContentPress: (content: Content) => void;
   onBack: () => void;
 }
 
 export const CantiquesView: React.FC<CantiquesViewProps> = ({ 
   content, 
-  onCoursePress, 
+  onContentPress, 
   onBack 
 }) => {
   const colors = useThemeColors();
@@ -135,10 +135,10 @@ export const CantiquesView: React.FC<CantiquesViewProps> = ({
     },
   });
 
-  // Gestionnaire pour l'ouverture d'un cours
-  const handleCoursePress = (course: Course) => {
-    console.log(`Ouvrir le cantique: ${course.title}`);
-    onCoursePress(course);
+  // Gestionnaire pour l'ouverture d'un contenu
+  const handleContentPress = (content: Content) => {
+    console.log(`Ouvrir le cantique: ${content.title}`);
+    onContentPress(content);
   };
 
   // Composant pour l'état vide
@@ -171,18 +171,18 @@ export const CantiquesView: React.FC<CantiquesViewProps> = ({
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContainer}
     >
-      {content.map((course: Course) => (
+      {content.map((content: Content) => (
         <TouchableOpacity
-          key={course.id}
+          key={content.id}
           style={styles.listItem}
-          onPress={() => handleCoursePress(course)}
+          onPress={() => handleContentPress(content)}
         >
           <View style={[styles.listThumbnail, { backgroundColor: `${colors.primary}15` }]}>
             {/* <BookOpen size={24} color={colors.primary2} /> */}
-            <TextComponent variante='body1' color={colors.primary2}>{course.id} </TextComponent>
+            <TextComponent variante='body1' color={colors.primary2}>{content.id} </TextComponent>
           </View>
             <TextComponent variante="subtitle3" style={styles.listTitle}>
-              {course.title}
+              {content.title}
             </TextComponent>
         </TouchableOpacity>
       ))}

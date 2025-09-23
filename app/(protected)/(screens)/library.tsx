@@ -7,7 +7,7 @@ import { WrapperComponent } from '@/components/WrapperComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
-import { Category, Folder as FolderType, Course } from '@/stores/appStore';
+import { Category, Folder as FolderType, Content } from '@/stores/appStore';
 
 // Imports des composants spécialisés
 import { CantiquesView } from '@/components/libraryComponents/CantiquesView';
@@ -167,10 +167,10 @@ export default function LibraryScreen() {
   };
 
   // Gestionnaires d'événements simplifiés
-  const handleCoursePress = (course: Course) => {
-    console.log(`Naviguer vers le cours: ${course.title}`);
-    // Navigation vers le détail du cours
-    // router.push(`/course/${course.id}`);
+  const handleContentPress = (content: Content) => {
+    console.log(`Naviguer vers le contenu: ${content.title}`);
+    // Navigation vers le détail du contenu
+    // router.push(`/content/${content.id}`);
   };
 
   const handleFolderPress = (folder: FolderType) => {
@@ -337,7 +337,7 @@ export default function LibraryScreen() {
 
     const content = currentCategory.content || [];
     const commonProps = {
-      onCoursePress: handleCoursePress,
+      onContentPress: handleContentPress,
       onBack: () => setCurrentCategory(null),
     };
 
@@ -355,7 +355,7 @@ export default function LibraryScreen() {
             category={currentCategory}
             currentFolder={currentFolder}
             onFolderPress={handleFolderPress}
-            onCoursePress={handleCoursePress}
+            onContentPress={handleContentPress}
             onBack={() => setCurrentCategory(null)}
           />
         );
