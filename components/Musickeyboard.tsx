@@ -226,6 +226,11 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
       alignItems: 'center',
       zIndex: 10,
     },
+    overContainer:{
+      display:'flex',
+      flexDirection:'column',
+      gap:15,
+    }
   });
 
   // Fonction pour générer des suggestions intelligentes
@@ -474,119 +479,120 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
   const currentVoice = voices.find(v => v.key === activeVoice);
 
   return (
-    <View style={styles.container}>
-      {/* Bouton de fermeture */}
+    <View style = {styles.overContainer}>
       {onClose && (
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
           <X size={16} color={colors.icon} />
         </TouchableOpacity>
       )}
+      <View style={styles.container}>
 
-      {/* Suggestions intelligentes avec indicateur de voix */}
-      <View style={styles.suggestionsContainer}>
-        {suggestions.map((suggestion, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.suggestionButton,
-              index < 2 && styles.prioritySuggestion, // Les 2 premières sont prioritaires
-            ]}
-            onPress={() => handleInsertSymbol(suggestion.symbol)}
-          >
-            <TextComponent
+        {/* Suggestions intelligentes avec indicateur de voix */}
+        <View style={styles.suggestionsContainer}>
+          {suggestions.map((suggestion, index) => (
+            <TouchableOpacity
+              key={index}
               style={[
-                styles.suggestionText,
-                index < 2 && styles.prioritySuggestionText,
+                styles.suggestionButton,
+                index < 2 && styles.prioritySuggestion, // Les 2 premières sont prioritaires
               ]}
+              onPress={() => handleInsertSymbol(suggestion.symbol)}
             >
-              {suggestion.display}
+              <TextComponent
+                style={[
+                  styles.suggestionText,
+                  index < 2 && styles.prioritySuggestionText,
+                ]}
+              >
+                {suggestion.display}
+              </TextComponent>
+              <TextComponent
+                style={[
+                  styles.suggestionLabel,
+                  index < 2 && styles.prioritySuggestionLabel,
+                ]}
+              >
+                {suggestion.name}
+              </TextComponent>
+            </TouchableOpacity>
+          ))}
+          
+          {/* Indicateur de voix active */}
+          <View style={styles.voiceIndicator}>
+            <TextComponent style={styles.voiceIndicatorText}>
+              {currentVoice?.label} - {currentVoice?.name}
             </TextComponent>
-            <TextComponent
-              style={[
-                styles.suggestionLabel,
-                index < 2 && styles.prioritySuggestionLabel,
-              ]}
-            >
-              {suggestion.name}
-            </TextComponent>
-          </TouchableOpacity>
-        ))}
-        
-        {/* Indicateur de voix active */}
-        <View style={styles.voiceIndicator}>
-          <TextComponent style={styles.voiceIndicatorText}>
-            {currentVoice?.label} - {currentVoice?.name}
-          </TextComponent>
+          </View>
         </View>
-      </View>
 
-      {/* Onglets pour switcher les modes */}
-      <View style={styles.tabContainer}>
-        {tabs.map((tab) => (
-          <TouchableOpacity
-            key={tab.key}
-            style={[
-              styles.tab,
-              keyboardMode === tab.key && styles.activeTab,
-            ]}
-            onPress={() => setKeyboardMode(tab.key as KeyboardMode)}
-          >
-            <TextComponent
+        {/* Onglets pour switcher les modes */}
+        <View style={styles.tabContainer}>
+          {tabs.map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
               style={[
-                styles.tabText,
-                keyboardMode === tab.key && styles.activeTabText,
+                styles.tab,
+                keyboardMode === tab.key && styles.activeTab,
               ]}
+              onPress={() => setKeyboardMode(tab.key as KeyboardMode)}
             >
-              {tab.label}
-            </TextComponent>
-          </TouchableOpacity>
-        ))}
-      </View>
+              <TextComponent
+                style={[
+                  styles.tabText,
+                  keyboardMode === tab.key && styles.activeTabText,
+                ]}
+              >
+                {tab.label}
+              </TextComponent>
+            </TouchableOpacity>
+          ))}
+        </View>
 
-      {/* Clavier principal */}
-      <View style={styles.keyboardContainer}>
-        {renderKeyboard()}
-        
-        {/* Ligne d'actions en bas */}
-        <View style={styles.actionRow}>
-          <TouchableOpacity
-            style={[styles.actionButton, styles.measureKey]}
-            onPress={handleInsertMeasure}
-          >
-            <BarChart3 size={16} color={colors.primary} />
-            <TextComponent style={[styles.keySubText, styles.measureKeyText]}>
-              Mesure
-            </TextComponent>
-          </TouchableOpacity>
+        {/* Clavier principal */}
+        <View style={styles.keyboardContainer}>
+          {renderKeyboard()}
           
-          <TouchableOpacity
-            style={[styles.actionButton, styles.spaceKey]}
-            onPress={() => handleInsertSymbol(' ')}
-          >
-            <TextComponent style={styles.keyText}>
-              espace
-            </TextComponent>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.actionButton]}
-            onPress={() => handleInsertSymbol('\n')}
-          >
-            <ArrowLeft size={16} color={colors.text} />
-            <TextComponent style={styles.keySubText}>
-              Retour
-            </TextComponent>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.actionButton, styles.actionKey]}
-            onPress={onDeleteLast}
-          >
-            <Trash2 size={16} color={colors.destructive} />
-            <TextComponent style={[styles.keySubText, styles.actionKeyText]}>
-              Suppr
-            </TextComponent>
-          </TouchableOpacity>
+          {/* Ligne d'actions en bas */}
+          <View style={styles.actionRow}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.measureKey]}
+              onPress={handleInsertMeasure}
+            >
+              <BarChart3 size={16} color={colors.primary} />
+              <TextComponent style={[styles.keySubText, styles.measureKeyText]}>
+                Mesure
+              </TextComponent>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.actionButton, styles.spaceKey]}
+              onPress={() => handleInsertSymbol(' ')}
+            >
+              <TextComponent style={styles.keyText}>
+                espace
+              </TextComponent>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.actionButton]}
+              onPress={() => handleInsertSymbol('\n')}
+            >
+              <ArrowLeft size={16} color={colors.text} />
+              <TextComponent style={styles.keySubText}>
+                Retour
+              </TextComponent>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.actionButton, styles.actionKey]}
+              onPress={onDeleteLast}
+            >
+              <Trash2 size={16} color={colors.destructive} />
+              <TextComponent style={[styles.keySubText, styles.actionKeyText]}>
+                Suppr
+              </TextComponent>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </View>
