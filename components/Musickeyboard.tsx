@@ -4,11 +4,10 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import {
   ArrowLeft,
   BarChart3,
-  Trash2,
-  X
+  Trash2
 } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
-import { BackHandler, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { BackHandler, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface MusicKeyboardProps {
   activeVoice: 'S' | 'A' | 'T' | 'B';
@@ -44,12 +43,24 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
   const [keyboardMode, setKeyboardMode] = useState<KeyboardMode>('notes');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [lastInsertedType, setLastInsertedType] = useState<'note' | 'symbol' | null>(null);
+  const suggestionsScrollRef = useRef<ScrollView | null>(null);
+  const [suggestionsScrollX, setSuggestionsScrollX] = useState(0);
+  const [suggestionsContentWidth, setSuggestionsContentWidth] = useState(0);
+  const [suggestionsContainerWidth, setSuggestionsContainerWidth] = useState(0);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
 
   const styles = StyleSheet.create({
     container: {
       backgroundColor: colors.card,
       borderTopWidth: 1,
       borderTopColor: colors.border,
+      // Shadow for better visual depth
+      elevation: 10,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.12,
+      shadowRadius: 8,
     },
     // Suggestions intelligentes (remplace les boutons de voix)
     suggestionsContainer: {
@@ -140,6 +151,12 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
     keyboardContainer: {
       backgroundColor: colors.card,
       paddingBottom: 8,
+      // subtle inner shadow / elevation
+      elevation: 6,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: -2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 6,
     },
     keyRow: {
       flexDirection: 'row',
@@ -230,7 +247,32 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
       display:'flex',
       flexDirection:'column',
       gap:15,
-    }
+    },
+    suggestionScrollArrow: {
+      position: 'absolute',
+      top: '50%',
+      marginTop: -12,
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: colors.card2,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 20,
+      opacity: 0.95,
+      // subtle shadow for arrows
+      elevation: 6,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.18,
+      shadowRadius: 4,
+    },
+    leftArrow: {
+      left: 8,
+    },
+    rightArrow: {
+      right: 8,
+    },
   });
 
   // Fonction pour générer des suggestions intelligentes
@@ -246,29 +288,28 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
     // Suggestions après insertion d'une note
     if (lastType === 'note' || hasRecentNote) {
       suggestions.push(
-        { symbol: ' ', display: '⎵', name: 'Espace', priority: 9 },
         { symbol: '.', display: '.', name: 'Point', priority: 8 },
-        { symbol: ',', display: ',', name: 'Virgule', priority: 7 },
-        { symbol: ':', display: ':', name: '2 points', priority: 6 },
+        { symbol: ',', display: ',', name: 'Virgule', priority: 6 },
+        { symbol: ':', display: ':', name: '2 points', priority: 7 },
         { symbol: ';', display: ';', name: 'Point virgule', priority: 5 },
-        { symbol: ' | ', display: '|', name: 'Mesure', priority: 4 },
       );
     }
-    
+
     // Suggestions après un espace
     if (hasRecentSpace) {
       suggestions.push(
-        { symbol: '| ', display: '|', name: 'Mesure', priority: 9 },
-        { symbol: '(', display: '(', name: 'Parenthèse', priority: 6 },
-        { symbol: '♩', display: '♩', name: 'Noire', priority: 5 },
+         { symbol: '.', display: '.', name: 'Point', priority: 8 },
+        { symbol: ',', display: ',', name: 'Virgule', priority: 6 },
+        { symbol: ':', display: ':', name: '2 points', priority: 7 },
+        { symbol: ';', display: ';', name: 'Point virgule', priority: 5 },
       );
     }
     
     // Suggestions de base toujours présentes
     suggestions.push(
       { symbol: ' | ', display: '|', name: 'Mesure', priority: 4 },
-      { symbol: '♪', display: '♪', name: 'Croche', priority: 3 },
-      { symbol: '♭', display: '♭', name: 'Bémol', priority: 2 },
+      { symbol: ' - ', display: '-', name: 'Tiret', priority: 4 },
+      { symbol: '♭', display: '♭', name: 'Bémol', priority: 1 },
       { symbol: '♯', display: '♯', name: 'Dièse', priority: 1 },
     );
     
@@ -452,42 +493,81 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
      <View style = {styles.overContainer}>
        <View style={styles.container}>
 
-         {/* Suggestions intelligentes avec indicateur de voix */}
-         <View style={styles.suggestionsContainer}>
-           {suggestions.map((suggestion, index) => (
+         {/* Suggestions intelligentes (scroll horizontal) */}
+         <View
+           style={styles.suggestionsContainer}
+           onLayout={(e) => setSuggestionsContainerWidth(e.nativeEvent.layout.width)}
+         >
+           <ScrollView
+             ref={(r) => { suggestionsScrollRef.current = r; }}
+             horizontal
+             showsHorizontalScrollIndicator={false}
+             contentContainerStyle={{ alignItems: 'center', paddingHorizontal: 8 }}
+             onContentSizeChange={(w) => {
+               setSuggestionsContentWidth(w);
+               setShowRightArrow(w > suggestionsContainerWidth + 8);
+             }}
+             onScroll={(e) => {
+               const x = e.nativeEvent.contentOffset.x;
+               setSuggestionsScrollX(x);
+               setShowLeftArrow(x > 8);
+               setShowRightArrow(x + suggestionsContainerWidth < suggestionsContentWidth - 8);
+             }}
+             scrollEventThrottle={16}
+           >
+             {suggestions.map((suggestion, index) => (
+               <TouchableOpacity
+                 key={index}
+                 style={[
+                   styles.suggestionButton,
+                   index < 2 && styles.prioritySuggestion, // Les 2 premières sont prioritaires
+                 ]}
+                 onPress={() => handleInsertSymbol(suggestion.symbol)}
+               >
+                 <TextComponent
+                   style={[
+                     styles.suggestionText,
+                     index < 2 && styles.prioritySuggestionText,
+                   ]}
+                 >
+                   {suggestion.display}
+                 </TextComponent>
+                 <TextComponent
+                   style={[
+                     styles.suggestionLabel,
+                     index < 2 && styles.prioritySuggestionLabel,
+                   ]}
+                 >
+                   {suggestion.name}
+                 </TextComponent>
+               </TouchableOpacity>
+             ))}
+           </ScrollView>
+
+           {showLeftArrow && (
              <TouchableOpacity
-               key={index}
-               style={[
-                 styles.suggestionButton,
-                 index < 2 && styles.prioritySuggestion, // Les 2 premières sont prioritaires
-               ]}
-               onPress={() => handleInsertSymbol(suggestion.symbol)}
+               style={[styles.suggestionScrollArrow, styles.leftArrow]}
+               onPress={() => {
+                 const target = Math.max(0, suggestionsScrollX - 120);
+                 suggestionsScrollRef.current?.scrollTo({ x: target, animated: true });
+               }}
              >
-               <TextComponent
-                 style={[
-                   styles.suggestionText,
-                   index < 2 && styles.prioritySuggestionText,
-                 ]}
-               >
-                 {suggestion.display}
-               </TextComponent>
-               <TextComponent
-                 style={[
-                   styles.suggestionLabel,
-                   index < 2 && styles.prioritySuggestionLabel,
-                 ]}
-               >
-                 {suggestion.name}
-               </TextComponent>
+               <TextComponent style={{ color: colors.text, fontSize: 18 }}>{'‹'}</TextComponent>
              </TouchableOpacity>
-           ))}
-           
-           {/* Indicateur de voix active */}
-           <View style={styles.voiceIndicator}>
-             <TextComponent style={styles.voiceIndicatorText}>
-               {currentVoice?.label} - {currentVoice?.name}
-             </TextComponent>
-           </View>
+           )}
+
+           {showRightArrow && (
+             <TouchableOpacity
+               style={[styles.suggestionScrollArrow, styles.rightArrow]}
+               onPress={() => {
+                 const maxX = Math.max(0, suggestionsContentWidth - suggestionsContainerWidth);
+                 const target = Math.min(maxX, suggestionsScrollX + 120);
+                 suggestionsScrollRef.current?.scrollTo({ x: target, animated: true });
+               }}
+             >
+               <TextComponent style={{ color: colors.text, fontSize: 18 }}>{'›'}</TextComponent>
+             </TouchableOpacity>
+           )}
          </View>
 
          {/* Onglets pour switcher les modes */}

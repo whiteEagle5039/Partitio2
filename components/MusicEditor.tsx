@@ -174,7 +174,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     },
     activeStaffContainer: {
       borderWidth: 1,
-      borderColor: colors.primary,
+      borderColor: colors.primary + '70',
     },
     staffSystem: {
       position: 'relative',
@@ -198,7 +198,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       borderColor: 'transparent',
     },
     activeLabelContainer: {
-      backgroundColor: colors.primary,
+      backgroundColor: colors.primary ,
       borderColor: colors.primary,
     },
     voiceLabelText: {
