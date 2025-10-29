@@ -7,8 +7,8 @@ import {
   Trash2,
   X
 } from 'lucide-react-native';
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { BackHandler, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface MusicKeyboardProps {
   activeVoice: 'S' | 'A' | 'T' | 'B';
@@ -284,317 +284,282 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
     setSuggestions(newSuggestions);
   }, [currentContent, lastInsertedType]);
 
-  // Gestionnaires avec tracking du type d'insertion
-  const handleInsertNote = (note: string) => {
-    onInsertNote(note);
-    setLastInsertedType('note');
-  };
+  // Intercept Android hardware back button to close the music keyboard when active
+  useEffect(() => {
+    if (!onClose) return;
+    if (Platform.OS !== 'android') return;
 
-  const handleInsertSymbol = (symbol: string) => {
-    onInsertSymbol(symbol);
-    setLastInsertedType('symbol');
-  };
+    const handler = () => {
+      onClose();
+      return true; // prevent default back action
+    };
 
-  const handleInsertMeasure = () => {
-    onInsertMeasure();
-    setLastInsertedType('symbol');
-  };
+    const subscription = BackHandler.addEventListener('hardwareBackPress', handler);
+    return () => subscription.remove();
+  }, [onClose]);
 
-  const voices = [
-    { key: 'S', label: 'S', name: 'Soprano' },
-    { key: 'A', label: 'A', name: 'Alto' },
-    { key: 'T', label: 'T', name: 'Ténor' },
-    { key: 'B', label: 'B', name: 'Basse' },
-  ] as const;
+   // Gestionnaires avec tracking du type d'insertion
+   const handleInsertNote = (note: string) => {
+     onInsertNote(note);
+     setLastInsertedType('note');
+   };
 
-  const tabs = [
-    { key: 'notes', label: 'Notes' },
-    { key: 'alterations', label: 'Alt.' },
-    { key: 'rhythms', label: 'Rythmes' },
-    { key: 'punctuation', label: 'Punct.' },
-  ] as const;
+   const handleInsertSymbol = (symbol: string) => {
+     onInsertSymbol(symbol);
+     setLastInsertedType('symbol');
+   };
 
-  // Disposition des notes naturelles
-  const notesLayout = [
-    [
-      { note: 'do', display: 'do' },
-      { note: 're', display: 're' },
-      { note: 'mi', display: 'mi' },
-    ],
-    [
-      { note: 'fa', display: 'fa' },
-      { note: 'sol', display: 'sol' },
-      { note: 'la', display: 'la' },
-      { note: 'si', display: 'si' },
-    ],
-  ];
+   const handleInsertMeasure = () => {
+     onInsertMeasure();
+     setLastInsertedType('symbol');
+   };
 
-  // Altérations organisées
-  const alterationsLayout = [
-    [
-      { note: 'do#', display: 'do#' },
-      { note: 'reb', display: 'ré♭' },
-      { note: 'mib', display: 'mi♭' },
-    ],
-    [
-      { note: 'fa#', display: 'fa#' },
-      { note: 'solb', display: 'sol♭' },
-      { note: 'lab', display: 'la♭' },
-      { note: 'sib', display: 'si♭' },
-    ],
-  ];
+   const voices = [
+     { key: 'S', label: 'S', name: 'Soprano' },
+     { key: 'A', label: 'A', name: 'Alto' },
+     { key: 'T', label: 'T', name: 'Ténor' },
+     { key: 'B', label: 'B', name: 'Basse' },
+   ] as const;
 
-  // Symboles rythmiques
-  const rhythmsLayout = [
-    [
-      { symbol: '♩', name: 'Noire' },
-      { symbol: '♪', name: 'Croche' },
-      { symbol: '♫', name: 'D.croche' },
-    ],
-    [
-      { symbol: '𝄽', name: 'Silence' },
-      { symbol: '𝄾', name: 'D-pause' },
-      { symbol: '𝄿', name: 'Pause' },
-    ],
-    [
-      { symbol: '♭', name: 'Bémol' },
-      { symbol: '♯', name: 'Dièse' },
-      { symbol: '♮', name: 'Bécarre' },
-    ],
-  ];
+   const tabs = [
+     { key: 'notes', label: 'Notes' },
+     { key: 'alterations', label: 'Alt.' },
+     { key: 'punctuation', label: 'Rythmes' },
+   ] as const;
 
-  // Ponctuation
-  const punctuationLayout = [
-    [
-      { symbol: '.', display: '.', name: 'Point' },
-      { symbol: ',', display: ',', name: 'Virgule' },
-      { symbol: ':', display: ':', name: ':' },
-      { symbol: ';', display: ';', name: ';' },
-    ],
-    [
-      { symbol: '(', display: '(', name: '(' },
-      { symbol: ')', display: ')', name: ')' },
-      { symbol: '-', display: '-', name: 'Tiret' },
-      { symbol: ' ', display: '⎵', name: 'Espace' },
-    ],
-  ];
+   // Disposition des notes naturelles
+   const notesLayout = [
+     [
+       { note: 'do', display: 'do' },
+       { note: 're', display: 're' },
+       { note: 'mi', display: 'mi' },
+     ],
+     [
+       { note: 'fa', display: 'fa' },
+       { note: 'sol', display: 'sol' },
+       { note: 'la', display: 'la' },
+       { note: 'si', display: 'si' },
+     ],
+   ];
 
-  const renderKeyboard = () => {
-    switch (keyboardMode) {
-      case 'notes':
-        return (
-          <>
-            {notesLayout.map((row, rowIndex) => (
-              <View key={rowIndex} style={styles.keyRow}>
-                {row.map((item, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.key}
-                    onPress={() => handleInsertNote(item.note)}
-                  >
-                    <TextComponent style={styles.keyText}>
-                      {item.display}
-                    </TextComponent>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ))}
-          </>
-        );
+   // Altérations organisées
+   const alterationsLayout = [
+     [
+       { note: 'do#', display: 'do#' },
+       { note: 'reb', display: 'ré♭' },
+       { note: 'mib', display: 'mi♭' },
+     ],
+     [
+       { note: 'fa#', display: 'fa#' },
+       { note: 'solb', display: 'sol♭' },
+       { note: 'lab', display: 'la♭' },
+       { note: 'sib', display: 'si♭' },
+     ],
+   ];
 
-      case 'alterations':
-        return (
-          <>
-            {alterationsLayout.map((row, rowIndex) => (
-              <View key={rowIndex} style={styles.keyRow}>
-                {row.map((item, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.key}
-                    onPress={() => handleInsertNote(item.note)}
-                  >
-                    <TextComponent style={styles.keyText}>
-                      {item.display}
-                    </TextComponent>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ))}
-          </>
-        );
+   // Ponctuation
+   const punctuationLayout = [
+     [
+       { symbol: '.', display: '.', name: 'Point' },
+       { symbol: ',', display: ',', name: 'Virgule' },
+       { symbol: ':', display: ':', name: ':' },
+       { symbol: ';', display: ';', name: ';' },
+     ],
+     [
+       { symbol: '(', display: '(', name: '(' },
+       { symbol: ')', display: ')', name: ')' },
+       { symbol: '-', display: '-', name: 'Tiret' },
+       { symbol: ' ', display: '⎵', name: 'Espace' },
+     ],
+   ];
 
-      case 'rhythms':
-        return (
-          <>
-            {rhythmsLayout.map((row, rowIndex) => (
-              <View key={rowIndex} style={styles.keyRow}>
-                {row.map((item, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.key}
-                    onPress={() => handleInsertSymbol(item.symbol)}
-                  >
-                    <TextComponent style={styles.keyText}>
-                      {item.symbol}
-                    </TextComponent>
-                    <TextComponent style={styles.keySubText}>
-                      {item.name}
-                    </TextComponent>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ))}
-          </>
-        );
+   const renderKeyboard = () => {
+     switch (keyboardMode) {
+       case 'notes':
+         return (
+           <>
+             {notesLayout.map((row, rowIndex) => (
+               <View key={rowIndex} style={styles.keyRow}>
+                 {row.map((item, index) => (
+                   <TouchableOpacity
+                     key={index}
+                     style={styles.key}
+                     onPress={() => handleInsertNote(item.note)}
+                   >
+                     <TextComponent style={styles.keyText}>
+                       {item.display}
+                     </TextComponent>
+                   </TouchableOpacity>
+                 ))}
+               </View>
+             ))}
+           </>
+         );
 
-      case 'punctuation':
-        return (
-          <>
-            {punctuationLayout.map((row, rowIndex) => (
-              <View key={rowIndex} style={styles.keyRow}>
-                {row.map((item, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.key}
-                    onPress={() => handleInsertSymbol(item.symbol)}
-                  >
-                    <TextComponent style={styles.keyText}>
-                      {item.display}
-                    </TextComponent>
-                    <TextComponent style={styles.keySubText}>
-                      {item.name}
-                    </TextComponent>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ))}
-          </>
-        );
+       case 'alterations':
+         return (
+           <>
+             {alterationsLayout.map((row, rowIndex) => (
+               <View key={rowIndex} style={styles.keyRow}>
+                 {row.map((item, index) => (
+                   <TouchableOpacity
+                     key={index}
+                     style={styles.key}
+                     onPress={() => handleInsertNote(item.note)}
+                   >
+                     <TextComponent style={styles.keyText}>
+                       {item.display}
+                     </TextComponent>
+                   </TouchableOpacity>
+                 ))}
+               </View>
+             ))}
+           </>
+         );
+     
+       case 'punctuation':
+         return (
+           <>
+             {punctuationLayout.map((row, rowIndex) => (
+               <View key={rowIndex} style={styles.keyRow}>
+                 {row.map((item, index) => (
+                   <TouchableOpacity
+                     key={index}
+                     style={styles.key}
+                     onPress={() => handleInsertSymbol(item.symbol)}
+                   >
+                     <TextComponent style={styles.keyText}>
+                       {item.display}
+                     </TextComponent>
+                     <TextComponent style={styles.keySubText}>
+                       {item.name}
+                     </TextComponent>
+                   </TouchableOpacity>
+                 ))}
+               </View>
+             ))}
+           </>
+         );
 
-      default:
-        return null;
-    }
-  };
+       default:
+         return null;
+     }
+   };
 
-  const currentVoice = voices.find(v => v.key === activeVoice);
+   const currentVoice = voices.find(v => v.key === activeVoice);
 
-  return (
-    <View style = {styles.overContainer}>
-      {onClose && (
-        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-          <X size={16} color={colors.icon} />
-        </TouchableOpacity>
-      )}
-      <View style={styles.container}>
+   return (
+     <View style = {styles.overContainer}>
+       <View style={styles.container}>
 
-        {/* Suggestions intelligentes avec indicateur de voix */}
-        <View style={styles.suggestionsContainer}>
-          {suggestions.map((suggestion, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.suggestionButton,
-                index < 2 && styles.prioritySuggestion, // Les 2 premières sont prioritaires
-              ]}
-              onPress={() => handleInsertSymbol(suggestion.symbol)}
-            >
-              <TextComponent
-                style={[
-                  styles.suggestionText,
-                  index < 2 && styles.prioritySuggestionText,
-                ]}
-              >
-                {suggestion.display}
-              </TextComponent>
-              <TextComponent
-                style={[
-                  styles.suggestionLabel,
-                  index < 2 && styles.prioritySuggestionLabel,
-                ]}
-              >
-                {suggestion.name}
-              </TextComponent>
-            </TouchableOpacity>
-          ))}
-          
-          {/* Indicateur de voix active */}
-          <View style={styles.voiceIndicator}>
-            <TextComponent style={styles.voiceIndicatorText}>
-              {currentVoice?.label} - {currentVoice?.name}
-            </TextComponent>
-          </View>
-        </View>
+         {/* Suggestions intelligentes avec indicateur de voix */}
+         <View style={styles.suggestionsContainer}>
+           {suggestions.map((suggestion, index) => (
+             <TouchableOpacity
+               key={index}
+               style={[
+                 styles.suggestionButton,
+                 index < 2 && styles.prioritySuggestion, // Les 2 premières sont prioritaires
+               ]}
+               onPress={() => handleInsertSymbol(suggestion.symbol)}
+             >
+               <TextComponent
+                 style={[
+                   styles.suggestionText,
+                   index < 2 && styles.prioritySuggestionText,
+                 ]}
+               >
+                 {suggestion.display}
+               </TextComponent>
+               <TextComponent
+                 style={[
+                   styles.suggestionLabel,
+                   index < 2 && styles.prioritySuggestionLabel,
+                 ]}
+               >
+                 {suggestion.name}
+               </TextComponent>
+             </TouchableOpacity>
+           ))}
+           
+           {/* Indicateur de voix active */}
+           <View style={styles.voiceIndicator}>
+             <TextComponent style={styles.voiceIndicatorText}>
+               {currentVoice?.label} - {currentVoice?.name}
+             </TextComponent>
+           </View>
+         </View>
 
-        {/* Onglets pour switcher les modes */}
-        <View style={styles.tabContainer}>
-          {tabs.map((tab) => (
-            <TouchableOpacity
-              key={tab.key}
-              style={[
-                styles.tab,
-                keyboardMode === tab.key && styles.activeTab,
-              ]}
-              onPress={() => setKeyboardMode(tab.key as KeyboardMode)}
-            >
-              <TextComponent
-                style={[
-                  styles.tabText,
-                  keyboardMode === tab.key && styles.activeTabText,
-                ]}
-              >
-                {tab.label}
-              </TextComponent>
-            </TouchableOpacity>
-          ))}
-        </View>
+         {/* Onglets pour switcher les modes */}
+         <View style={styles.tabContainer}>
+           {tabs.map((tab) => (
+             <TouchableOpacity
+               key={tab.key}
+               style={[
+                 styles.tab,
+                 keyboardMode === tab.key && styles.activeTab,
+               ]}
+               onPress={() => setKeyboardMode(tab.key as KeyboardMode)}
+             >
+               <TextComponent
+                 style={[
+                   styles.tabText,
+                   keyboardMode === tab.key && styles.activeTabText,
+                 ]}
+               >
+                 {tab.label}
+               </TextComponent>
+             </TouchableOpacity>
+           ))}
+         </View>
 
-        {/* Clavier principal */}
-        <View style={styles.keyboardContainer}>
-          {renderKeyboard()}
-          
-          {/* Ligne d'actions en bas */}
-          <View style={styles.actionRow}>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.measureKey]}
-              onPress={handleInsertMeasure}
-            >
-              <BarChart3 size={16} color={colors.primary} />
-              <TextComponent style={[styles.keySubText, styles.measureKeyText]}>
-                Mesure
-              </TextComponent>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.actionButton, styles.spaceKey]}
-              onPress={() => handleInsertSymbol(' ')}
-            >
-              <TextComponent style={styles.keyText}>
-                espace
-              </TextComponent>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.actionButton]}
-              onPress={() => handleInsertSymbol('\n')}
-            >
-              <ArrowLeft size={16} color={colors.text} />
-              <TextComponent style={styles.keySubText}>
-                Retour
-              </TextComponent>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.actionButton, styles.actionKey]}
-              onPress={onDeleteLast}
-            >
-              <Trash2 size={16} color={colors.destructive} />
-              <TextComponent style={[styles.keySubText, styles.actionKeyText]}>
-                Suppr
-              </TextComponent>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </View>
-  );
+         {/* Clavier principal */}
+         <View style={styles.keyboardContainer}>
+           {renderKeyboard()}
+           
+           {/* Ligne d'actions en bas */}
+           <View style={styles.actionRow}>
+             <TouchableOpacity
+               style={[styles.actionButton, styles.measureKey]}
+               onPress={handleInsertMeasure}
+             >
+               <BarChart3 size={16} color={colors.primary} />
+               <TextComponent style={[styles.keySubText, styles.measureKeyText]}>
+                 Mesure
+               </TextComponent>
+             </TouchableOpacity>
+             
+             <TouchableOpacity
+               style={[styles.actionButton, styles.spaceKey]}
+               onPress={() => handleInsertSymbol(' ')}
+             >
+               <TextComponent style={styles.keyText}>
+                 espace
+               </TextComponent>
+             </TouchableOpacity>
+             
+             <TouchableOpacity
+               style={[styles.actionButton]}
+               onPress={() => handleInsertSymbol('\n')}
+             >
+               <ArrowLeft size={16} color={colors.text} />
+               <TextComponent style={styles.keySubText}>
+                 Retour
+               </TextComponent>
+             </TouchableOpacity>
+             
+             <TouchableOpacity
+               style={[styles.actionButton, styles.actionKey]}
+               onPress={onDeleteLast}
+             >
+               <Trash2 size={16} color={colors.destructive} />
+               <TextComponent style={[styles.keySubText, styles.actionKeyText]}>
+                 Suppr
+               </TextComponent>
+             </TouchableOpacity>
+           </View>
+         </View>
+       </View>
+     </View>
+   );
 };
