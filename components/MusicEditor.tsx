@@ -1,9 +1,9 @@
 // components/MusicEditor.tsx
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { ChevronDown, ChevronUp, Plus, Edit3 } from 'lucide-react-native';
+import { ChevronDown, ChevronUp, Edit3, Plus } from 'lucide-react-native';
 import React, { useRef, useState } from 'react';
-import { Dimensions, ScrollView, StyleSheet, TextInput, TouchableOpacity, View, Alert } from 'react-native';
+import { Alert, Dimensions, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Section {
@@ -13,6 +13,7 @@ interface Section {
   alto: string;
   tenor: string;
   bass: string;
+  lyrics?: string;
 }
 
 interface MusicEditorProps {
@@ -77,8 +78,8 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       justifyContent: 'space-between',
     },
     activeSectionHeader: {
-      borderWidth: 2,
-      borderColor: colors.primary + '40',
+      borderWidth: 1,
+      borderColor: colors.primary,
     },
     sectionHeaderLeft: {
       flex: 1,
@@ -140,6 +141,22 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       fontWeight: '600',
       color: colors.primary,
     },
+    lyricsContainer: {
+      width: width,
+      padding: 12,
+      justifyContent: 'flex-start',
+      backgroundColor: colors.background,
+    },
+    lyricsInput: {
+      width: '100%',
+      minHeight: 200,
+      maxHeight: 600,
+      padding: 12,
+      borderRadius: 12,
+      backgroundColor: colors.card,
+      color: colors.text,
+      textAlignVertical: 'top',
+    },
     staffContainer: {
       backgroundColor: colors.card,
       borderRadius: 12,
@@ -147,6 +164,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       marginTop: 4,
       padding: 10,
       minHeight: 200,
+      maxWidth: '96%',
     },
     collapsedStaffContainer: {
       minHeight: 0,
@@ -155,8 +173,8 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       backgroundColor: 'transparent',
     },
     activeStaffContainer: {
-      borderWidth: 2,
-      borderColor: colors.primary + '40',
+      borderWidth: 1,
+      borderColor: colors.primary,
     },
     staffSystem: {
       position: 'relative',
@@ -164,13 +182,13 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     staffLine: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginVertical: 6,
+      marginVertical: 1,
       minHeight: 48,
       position: 'relative',
     },
     voiceLabel: {
-      width: 44,
-      height: 44,
+      width: 38,
+      height: 38,
       borderRadius: 22,
       backgroundColor: colors.primary + '15',
       justifyContent: 'center',
@@ -207,7 +225,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       borderColor: colors.muted,
     },
     activeStaff: {
-      borderColor: colors.blueSingle + '70',
+      borderColor: colors.blueSingle
     },
     measureOverlay: {
       position: 'absolute',
@@ -257,6 +275,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       alto: '',
       tenor: '',
       bass: '',
+      lyrics: '',
     };
 
     const updatedComposition = {
@@ -419,6 +438,26 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     return lines;
   };
 
+  // Composant séparé pour le panneau de paroles
+  const renderLyrics = (section: Section) => {
+    return (
+      <View style={styles.lyricsContainer}>
+        <TextComponent variante="subtitle2" style={{ marginBottom: 8 }}>
+          Paroles
+        </TextComponent>
+        <TextInput
+          style={styles.lyricsInput}
+          value={section.lyrics ?? ''}
+          onChangeText={(text) => updateSection(section.id, 'lyrics', text)}
+          placeholder="Écrivez ici les paroles associées à cette section..."
+          placeholderTextColor={colors.primary + '50'}
+          multiline
+          textAlignVertical="top"
+        />
+      </View>
+    );
+  };
+
   const renderStaffLines = (section: Section) => {
     const voices = [
       { key: 'S', label: 'S', content: section.soprano, name: 'Soprano' },
@@ -434,15 +473,16 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       section.bass.length
     );
 
+    // Retourne uniquement le système de portées (sans ScrollView horizontal ni paroles)
     return (
       <View style={styles.staffSystem}>
         <View style={styles.measureOverlay}>
           {activeSectionId === section.id && renderSystemMeasureLines(maxLength)}
         </View>
-        
+
         {voices.map((voice) => {
           const isActive = activeVoice === voice.key && activeSectionId === section.id;
-          
+
           return (
             <View key={voice.key} style={styles.staffLine}>
               <TouchableOpacity
@@ -463,12 +503,12 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                   {voice.label}
                 </TextComponent>
               </TouchableOpacity>
-              
+
               <View style={styles.staffContent}>
                 <View style={styles.measureOverlay}>
                   {renderMeasureLines(voice.content)}
                 </View>
-                
+
                 <TextInput
                   style={[
                     styles.staffInput,
@@ -482,7 +522,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                     onStaffFocus?.(voice.key as 'S' | 'A' | 'T' | 'B', section.id);
                   }}
                   placeholder={`${voice.name}`}
-                  placeholderTextColor={colors.card2}
+                  placeholderTextColor={colors.text2 +'50'}
                   multiline={false}
                   scrollEnabled={false}
                   showSoftInputOnFocus={false}
@@ -600,14 +640,24 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                 </View>
               </View>
 
-              {/* Contenu de la section (portées) */}
+              {/* Contenu de la section (portées + paroles déplaçables horizontalement) */}
               {!isCollapsed && (
-                <View style={[
-                  styles.staffContainer,
-                  isActive && styles.activeStaffContainer
-                ]}>
-                  {renderStaffLines(section)}
-                </View>
+                <ScrollView
+                  horizontal
+                  pagingEnabled={false}
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ width: width * 2 }}
+                >
+                  <View style={[
+                    styles.staffContainer,
+                    isActive && styles.activeStaffContainer,
+                    { width }
+                  ]}>
+                    {renderStaffLines(section)}
+                  </View>
+
+                  {renderLyrics(section)}
+                </ScrollView>
               )}
 
               {/* Bouton d'ajout de section après chaque section */}

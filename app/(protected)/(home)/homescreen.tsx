@@ -4,7 +4,7 @@ import { WrapperComponent } from '@/components/WrapperComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
-import {Clock,Heart,Library,Menu,PenTool,Search,TrendingUp,WifiOff, BookOpen} from 'lucide-react-native';
+import { BookOpen, Clock, Heart, Library, Menu, PenTool, Search, TrendingUp, WifiOff } from 'lucide-react-native';
 import React from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -39,6 +39,15 @@ export default function HomeScreen() {
       paddingHorizontal: 10,
       paddingVertical: 10,
       backgroundColor: colors.card,
+    },
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    iconButton: {
+      padding: 8,
+      borderRadius: 8,
     },
     logo: {
       flexDirection: 'row',
@@ -213,18 +222,6 @@ export default function HomeScreen() {
 
   const quickActions = [
   {
-    icon: Search,
-    label: 'Rechercher',
-    color: colors.primary2,
-    onPress: () => router.push('/search'),
-  },
-  {
-    icon: PenTool,
-    label: 'Composer',
-    color: colors.primary2,
-    onPress: () => router.push('/compose'),
-  },
-  {
     icon: BookOpen,
     label: 'Cantiques',
     color: colors.primary2,
@@ -236,6 +233,12 @@ export default function HomeScreen() {
       }
       router.push('/library');
     },
+  },
+  {
+    icon: PenTool,
+    label: 'Composer',
+    color: colors.primary2,
+    onPress: () => router.push('/compose'),
   },
   {
     icon: Library,
@@ -358,12 +361,21 @@ export default function HomeScreen() {
             </TextComponent>
           </View>
           
-          <TouchableOpacity 
-            style={styles.menuButton}
-            onPress={() => setDrawerOpen(!isDrawerOpen)}
-          >
-            <Menu size={32} color={colors.icon} />
-          </TouchableOpacity>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.iconButton}
+              onPress={() => router.push('/search')}
+            >
+              <Search size={28} color={colors.icon} />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.menuButton}
+              onPress={() => setDrawerOpen(!isDrawerOpen)}
+            >
+              <Menu size={32} color={colors.icon} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
