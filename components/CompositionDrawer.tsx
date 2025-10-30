@@ -178,7 +178,10 @@ export const CompositionDrawer: React.FC<CompositionDrawerProps> = ({
       backgroundColor: colors.background2,
       borderRadius: 12,
       margin: 8,
-      overflow: 'hidden',
+      padding: 10,
+      minHeight: 64,
+      borderColor: colors.card2,
+      borderWidth: 2,
     },
     activeSectionItem: {
       // backgroundColor: colors.primary + '20',
