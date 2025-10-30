@@ -292,7 +292,7 @@ export const CompositionDrawer: React.FC<CompositionDrawerProps> = ({
     presetButtonText: {
       fontSize: 12,
       color: colors.text2,
-    },
+    }
   });
 
 
@@ -426,29 +426,19 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
     <>
       {/* Overlay animé */}
       <Animated.View
-        pointerEvents={isOpen ? 'auto' : 'none'} // bloque le clic seulement si ouvert
-        style={[
-          styles.overlay,
-          { opacity: overlayAnim },
-        ]}
+        pointerEvents={isOpen ? 'auto' : 'none'}
+        style={[styles.overlay, { opacity: overlayAnim }]}
       >
         <TouchableOpacity style={{ flex: 1 }} onPress={onClose} />
       </Animated.View>
 
       {/* Drawer animé */}
-      <Animated.View
-        style={[
-          styles.drawer,
-          { transform: [{ translateX: slideAnim }] },
-        ]}
-      >
+      <Animated.View style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}>
         {/* Header */}
         <View style={styles.header}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Settings2 size={20} color={colors.primary} />
-            <TextComponent variante="subtitle2" style={{ marginLeft: 8 }}>
-              Configuration
-            </TextComponent>
+            <TextComponent variante="subtitle2" style={{ marginLeft: 8 }}>Configuration</TextComponent>
           </View>
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <X size={20} color={colors.icon} />
@@ -461,9 +451,7 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
           <View style={styles.section}>
             <View style={styles.sectionTitle}>
               <FileText size={16} color={colors.primary} />
-              <TextComponent style={styles.sectionTitleText}>
-                Informations générales
-              </TextComponent>
+              <TextComponent style={styles.sectionTitleText}>Informations générales</TextComponent>
             </View>
             <TextComponent style={styles.inputLabel}>Titre</TextComponent>
             <TextInput
@@ -483,11 +471,7 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
             />
             <View style={styles.presetButtons}>
               {tempoPresets.map((preset) => (
-                <TouchableOpacity
-                  key={preset}
-                  style={styles.presetButton}
-                  onPress={() => updateCompositionField('tempo', preset)}
-                >
+                <TouchableOpacity key={preset} style={styles.presetButton} onPress={() => updateCompositionField('tempo', preset)}>
                   <TextComponent style={styles.presetButtonText}>{preset}</TextComponent>
                 </TouchableOpacity>
               ))}
@@ -502,95 +486,50 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
             />
             <View style={styles.presetButtons}>
               {keyPresets.map((preset) => (
-                <TouchableOpacity
-                  key={preset}
-                  style={styles.presetButton}
-                  onPress={() => updateCompositionField('key', preset)}
-                >
+                <TouchableOpacity key={preset} style={styles.presetButton} onPress={() => updateCompositionField('key', preset)}>
                   <TextComponent style={styles.presetButtonText}>{preset}</TextComponent>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
 
-            {/* Gestion des sections */}
+          {/* Gestion des sections */}
           <View style={styles.section}>
             <View style={styles.sectionTitle}>
               <Music size={16} color={colors.primary} />
-              <TextComponent style={styles.sectionTitleText}>
-                Sections ({composition.sections.length})
-              </TextComponent>
+              <TextComponent style={styles.sectionTitleText}>Sections ({composition.sections.length})</TextComponent>
             </View>
           </View>
 
           <View style={styles.sectionsContainer}>
             {composition.sections.map((section, index) => (
-              <View
-                key={section.id}
-                style={[
-                  styles.sectionItem,
-                  activeSectionId === section.id && styles.activeSectionItem,
-                ]}
-              >
-                <TouchableOpacity
-                  style={styles.sectionHeader}
-                  onPress={() => onSectionSelect(section.id)}
-                >
-                  <View style={[
-                    styles.sectionIcon,
-                    activeSectionId === section.id && styles.activeSectionIcon,
-                  ]}>
-                    <Music size={16} color={
-                      activeSectionId === section.id ? colors.primaryForeground : colors.primary
-                    } />
+              <View key={section.id} style={[styles.sectionItem, activeSectionId === section.id && styles.activeSectionItem]}>
+                <TouchableOpacity style={styles.sectionHeader} onPress={() => onSectionSelect(section.id)}>
+                  <View style={[styles.sectionIcon, activeSectionId === section.id && styles.activeSectionIcon]}>
+                    <Music size={16} color={activeSectionId === section.id ? colors.primaryForeground : colors.primary} />
                   </View>
-                  
                   <View style={styles.sectionContent}>
-                    <TextComponent style={styles.sectionName}>
-                      {section.name}
-                    </TextComponent>
-                    <TextComponent style={styles.sectionStats}>
-                      {getSectionStats(section)}
-                    </TextComponent>
+                    <TextComponent style={styles.sectionName}>{section.name}</TextComponent>
+                    <TextComponent style={styles.sectionStats}>{getSectionStats(section)}</TextComponent>
                   </View>
-                  
                   <View style={styles.sectionActions}>
                     {index > 0 && (
-                      <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => moveSectionUp(index)}
-                      >
+                      <TouchableOpacity style={styles.actionButton} onPress={() => moveSectionUp(index)}>
                         <ChevronUp size={16} color={colors.icon} />
                       </TouchableOpacity>
                     )}
-                    
                     {index < composition.sections.length - 1 && (
-                      <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => moveSectionDown(index)}
-                      >
+                      <TouchableOpacity style={styles.actionButton} onPress={() => moveSectionDown(index)}>
                         <ChevronDown size={16} color={colors.icon} />
                       </TouchableOpacity>
                     )}
-                    
-                    <TouchableOpacity
-                      style={styles.actionButton}
-                      onPress={() => duplicateSection(section.id)}
-                    >
+                    <TouchableOpacity style={styles.actionButton} onPress={() => duplicateSection(section.id)}>
                       <Copy size={16} color={colors.icon} />
                     </TouchableOpacity>
-                    
-                    <TouchableOpacity
-                      style={styles.actionButton}
-                      onPress={() => setEditingSectionId(section.id)}
-                    >
+                    <TouchableOpacity style={styles.actionButton} onPress={() => setEditingSectionId(section.id)}>
                       <Edit3 size={16} color={colors.icon} />
                     </TouchableOpacity>
-                    
-                    <TouchableOpacity
-                      style={styles.actionButton}
-                      onPress={() => deleteSection(section.id)}
-                    >
+                    <TouchableOpacity style={styles.actionButton} onPress={() => deleteSection(section.id)}>
                       <Trash2 size={16} color={colors.destructive} />
                     </TouchableOpacity>
                   </View>
@@ -598,29 +537,13 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
 
                 {editingSectionId === section.id && (
                   <View style={styles.editingContainer}>
-                    <TextInput
-                      style={styles.editingInput}
-                      value={section.name}
-                      onChangeText={(text) => updateSectionName(section.id, text)}
-                      placeholder="Nom de la section"
-                      autoFocus
-                    />
+                    <TextInput style={styles.editingInput} value={section.name} onChangeText={(text) => updateSectionName(section.id, text)} placeholder="Nom de la section" autoFocus />
                     <View style={styles.editingActions}>
-                      <TouchableOpacity
-                        style={[styles.editingButton, styles.cancelButton]}
-                        onPress={() => setEditingSectionId(null)}
-                      >
-                        <TextComponent style={{ color: colors.text2 }}>
-                          Annuler
-                        </TextComponent>
+                      <TouchableOpacity style={[styles.editingButton, styles.cancelButton]} onPress={() => setEditingSectionId(null)}>
+                        <TextComponent style={{ color: colors.text2 }}>Annuler</TextComponent>
                       </TouchableOpacity>
-                      <TouchableOpacity
-                        style={[styles.editingButton, styles.saveButton]}
-                        onPress={() => setEditingSectionId(null)}
-                      >
-                        <TextComponent style={{ color: colors.primaryForeground }}>
-                          OK
-                        </TextComponent>
+                      <TouchableOpacity style={[styles.editingButton, styles.saveButton]} onPress={() => setEditingSectionId(null)}>
+                        <TextComponent style={{ color: colors.primaryForeground }}>OK</TextComponent>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -639,11 +562,7 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
                   { key: 'intro', label: 'Intro' },
                   { key: 'outro', label: 'Outro' },
                 ].map((type) => (
-                  <TouchableOpacity
-                    key={type.key}
-                    style={styles.presetButton}
-                    onPress={() => addSection(type.key)}
-                  >
+                  <TouchableOpacity key={type.key} style={styles.presetButton} onPress={() => addSection(type.key)}>
                     <TextComponent style={styles.presetButtonText}>{type.label}</TextComponent>
                   </TouchableOpacity>
                 ))}
@@ -652,18 +571,12 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
 
             <TouchableOpacity style={styles.addButton} onPress={() => addSection()}>
               <Plus size={20} color={colors.primaryForeground} />
-              <TextComponent
-                style={styles.addButtonText}
-                color={colors.primaryForeground}
-              >
-                Ajouter une section
-              </TextComponent>
+              <TextComponent style={styles.addButtonText} color={colors.primaryForeground}>Ajouter une section</TextComponent>
             </TouchableOpacity>
           </View>
-          
+
         </ScrollView>
       </Animated.View>
     </>
-
   );
 };

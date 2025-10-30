@@ -68,10 +68,12 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       marginHorizontal: 8,
       borderRadius: 12,
       padding: 16,
+      borderWidth: 1,
+      borderColor: colors.card2,
       elevation: 1,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
+      shadowOffset: { width: 1, height: 2 },
+      shadowOpacity: 0.2,
       shadowRadius: 2,
       flexDirection: 'row',
       alignItems: 'center',
@@ -155,6 +157,10 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       borderRadius: 12,
       backgroundColor: colors.card,
       color: colors.text,
+      fontSize: 14,
+      fontWeight: '400',
+      fontFamily: 'Tiempos-Regular',
+      lineHeight: 20,
       textAlignVertical: 'top',
     },
     staffContainer: {
@@ -262,6 +268,28 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       color: colors.text2,
       marginVertical: 40,
       fontSize: 16,
+    },
+    // Minimal sheet title area (not a floating banner)
+    sheetHeader: {
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+      backgroundColor: 'transparent',
+      marginBottom: 4,
+    },
+    sheetTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 2,
+      textAlign: 'left',
+    },
+    sheetMetaRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    sheetMetaText: {
+      fontSize: 14,
+      color: colors.text2,
     },
   });
 
@@ -559,6 +587,17 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
         style={styles.sectionsContainer}
         showsVerticalScrollIndicator={false}
       >
+        {/* Sheet title written on the page (not a banner) */}
+        <View style={styles.sheetHeader}>
+          <TextComponent variante="subtitle2" style={styles.sheetTitle}>
+            {composition.title || 'Sans titre'}
+          </TextComponent>
+          <View style={styles.sheetMetaRow}>
+            <TextComponent variante="body4" style={styles.sheetMetaText}>{composition.key || '-'}</TextComponent>
+            <TextComponent variante="body4" style={[styles.sheetMetaText, { marginLeft: 12 }]}>{composition.tempo || '-'}</TextComponent>
+          </View>
+        </View>
+
         {composition.sections.map((section, index) => {
           const isCollapsed = collapsedSections.has(section.id);
           const isActive = activeSectionId === section.id;

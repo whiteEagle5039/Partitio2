@@ -31,7 +31,7 @@ export default function ComposeScreen() {
   
   // État principal de la composition
   const [composition, setComposition] = useState<Composition>({
-    title: 'Nouvelle Composition',
+    title: 'Ma composition - John .D #1',
     tempo: '4/4',
     key: 'Do M',
     sections: [
