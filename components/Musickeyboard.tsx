@@ -12,9 +12,9 @@ import { BackHandler, Platform, ScrollView, StyleSheet, TouchableOpacity, View }
 interface MusicKeyboardProps {
   activeVoice: 'S' | 'A' | 'T' | 'B';
   onVoiceChange: (voice: 'S' | 'A' | 'T' | 'B') => void;
-  onInsertSymbol: (symbol: string) => void;
+  // onInsertSymbol: (symbol: string) => void;
   onInsertNote: (note: string) => void;
-  onInsertMeasure: () => void;
+  // onInsertMeasure: () => void;
   onDeleteLast: () => void;
   onClose?: () => void;
   currentContent?: string; // Pour analyser le contexte actuel
@@ -32,9 +32,9 @@ interface Suggestion {
 export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
   activeVoice,
   onVoiceChange,
-  onInsertSymbol,
+  // onInsertSymbol,
   onInsertNote,
-  onInsertMeasure,
+  // onInsertMeasure,
   onDeleteLast,
   onClose,
   currentContent = '',
@@ -345,13 +345,8 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
      setLastInsertedType('note');
    };
 
-   const handleInsertSymbol = (symbol: string) => {
-     onInsertSymbol(symbol);
-     setLastInsertedType('symbol');
-   };
-
    const handleInsertMeasure = () => {
-     onInsertMeasure();
+     onInsertNote(' | ');
      setLastInsertedType('symbol');
    };
 
@@ -467,7 +462,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
                    <TouchableOpacity
                      key={index}
                      style={styles.key}
-                     onPress={() => handleInsertSymbol(item.symbol)}
+                     onPress={() => handleInsertNote(item.symbol)}
                    >
                      <TextComponent style={styles.keyText}>
                        {item.display}
@@ -519,10 +514,9 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
                <TouchableOpacity
                  key={index}
                  style={[
-                   styles.suggestionButton,
-                   index < 2 && styles.prioritySuggestion, // Les 2 premières sont prioritaires
+                   styles.suggestionButton
                  ]}
-                 onPress={() => handleInsertSymbol(suggestion.symbol)}
+                 onPress={() => handleInsertNote(suggestion.symbol)}
                >
                  <TextComponent
                    style={[
@@ -611,7 +605,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
              
              <TouchableOpacity
                style={[styles.actionButton, styles.spaceKey]}
-               onPress={() => handleInsertSymbol(' ')}
+               onPress={() => handleInsertNote(' ')}
              >
                <TextComponent style={styles.keyText}>
                  espace
@@ -620,7 +614,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
              
              <TouchableOpacity
                style={[styles.actionButton]}
-               onPress={() => handleInsertSymbol('\n')}
+               onPress={() => handleInsertNote('\n')}
              >
                <ArrowLeft size={16} color={colors.text} />
                <TextComponent style={styles.keySubText}>
