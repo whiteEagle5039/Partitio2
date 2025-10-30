@@ -52,6 +52,7 @@ export default function ComposeScreen() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showKeyboard, setShowKeyboard] = useState(false);
   const [drawerAnimation] = useState(new Animated.Value(0));
+  const [cursorSelection, setCursorSelection] = useState<{ start: number; end: number } | null>(null);
 
   const styles = StyleSheet.create({
     container: {
@@ -114,25 +115,50 @@ export default function ComposeScreen() {
 
   // Gestion des touches du clavier musical
   const handleInsertNote = (note: string) => {
+    console.log('🎵 handleInsertNote appelé avec:', note);
+    console.log('📍 Section active:', activeSectionId);
+    console.log('🎤 Voix active:', activeVoice);
+    
     const currentSection = composition.sections.find(s => s.id === activeSectionId);
-    if (!currentSection) return;
+    if (!currentSection) {
+        console.log('❌ Section non trouvée !');
+        return;
+    }
+    
+    console.log('✅ Section trouvée:', currentSection.name);
 
     const voiceKey = activeVoice.toLowerCase() as keyof Omit<Section, 'id' | 'name'>;
-    const currentContent = currentSection[voiceKey];
-    const newContent = currentContent + note + ' ';
+    const currentContent = currentSection[voiceKey] || '';
+    console.log('📝 Contenu actuel:', currentContent);
+    
+    const sel = cursorSelection || { start: currentContent.length, end: currentContent.length };
+    const before = currentContent.slice(0, sel.start);
+    const after = currentContent.slice(sel.end);
+    const insertText = note + ' ';
+    const newContent = before + insertText + after;
+    
+    console.log('✨ Nouveau contenu:', newContent);
 
     updateSectionContent(activeSectionId, voiceKey, newContent);
-  };
+    const newPos = before.length + insertText.length;
+    setCursorSelection({ start: newPos, end: newPos });
+};
 
   const handleInsertSymbol = (symbol: string) => {
     const currentSection = composition.sections.find(s => s.id === activeSectionId);
     if (!currentSection) return;
 
     const voiceKey = activeVoice.toLowerCase() as keyof Omit<Section, 'id' | 'name'>;
-    const currentContent = currentSection[voiceKey];
-    const newContent = currentContent + symbol;
+    const currentContent = currentSection[voiceKey] || '';
+    const sel = cursorSelection || { start: currentContent.length, end: currentContent.length };
+    const before = currentContent.slice(0, sel.start);
+    const after = currentContent.slice(sel.end);
+    const insertText = symbol;
+    const newContent = before + insertText + after;
 
     updateSectionContent(activeSectionId, voiceKey, newContent);
+    const newPos = before.length + insertText.length;
+    setCursorSelection({ start: newPos, end: newPos });
   };
 
   const handleInsertMeasure = () => {
@@ -144,10 +170,24 @@ export default function ComposeScreen() {
     if (!currentSection) return;
 
     const voiceKey = activeVoice.toLowerCase() as keyof Omit<Section, 'id' | 'name'>;
-    const currentContent = currentSection[voiceKey];
-    const newContent = currentContent.slice(0, -1);
-
-    updateSectionContent(activeSectionId, voiceKey, newContent);
+    const currentContent = currentSection[voiceKey] || '';
+    const sel = cursorSelection || { start: currentContent.length, end: currentContent.length };
+    if (sel.start === sel.end && sel.start > 0) {
+      // delete previous character
+      const before = currentContent.slice(0, sel.start - 1);
+      const after = currentContent.slice(sel.end);
+      const newContent = before + after;
+      updateSectionContent(activeSectionId, voiceKey, newContent);
+      const newPos = sel.start - 1;
+      setCursorSelection({ start: newPos, end: newPos });
+    } else if (sel.start !== sel.end) {
+      // delete selection
+      const before = currentContent.slice(0, sel.start);
+      const after = currentContent.slice(sel.end);
+      const newContent = before + after;
+      updateSectionContent(activeSectionId, voiceKey, newContent);
+      setCursorSelection({ start: before.length, end: before.length });
+    }
   };
 
   // Mise à jour du contenu d'une section
@@ -167,6 +207,13 @@ export default function ComposeScreen() {
     setActiveVoice(voice);
     setActiveSectionId(sectionId);
     setShowKeyboard(true);
+    // reset selection if switching focus
+    setCursorSelection(null);
+  };
+
+  const handleSelectionChange = (voice: 'S' | 'A' | 'T' | 'B', sectionId: string, selection: { start: number; end: number }) => {
+    // Mettre à jour la sélection sans condition pour éviter les désynchronisations
+    setCursorSelection(selection);
   };
 
   // Animation du drawer
@@ -204,6 +251,8 @@ export default function ComposeScreen() {
           onVoiceChange={setActiveVoice}
           onSectionChange={setActiveSectionId}
           onStaffFocus={handleStaffFocus}
+          cursorSelection={cursorSelection}
+          onSelectionChange={handleSelectionChange}
         />
       </View>
 
@@ -218,6 +267,7 @@ export default function ComposeScreen() {
             onInsertMeasure={handleInsertMeasure}
             onDeleteLast={handleDeleteLast}
             onClose={() => setShowKeyboard(false)}
+            currentContent={composition.sections.find(s => s.id === activeSectionId)?.[activeVoice.toLowerCase() as keyof Section] as string}
           />
         </View>
       )}

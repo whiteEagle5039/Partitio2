@@ -2,7 +2,7 @@
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { ChevronDown, ChevronUp, Edit3, Plus } from 'lucide-react-native';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Dimensions, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -28,6 +28,10 @@ interface MusicEditorProps {
   activeSectionId: string;
   onVoiceChange: (voice: 'S' | 'A' | 'T' | 'B') => void;
   onSectionChange: (sectionId: string) => void;
+  // Cursor selection for the active staff (optional)
+  cursorSelection?: { start: number; end: number } | null;
+  // Called when a staff TextInput selection changes
+  onSelectionChange?: (voice: 'S' | 'A' | 'T' | 'B', sectionId: string, selection: { start: number; end: number }) => void;
   onStaffFocus?: (voice: 'S' | 'A' | 'T' | 'B', sectionId: string) => void;
 }
 
@@ -40,15 +44,35 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
   activeSectionId,
   onVoiceChange,
   onSectionChange,
+  cursorSelection = null,
+  onSelectionChange,
   onStaffFocus,
 }) => {
   const colors = useThemeColors();
   const scrollViewRef = useRef<ScrollView>(null);
+  const inputRefs = useRef<{ [key: string]: TextInput | null }>({});
   
   // États pour la gestion des sections
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
+
+  // Forcer la mise à jour des TextInputs quand la composition change
+  useEffect(() => {
+    const activeSection = composition.sections.find(s => s.id === activeSectionId);
+    if (!activeSection) return;
+
+    const voices = ['S', 'A', 'T', 'B'] as const;
+    voices.forEach((voice) => {
+      const inputKey = `${activeSectionId}-${voice}`;
+      const ref = inputRefs.current[inputKey];
+      if (ref) {
+        const voiceKey = voice.toLowerCase() as 'soprano' | 'alto' | 'tenor' | 'bass';
+        const content = activeSection[voiceKey] || '';
+        ref.setNativeProps({ text: content });
+      }
+    });
+  }, [composition, activeSectionId]);
 
   const styles = StyleSheet.create({
     container: {
@@ -510,6 +534,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
 
         {voices.map((voice) => {
           const isActive = activeVoice === voice.key && activeSectionId === section.id;
+          const inputKey = `${section.id}-${voice.key}`;
 
           return (
             <View key={voice.key} style={styles.staffLine}>
@@ -522,6 +547,10 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                   onVoiceChange(voice.key as 'S' | 'A' | 'T' | 'B');
                   onSectionChange(section.id);
                   onStaffFocus?.(voice.key as 'S' | 'A' | 'T' | 'B', section.id);
+                  // Focus programmatiquement le bon input
+                  setTimeout(() => {
+                    inputRefs.current[inputKey]?.focus();
+                  }, 100);
                 }}
               >
                 <TextComponent style={[
@@ -538,23 +567,32 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                 </View>
 
                 <TextInput
+                  key={inputKey}
+                  ref={(ref) => { inputRefs.current[inputKey] = ref; }}
                   style={[
                     styles.staffInput,
                     isActive && styles.activeStaff,
                   ]}
-                  value={voice.content}
-                  onChangeText={(text) => updateSection(section.id, voice.key, text)}
+                  defaultValue={voice.content}
+                  onChangeText={(text) => {
+                    updateSection(section.id, voice.key, text);
+                  }}
                   onFocus={() => {
                     onVoiceChange(voice.key as 'S' | 'A' | 'T' | 'B');
                     onSectionChange(section.id);
                     onStaffFocus?.(voice.key as 'S' | 'A' | 'T' | 'B', section.id);
                   }}
-                  placeholder={`${voice.name}`}
-                  placeholderTextColor={colors.text2 +'50'}
-                  multiline={false}
-                  scrollEnabled={false}
-                  showSoftInputOnFocus={false}
-                />
+                  onSelectionChange={(e) => {
+                    const sel = e.nativeEvent.selection;
+                    onSelectionChange?.(voice.key as 'S' | 'A' | 'T' | 'B', section.id, { start: sel.start, end: sel.end });
+                  }}
+                   placeholder={`${voice.name}`}
+                   placeholderTextColor={colors.text2 +'50'}
+                   multiline={false}
+                   scrollEnabled={false}
+                   showSoftInputOnFocus={false}
+                   editable={true}
+                 />
               </View>
             </View>
           );
