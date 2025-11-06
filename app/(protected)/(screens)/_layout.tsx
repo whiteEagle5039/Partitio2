@@ -11,6 +11,7 @@ export default function ScreensLayout() {
         <Stack.Screen name="compose" />
         <Stack.Screen name="profile" />
         <Stack.Screen name="setting" />
+        <Stack.Screen name="compositionPreview" />
       </Stack>
       <StatusBar style="auto" />
     </>
