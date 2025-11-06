@@ -1,13 +1,16 @@
-import { CompositionDrawer } from '@/components/CompositionDrawer';
-import { MusicEditor } from '@/components/MusicEditor';
-import { MusicKeyboard } from '@/components/Musickeyboard';
+// Exemple d'intégration dans compose.tsx
+import { CompositionDrawer } from '@/components/musicComponents/CompositionDrawer';
+import { MusicEditor } from '@/components/musicComponents/MusicEditor';
+import { MusicKeyboard } from '@/components/musicComponents/Musickeyboard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
-import { useRouter } from 'expo-router';
-import { Settings2, Save, RotateCcw } from 'lucide-react-native';
-import React, { useState, useRef } from 'react';
-import { Animated, StyleSheet, TouchableOpacity, View, PanResponder } from 'react-native';
+import { useCompositionStorage } from '@/utils/CompositionStorage';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { Save, RotateCcw } from 'lucide-react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { Animated, StyleSheet, TouchableOpacity, View, PanResponder, Alert } from 'react-native';
 import { Dimensions } from 'react-native';
+
 interface Section {
   id: string;
   name: string;
@@ -27,24 +30,29 @@ interface Composition {
 export default function ComposeScreen() {
   const colors = useThemeColors();
   const router = useRouter();
+  const params = useLocalSearchParams();
   const { addComposition } = useAppStore();
   const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
   
+  // Hook de stockage
+  const {
+    saveComposition,
+    loadComposition,
+    exportComposition,
+  } = useCompositionStorage();
+
+  // ID de la composition (si on édite une existante)
+  const [compositionId, setCompositionId] = useState<string | undefined>(
+    params.id ? String(params.id) : undefined
+  );
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
   // État principal de la composition
   const [composition, setComposition] = useState<Composition>({
     title: 'Sans titre - John .D #1',
     tempo: '4/4',
     key: 'Do',
-    sections: [
-      // {
-      //   id: '1',
-      //   name: 'Couplet 1',
-      //   soprano: '',
-      //   alto: '',
-      //   tenor: '',
-      //   bass: '',
-      // }
-    ],
+    sections: [],
   });
 
   // État de l'interface
@@ -54,7 +62,7 @@ export default function ComposeScreen() {
   const [showKeyboard, setShowKeyboard] = useState(false);
   const [drawerAnimation] = useState(new Animated.Value(0));
   const [cursorSelection, setCursorSelection] = useState<{ start: number; end: number } | null>(null);
-  const [showFloatingMenu, setShowFloatingMenu] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   // État pour gérer le drag vs click
   const [isDragging, setIsDragging] = useState(false);
@@ -64,11 +72,40 @@ export default function ComposeScreen() {
   // Pour le bouton draggable
   const pan = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   
+  // Charger la composition si on édite une existante
+  useEffect(() => {
+    if (compositionId) {
+      loadExistingComposition();
+    }
+  }, [compositionId]);
+
+  const loadExistingComposition = async () => {
+    if (!compositionId) return;
+    
+    try {
+      const loaded = await loadComposition(compositionId);
+      if (loaded) {
+        setComposition(loaded);
+        if (loaded.sections.length > 0) {
+          setActiveSectionId(loaded.sections[0].id);
+        }
+        console.log('✅ Composition chargée:', compositionId);
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors du chargement:', error);
+      Alert.alert('Erreur', 'Impossible de charger la composition');
+    }
+  };
+
+  // Détecter les changements non sauvegardés
+  useEffect(() => {
+    setHasUnsavedChanges(true);
+  }, [composition]);
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: (_, gestureState) => {
-        // N'activer le pan que si on a bougé de plus de 10 pixels
         const moved = Math.abs(gestureState.dx) > 10 || Math.abs(gestureState.dy) > 10;
         if (moved) {
           setIsDragging(true);
@@ -95,23 +132,18 @@ export default function ComposeScreen() {
         const newX = startPosition.current.x + gestureState.dx;
         const newY = startPosition.current.y + gestureState.dy;
         
-        // Contraintes de l'écran (avec marges)
         const margin = 25;
-        const buttonWidth = 50;
-        const buttonHeight = 90;
-        const maxX = 100; // Distance max vers la droite
-        const minX = -300; // Distance max vers la gauche
-        const maxY = 200; // Distance max vers le bas
-        const minY = -600; // Distance max vers le haut
+        const maxX = 100;
+        const minX = -300;
+        const maxY = 200;
+        const minY = -600;
         
-        // Limiter la position
         const constrainedX = Math.max(minX, Math.min(maxX, newX));
         const constrainedY = Math.max(minY, Math.min(maxY, newY));
         
         pan.flattenOffset();
         pan.setValue({ x: constrainedX, y: constrainedY });
         
-        // Réinitialiser après un court délai
         setTimeout(() => setIsDragging(false), 150);
       }
     })
@@ -121,13 +153,6 @@ export default function ComposeScreen() {
     container: {
       flex: 1,
       backgroundColor: colors.background,
-    },
-    backButton: {
-      marginRight: 16,
-      padding: 8,
-    },
-    actionButton: {
-      padding: 8,
     },
     editorContainer: {
       flex: 1,
@@ -158,6 +183,9 @@ export default function ComposeScreen() {
       borderColor: colors.border,
       gap: 12,
     },
+    saveButtonActive: {
+      backgroundColor: colors.primary + '30',
+    },
     dotsContainer: {
       width: 24,
       height: 24,
@@ -174,54 +202,23 @@ export default function ComposeScreen() {
     },
   });
 
-  // Formatage de la composition en texte structuré
-  const formatCompositionAsText = (comp: Composition): string => {
-    let text = `# Titre: ${comp.title}\n`;
-    text += `# Temps: ${comp.tempo}\n`;
-    text += `# Gamme: ${comp.key}\n\n`;
-
-    comp.sections.forEach((section) => {
-      text += `## ${section.name}\n`;
-      text += `S: ${section.soprano}\n`;
-      text += `A: ${section.alto}\n`;
-      text += `T: ${section.tenor}\n`;
-      text += `B: ${section.bass}\n\n`;
-    });
-
-    return text;
-  };
-
-  // Gestion de la navigation vers une section
-  const handleSectionSelect = (sectionId: string) => {
-    setActiveSectionId(sectionId);
-    setIsDrawerOpen(false);
-  };
-
-  // Gestion des touches du clavier musical
   const handleInsertNote = (note: string) => {
     console.log('🎵 handleInsertNote appelé avec:', note);
-    console.log('📍 Section active:', activeSectionId);
-    console.log('🎤 Voix active:', activeVoice);
     
     const currentSection = composition.sections.find(s => s.id === activeSectionId);
     if (!currentSection) {
         console.log('❌ Section non trouvée !');
         return;
     }
-    
-    console.log('✅ Section trouvée:', currentSection.name);
 
     const voiceKey = activeVoice.toLowerCase() as keyof Omit<Section, 'id' | 'name'>;
     const currentContent = currentSection[voiceKey] || '';
-    console.log('📝 Contenu actuel:', currentContent);
     
     const sel = cursorSelection || { start: currentContent.length, end: currentContent.length };
     const before = currentContent.slice(0, sel.start);
     const after = currentContent.slice(sel.end);
     const insertText = note + ' ';
     const newContent = before + insertText + after;
-    
-    console.log('✨ Nouveau contenu:', newContent);
 
     updateSectionContent(activeSectionId, voiceKey, newContent);
     const newPos = before.length + insertText.length;
@@ -235,8 +232,8 @@ export default function ComposeScreen() {
     const voiceKey = activeVoice.toLowerCase() as keyof Omit<Section, 'id' | 'name'>;
     const currentContent = currentSection[voiceKey] || '';
     const sel = cursorSelection || { start: currentContent.length, end: currentContent.length };
+    
     if (sel.start === sel.end && sel.start > 0) {
-      // delete previous character
       const before = currentContent.slice(0, sel.start - 1);
       const after = currentContent.slice(sel.end);
       const newContent = before + after;
@@ -244,7 +241,6 @@ export default function ComposeScreen() {
       const newPos = sel.start - 1;
       setCursorSelection({ start: newPos, end: newPos });
     } else if (sel.start !== sel.end) {
-      // delete selection
       const before = currentContent.slice(0, sel.start);
       const after = currentContent.slice(sel.end);
       const newContent = before + after;
@@ -253,7 +249,6 @@ export default function ComposeScreen() {
     }
   };
 
-  // Mise à jour du contenu d'une section
   const updateSectionContent = (sectionId: string, voice: keyof Omit<Section, 'id' | 'name'>, content: string) => {
     setComposition(prev => ({
       ...prev,
@@ -265,21 +260,17 @@ export default function ComposeScreen() {
     }));
   };
 
-  // Gestion du focus sur les lignes de partition
   const handleStaffFocus = (voice: 'S' | 'A' | 'T' | 'B', sectionId: string) => {
     setActiveVoice(voice);
     setActiveSectionId(sectionId);
     setShowKeyboard(true);
-    // reset selection if switching focus
     setCursorSelection(null);
   };
 
   const handleSelectionChange = (voice: 'S' | 'A' | 'T' | 'B', sectionId: string, selection: { start: number; end: number }) => {
-    // Mettre à jour la sélection sans condition pour éviter les désynchronisations
     setCursorSelection(selection);
   };
 
-  // Animation du drawer
   const toggleDrawer = () => {
     const toValue = isDrawerOpen ? 0 : 1;
     setIsDrawerOpen(!isDrawerOpen);
@@ -291,12 +282,71 @@ export default function ComposeScreen() {
     }).start();
   };
 
-  // Gestion de la sauvegarde
-  const handleSave = () => {
-    console.log('💾 Sauvegarde de la composition...');
+  // Fonction de sauvegarde améliorée
+  const handleSave = async () => {
+    if (isSaving) return;
+    
+    setIsSaving(true);
+    
+    try {
+      // Demander le nom du compositeur si c'est une nouvelle composition
+      let composerName = 'Anonyme';
+      
+      if (!compositionId) {
+        // TODO: Afficher un dialogue pour demander le nom du compositeur
+        // Pour l'instant on utilise une valeur par défaut
+        composerName = 'John .D';
+      }
+
+      const saved = await saveComposition(composition, composerName, compositionId);
+      
+      if (!compositionId) {
+        setCompositionId(saved.id);
+      }
+      
+      setHasUnsavedChanges(false);
+      
+      Alert.alert(
+        'Succès',
+        'Composition sauvegardée avec succès !',
+        [
+          {
+            text: 'OK',
+            onPress: () => console.log('✅ Composition sauvegardée:', saved.id)
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde:', error);
+      Alert.alert(
+        'Erreur',
+        'Impossible de sauvegarder la composition. Veuillez réessayer.'
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  // Handlers pour les boutons flottants qui vérifient le drag
+  // Fonction pour exporter la composition
+  const handleExport = async () => {
+    if (!compositionId) {
+      Alert.alert('Info', 'Veuillez d\'abord sauvegarder la composition');
+      return;
+    }
+
+    try {
+      const json = await exportComposition(compositionId);
+      if (json) {
+        // TODO: Utiliser le module de partage pour envoyer le JSON
+        console.log('Export JSON:', json);
+        Alert.alert('Succès', 'Composition exportée !');
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'export:', error);
+      Alert.alert('Erreur', 'Impossible d\'exporter la composition');
+    }
+  };
+
   const handleSavePress = () => {
     if (!isDragging && Date.now() - dragStartTime.current > 200) {
       console.log('💾 Bouton Save cliqué');
@@ -311,11 +361,9 @@ export default function ComposeScreen() {
     }
   };
 
-  // Fonction pour gérer les changements de composition (ajout/suppression de sections)
   const handleCompositionChange = (newComposition: Composition) => {
     setComposition(newComposition);
     
-    // Vérifier si la section active existe encore
     const activeExists = newComposition.sections.some(s => s.id === activeSectionId);
     if (!activeExists && newComposition.sections.length > 0) {
       setActiveSectionId(newComposition.sections[0].id);
@@ -324,7 +372,6 @@ export default function ComposeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Éditeur de partition */}
       <View style={styles.editorContainer}>
         <MusicEditor
           composition={composition}
@@ -339,7 +386,6 @@ export default function ComposeScreen() {
         />
       </View>
 
-      {/* Clavier musical */}
       {showKeyboard && (
         <View style={styles.keyboardContainer}>
           <MusicKeyboard
@@ -353,7 +399,6 @@ export default function ComposeScreen() {
         </View>
       )}
 
-      {/* Boutons flottants draggables */}
       {!showKeyboard && (
         <Animated.View 
           style={[
@@ -370,16 +415,17 @@ export default function ComposeScreen() {
             style={styles.floatingMenuButton}
             {...panResponder.panHandlers}
           >
-            {/* Bouton Sauvegarder (en haut) */}
             <TouchableOpacity 
               onPress={handleSavePress}
               activeOpacity={0.7}
               disabled={isDragging}
             >
-              <Save size={24} color={colors.text} />
+              <Save 
+                size={22} 
+                color={hasUnsavedChanges ? colors.primary : colors.text} 
+              />
             </TouchableOpacity>
             
-            {/* Bouton Paramètres avec 3 points (en bas) */}
             <TouchableOpacity 
               onPress={handleDrawerPress}
               activeOpacity={0.7}
@@ -395,13 +441,15 @@ export default function ComposeScreen() {
         </Animated.View>
       )}
 
-      {/* Drawer de configuration */}
       <CompositionDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
         composition={composition}
         onCompositionChange={setComposition}
-        onSectionSelect={handleSectionSelect}
+        onSectionSelect={(sectionId) => {
+          setActiveSectionId(sectionId);
+          setIsDrawerOpen(false);
+        }}
         activeSectionId={activeSectionId}
       />
     </View>

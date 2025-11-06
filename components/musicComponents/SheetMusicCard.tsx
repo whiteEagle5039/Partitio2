@@ -2,7 +2,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { Check, Download, Play } from 'lucide-react-native';
 import React from 'react';
 import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { TextComponent } from './uxComponents/TextComponent';
+import { TextComponent } from '../uxComponents/TextComponent';
 
 type SheetMusicCardProps = {
   title: string;

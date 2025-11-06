@@ -5,7 +5,8 @@ import {
   ArrowLeft,
   BarChart3,
   Trash2,
-  ChevronDown
+  ChevronDown,
+  Minus
 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { BackHandler, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -611,6 +612,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
                <TextComponent style={styles.keyText}>
                  espace
                </TextComponent>
+               <Minus size={16} color={colors.text} />
              </TouchableOpacity>
              
              <TouchableOpacity

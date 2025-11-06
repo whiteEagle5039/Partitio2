@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Animated, Dimensions, TouchableOpacity, StyleSheet } from 'react-native';
-import { DrawerMenu } from './DrawerMenu';
 import { useAppStore } from '@/stores/appStore';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { DrawerMenu } from './musicComponents/DrawerMenu';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const DRAWER_WIDTH = 230;

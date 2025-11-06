@@ -1,4 +1,4 @@
-import { SheetMusicCard } from '@/components/SheetMusicCard';
+import { SheetMusicCard } from '@/components/musicComponents/SheetMusicCard';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { WrapperComponent } from '@/components/WrapperComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';

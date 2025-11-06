@@ -2,18 +2,18 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
 import {
-  HardDrive,
-  Library,
-  PenTool,
-  Search,
-  Settings,
-  User,
-  X
+    HardDrive,
+    Library,
+    PenTool,
+    Search,
+    Settings,
+    User,
+    X
 } from 'lucide-react-native';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { TextComponent } from './uxComponents/TextComponent';
+import { TextComponent } from '../uxComponents/TextComponent';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const DRAWER_WIDTH = 300;
