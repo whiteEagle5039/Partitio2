@@ -4,7 +4,8 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import {
   ArrowLeft,
   BarChart3,
-  Trash2
+  Trash2,
+  ChevronDown
 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { BackHandler, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -613,23 +614,25 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
              </TouchableOpacity>
              
              <TouchableOpacity
-               style={[styles.actionButton]}
-               onPress={() => handleInsertNote('\n')}
+               style={[styles.actionButton, styles.actionKey]}
+               onPress={onDeleteLast}
              >
-               <ArrowLeft size={16} color={colors.text} />
-               <TextComponent style={styles.keySubText}>
-                 Retour
+               <ArrowLeft size={16} color={colors.destructive} />
+               <TextComponent style={[styles.keySubText, styles.actionKeyText]}>
+                 Effacer
                </TextComponent>
              </TouchableOpacity>
              
              <TouchableOpacity
                style={[styles.actionButton, styles.actionKey]}
-               onPress={onDeleteLast}
+               onPress={() => {
+               const closeKeyboard = () => {
+                 if (onClose) onClose();
+               };
+               closeKeyboard();
+               }}
              >
-               <Trash2 size={16} color={colors.destructive} />
-               <TextComponent style={[styles.keySubText, styles.actionKeyText]}>
-                 Suppr
-               </TextComponent>
+               <ChevronDown size={16} color={colors.text} />
              </TouchableOpacity>
            </View>
          </View>
