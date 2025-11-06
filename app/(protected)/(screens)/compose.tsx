@@ -32,18 +32,18 @@ export default function ComposeScreen() {
   
   // État principal de la composition
   const [composition, setComposition] = useState<Composition>({
-    title: 'Ma composition - John .D #1',
+    title: 'Sans titre - John .D #1',
     tempo: '4/4',
     key: 'Do',
     sections: [
-      {
-        id: '1',
-        name: 'Couplet 1',
-        soprano: '',
-        alto: '',
-        tenor: '',
-        bass: '',
-      }
+      // {
+      //   id: '1',
+      //   name: 'Couplet 1',
+      //   soprano: '',
+      //   alto: '',
+      //   tenor: '',
+      //   bass: '',
+      // }
     ],
   });
 
@@ -156,12 +156,11 @@ export default function ComposeScreen() {
       shadowRadius: 6,
       borderWidth: 1,
       borderColor: colors.border,
-      // gap: 20,
+      gap: 12,
     },
     dotsContainer: {
       width: 24,
       height: 24,
-      display: 'flex',
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',

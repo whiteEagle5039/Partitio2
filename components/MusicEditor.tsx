@@ -603,9 +603,20 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
 
   if (composition.sections.length === 0) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
+          <View style={styles.sheetHeader}>
+            <TextComponent variante="subtitle2" style={styles.sheetTitle}>
+              {composition.title || 'Sans titre'}
+          </TextComponent>
+          <View style={styles.sheetMetaRow}>
+            <TextComponent variante="body4" style={styles.sheetMetaText}>{composition.key || '-'}</TextComponent>
+            <TextComponent variante="body4" style={[styles.sheetMetaText, { marginLeft: 12 }]}>{composition.tempo || '-'}</TextComponent>
+          </View>
+        </View>
+
         <TextComponent variante="body2" color={colors.text2} style={styles.emptyMessage}>
-          Aucune section dans votre composition.{'\n'}
+          Votre inspiration commence ici...{'\n'}
           Commencez par ajouter une section.
         </TextComponent>
         <TouchableOpacity style={styles.addSectionButton} onPress={addNewSection}>
@@ -615,8 +626,9 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
           </TextComponent>
         </TouchableOpacity>
       </View>
-    );
-  }
+    </SafeAreaView>
+  );
+}
 
   return (
     <SafeAreaView style={styles.container}>
