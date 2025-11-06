@@ -4,10 +4,10 @@ import { MusicKeyboard } from '@/components/Musickeyboard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
-import { Settings2 } from 'lucide-react-native';
-import React, { useState } from 'react';
-import { Animated, StyleSheet, TouchableOpacity, View } from 'react-native';
-
+import { Settings2, Save, RotateCcw } from 'lucide-react-native';
+import React, { useState, useRef } from 'react';
+import { Animated, StyleSheet, TouchableOpacity, View, PanResponder } from 'react-native';
+import { Dimensions } from 'react-native';
 interface Section {
   id: string;
   name: string;
@@ -28,6 +28,7 @@ export default function ComposeScreen() {
   const colors = useThemeColors();
   const router = useRouter();
   const { addComposition } = useAppStore();
+  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
   
   // État principal de la composition
   const [composition, setComposition] = useState<Composition>({
@@ -53,6 +54,68 @@ export default function ComposeScreen() {
   const [showKeyboard, setShowKeyboard] = useState(false);
   const [drawerAnimation] = useState(new Animated.Value(0));
   const [cursorSelection, setCursorSelection] = useState<{ start: number; end: number } | null>(null);
+  const [showFloatingMenu, setShowFloatingMenu] = useState(false);
+  
+  // État pour gérer le drag vs click
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartTime = useRef(0);
+  const startPosition = useRef({ x: 0, y: 0 });
+
+  // Pour le bouton draggable
+  const pan = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
+  
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        // N'activer le pan que si on a bougé de plus de 10 pixels
+        const moved = Math.abs(gestureState.dx) > 10 || Math.abs(gestureState.dy) > 10;
+        if (moved) {
+          setIsDragging(true);
+        }
+        return moved;
+      },
+      onPanResponderGrant: (_, gestureState) => {
+        dragStartTime.current = Date.now();
+        startPosition.current = {
+          x: (pan.x as any)._value,
+          y: (pan.y as any)._value
+        };
+        pan.setOffset({
+          x: startPosition.current.x,
+          y: startPosition.current.y
+        });
+        pan.setValue({ x: 0, y: 0 });
+      },
+      onPanResponderMove: Animated.event(
+        [null, { dx: pan.x, dy: pan.y }],
+        { useNativeDriver: false }
+      ),
+      onPanResponderRelease: (_, gestureState) => {
+        const newX = startPosition.current.x + gestureState.dx;
+        const newY = startPosition.current.y + gestureState.dy;
+        
+        // Contraintes de l'écran (avec marges)
+        const margin = 25;
+        const buttonWidth = 50;
+        const buttonHeight = 90;
+        const maxX = 100; // Distance max vers la droite
+        const minX = -300; // Distance max vers la gauche
+        const maxY = 200; // Distance max vers le bas
+        const minY = -600; // Distance max vers le haut
+        
+        // Limiter la position
+        const constrainedX = Math.max(minX, Math.min(maxX, newX));
+        const constrainedY = Math.max(minY, Math.min(maxY, newY));
+        
+        pan.flattenOffset();
+        pan.setValue({ x: constrainedX, y: constrainedY });
+        
+        // Réinitialiser après un court délai
+        setTimeout(() => setIsDragging(false), 150);
+      }
+    })
+  ).current;
 
   const styles = StyleSheet.create({
     container: {
@@ -72,21 +135,43 @@ export default function ComposeScreen() {
     keyboardContainer: {
       backgroundColor: colors.card,
     },
-    floatingConfigButton: {
+    draggableContainer: {
       position: 'absolute',
       bottom: 30,
       right: 20,
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-      backgroundColor: colors.primary + 'CC',
-      justifyContent: 'center',
       alignItems: 'center',
+    },
+    floatingMenuButton: {
+      width: 50,
+      height: 90,
+      borderRadius: 28,
+      backgroundColor: colors.card,
+      justifyContent: 'space-evenly',
+      alignItems: 'center',
+      paddingVertical: 16,
       elevation: 6,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 3 },
       shadowOpacity: 0.3,
       shadowRadius: 6,
+      borderWidth: 1,
+      borderColor: colors.border,
+      // gap: 20,
+    },
+    dotsContainer: {
+      width: 24,
+      height: 24,
+      display: 'flex',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 2,
+    },
+    dot: {
+      width: 4,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: colors.primary,
     },
   });
 
@@ -142,51 +227,7 @@ export default function ComposeScreen() {
     updateSectionContent(activeSectionId, voiceKey, newContent);
     const newPos = before.length + insertText.length;
     setCursorSelection({ start: newPos, end: newPos });
-};
-
-  // const handleInsertSymbol = (symbol: string) => {
-  //   const currentSection = composition.sections.find(s => s.id === activeSectionId);
-  //   if (!currentSection) return;
-
-  //   const voiceKey = activeVoice.toLowerCase() as keyof Omit<Section, 'id' | 'name'>;
-  //   const currentContent = currentSection[voiceKey] || '';
-  //   const sel = cursorSelection || { start: currentContent.length, end: currentContent.length };
-  //   const before = currentContent.slice(0, sel.start);
-  //   const after = currentContent.slice(sel.end);
-  //   const insertText = symbol;
-  //   const newContent = before + insertText + after;
-
-  //   updateSectionContent(activeSectionId, voiceKey, newContent);
-  //   const newPos = before.length + insertText.length;
-  //   setCursorSelection({ start: newPos, end: newPos });
-  // };
-  
-//   const handleInsertSymbol = (symbol: string) => {
-//   const currentSection = composition.sections.find(s => s.id === activeSectionId);
-//   if (!currentSection) return;
-
-//   const voiceKey = activeVoice.toLowerCase() as keyof Omit<Section, 'id' | 'name'>;
-//   const currentContent = currentSection[voiceKey] || '';
-//   const sel = cursorSelection || { start: currentContent.length, end: currentContent.length };
-//   const before = currentContent.slice(0, sel.start);
-//   const after = currentContent.slice(sel.end);
-  
-//   // Traitement spécial pour la mesure et le tiret
-//   let insertText = symbol;
-//   if (symbol === '|') {
-//     insertText = ' | ';
-//   } else if (symbol === '-') {
-//     insertText = ' - ';
-//   }
-  
-//   const newContent = before + insertText + after;
-//   updateSectionContent(activeSectionId, voiceKey, newContent);
-//   const newPos = before.length + insertText.length;
-//   setCursorSelection({ start: newPos, end: newPos });
-// };
-//   const handleInsertMeasure = () => {
-//     handleInsertSymbol(' | ');
-//   };
+  };
 
   const handleDeleteLast = () => {
     const currentSection = composition.sections.find(s => s.id === activeSectionId);
@@ -251,6 +292,26 @@ export default function ComposeScreen() {
     }).start();
   };
 
+  // Gestion de la sauvegarde
+  const handleSave = () => {
+    console.log('💾 Sauvegarde de la composition...');
+  };
+
+  // Handlers pour les boutons flottants qui vérifient le drag
+  const handleSavePress = () => {
+    if (!isDragging && Date.now() - dragStartTime.current > 200) {
+      console.log('💾 Bouton Save cliqué');
+      handleSave();
+    }
+  };
+
+  const handleDrawerPress = () => {
+    if (!isDragging && Date.now() - dragStartTime.current > 200) {
+      console.log('⚙️ Bouton Drawer cliqué');
+      toggleDrawer();
+    }
+  };
+
   // Fonction pour gérer les changements de composition (ajout/suppression de sections)
   const handleCompositionChange = (newComposition: Composition) => {
     setComposition(newComposition);
@@ -286,8 +347,6 @@ export default function ComposeScreen() {
             activeVoice={activeVoice}
             onVoiceChange={setActiveVoice}
             onInsertNote={handleInsertNote}
-            // onInsertSymbol={handleInsertSymbol}
-            // onInsertMeasure={handleInsertMeasure}
             onDeleteLast={handleDeleteLast}
             onClose={() => setShowKeyboard(false)}
             currentContent={composition.sections.find(s => s.id === activeSectionId)?.[activeVoice.toLowerCase() as keyof Section] as string}
@@ -295,14 +354,46 @@ export default function ComposeScreen() {
         </View>
       )}
 
-      {/* Bouton de configuration flottant */}
+      {/* Boutons flottants draggables */}
       {!showKeyboard && (
-        <TouchableOpacity 
-          style={styles.floatingConfigButton}
-          onPress={toggleDrawer}
+        <Animated.View 
+          style={[
+            styles.draggableContainer,
+            {
+              transform: [
+                { translateX: pan.x },
+                { translateY: pan.y }
+              ]
+            }
+          ]}
         >
-          <Settings2 size={24} color={colors.primaryForeground} />
-        </TouchableOpacity>
+          <View 
+            style={styles.floatingMenuButton}
+            {...panResponder.panHandlers}
+          >
+            {/* Bouton Sauvegarder (en haut) */}
+            <TouchableOpacity 
+              onPress={handleSavePress}
+              activeOpacity={0.7}
+              disabled={isDragging}
+            >
+              <Save size={24} color={colors.text} />
+            </TouchableOpacity>
+            
+            {/* Bouton Paramètres avec 3 points (en bas) */}
+            <TouchableOpacity 
+              onPress={handleDrawerPress}
+              activeOpacity={0.7}
+              disabled={isDragging}
+            >
+              <View style={styles.dotsContainer}>
+                <View style={styles.dot} />
+                <View style={styles.dot} />
+                <View style={styles.dot} />
+              </View>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
       )}
 
       {/* Drawer de configuration */}
