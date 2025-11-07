@@ -132,17 +132,39 @@ export default function ComposeScreen() {
         const newX = startPosition.current.x + gestureState.dx;
         const newY = startPosition.current.y + gestureState.dy;
         
-        const margin = 25;
-        const maxX = 100;
-        const minX = -300;
-        const maxY = 200;
-        const minY = -600;
+        // Dimensions de l'écran et marges
+        const buttonWidth = 50;
+        const margin = 20;
+        const minY = -screenHeight + 200; // Éviter le haut de l'écran
+        const maxY = 100; // Éviter le bas de l'écran
         
-        const constrainedX = Math.max(minX, Math.min(maxX, newX));
+        // Contraindre Y
         const constrainedY = Math.max(minY, Math.min(maxY, newY));
         
+        // Déterminer le côté le plus proche (gauche ou droite)
+        // Position actuelle du bouton sur l'écran
+        const buttonCenterX = screenWidth - margin - buttonWidth / 2 + newX;
+        const screenCenter = screenWidth / 2;
+        
+        // Si le bouton est plus proche du bord droit
+        let targetX;
+        if (buttonCenterX > screenCenter) {
+          // Coller à droite (position initiale)
+          targetX = 0;
+        } else {
+          // Coller à gauche
+          targetX = -(screenWidth - buttonWidth - margin * 2);
+        }
+        
         pan.flattenOffset();
-        pan.setValue({ x: constrainedX, y: constrainedY });
+        
+        // Animation vers le bord
+        Animated.spring(pan, {
+          toValue: { x: targetX, y: constrainedY },
+          useNativeDriver: false,
+          tension: 100,
+          friction: 10,
+        }).start();
         
         setTimeout(() => setIsDragging(false), 150);
       }
@@ -282,52 +304,6 @@ export default function ComposeScreen() {
     }).start();
   };
 
-  // Fonction de sauvegarde améliorée
-  // const handleSave = async () => {
-  //   if (isSaving) return;
-    
-  //   setIsSaving(true);
-    
-  //   try {
-  //     // Demander le nom du compositeur si c'est une nouvelle composition
-  //     let composerName = 'Anonyme';
-      
-  //     if (!compositionId) {
-  //       // TODO: Afficher un dialogue pour demander le nom du compositeur
-  //       // Pour l'instant on utilise une valeur par défaut
-  //       composerName = 'John .D';
-  //     }
-
-  //     const saved = await saveComposition(composition, composerName, compositionId);
-      
-  //     if (!compositionId) {
-  //       setCompositionId(saved.id);
-  //     }
-      
-  //     setHasUnsavedChanges(false);
-      
-  //     Alert.alert(
-  //       'Succès',
-  //       'Composition sauvegardée avec succès !',
-  //       [
-  //         {
-  //           text: 'OK',
-  //           onPress: () => console.log('✅ Composition sauvegardée:', saved.id)
-  //         }
-  //       ]
-  //     );
-  //   } catch (error) {
-  //     console.error('❌ Erreur lors de la sauvegarde:', error);
-  //     Alert.alert(
-  //       'Erreur',
-  //       'Impossible de sauvegarder la composition. Veuillez réessayer.'
-  //     );
-  //   } finally {
-  //     setIsSaving(false);
-  //   }
-  // };
-
-  // Remplacer la fonction handleSave dans compose.tsx
 
 const handleSave = async () => {
   if (isSaving) return;
@@ -484,7 +460,7 @@ const handleSave = async () => {
             >
               <Save 
                 size={22} 
-                color={hasUnsavedChanges ? colors.primary : colors.text} 
+                color={colors.text} 
               />
             </TouchableOpacity>
             
