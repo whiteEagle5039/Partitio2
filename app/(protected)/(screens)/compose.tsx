@@ -2,6 +2,7 @@
 import { CompositionDrawer } from '@/components/musicComponents/CompositionDrawer';
 import { MusicEditor } from '@/components/musicComponents/MusicEditor';
 import { MusicKeyboard } from '@/components/musicComponents/Musickeyboard';
+import { SaveCompositionModal } from '@/components/musicComponents/SaveCompositionModal';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useCompositionStorage } from '@/utils/CompositionStorage';
@@ -60,6 +61,7 @@ export default function ComposeScreen() {
   const [activeSectionId, setActiveSectionId] = useState('1');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showKeyboard, setShowKeyboard] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
   const [drawerAnimation] = useState(new Animated.Value(0));
   const [cursorSelection, setCursorSelection] = useState<{ start: number; end: number } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -304,67 +306,77 @@ export default function ComposeScreen() {
     }).start();
   };
 
-
-const handleSave = async () => {
-  if (isSaving) return;
-  
-  setIsSaving(true);
-  
-  try {
-    // Demander le nom du compositeur si c'est une nouvelle composition
-    let composerName = 'Anonyme';
-    
-    if (!compositionId) {
-      // TODO: Afficher un dialogue pour demander le nom du compositeur
-      // Pour l'instant on utilise une valeur par défaut
-      composerName = 'John .D';
+  // Fonction principale de sauvegarde - vérifie s'il y a des sections
+  const handleSave = async () => {
+    // Vérifier qu'il y a au moins une section
+    if (composition.sections.length === 0) {
+      Alert.alert(
+        'Composition vide',
+        'Vous devez ajouter au moins une section avant de sauvegarder.',
+        [{ text: 'OK' }]
+      );
+      return;
     }
 
-    console.log('💾 Sauvegarde en cours...');
-    console.log('📝 Composition ID actuel:', compositionId);
-    console.log('📝 Données:', {
-      title: composition.title,
-      sections: composition.sections.length,
-    });
+    // Ouvrir le modal de sauvegarde
+    setShowSaveModal(true);
+  };
 
-    const saved = await saveComposition(composition, composerName, compositionId);
+  // Fonction appelée par le modal après avoir récupéré le nom du compositeur
+  const handleSaveWithComposer = async (composerName: string) => {
+    if (isSaving) return;
     
-    console.log('✅ Composition sauvegardée avec ID:', saved.id);
+    setIsSaving(true);
     
-    if (!compositionId) {
-      setCompositionId(saved.id);
-      console.log('🆕 Nouvel ID défini:', saved.id);
-    }
-    
-    setHasUnsavedChanges(false);
-    
-    Alert.alert(
-      'Succès',
-      'Composition sauvegardée avec succès !',
-      [
-        {
-          text: 'Voir',
-          onPress: () => {
-            console.log('👀 Navigation vers preview avec ID:', saved.id);
-            router.push(`/compositionPreview?id=${saved.id}`);
+    try {
+      console.log('💾 Sauvegarde en cours...');
+      console.log('📝 Composition ID actuel:', compositionId);
+      console.log('📊 Données:', {
+        title: composition.title,
+        sections: composition.sections.length,
+        composer: composerName,
+      });
+
+      const saved = await saveComposition(composition, composerName, compositionId);
+      
+      console.log('✅ Composition sauvegardée avec ID:', saved.id);
+      
+      if (!compositionId) {
+        setCompositionId(saved.id);
+        console.log('🆕 Nouvel ID défini:', saved.id);
+      }
+      
+      setHasUnsavedChanges(false);
+      
+      Alert.alert(
+        'Succès',
+        'Composition sauvegardée avec succès !',
+        [
+          {
+            text: 'Voir dans la bibliothèque',
+            onPress: () => {
+              console.log('📚 Navigation vers la bibliothèque');
+              router.push('/library');
+            }
+          },
+          {
+            text: 'Continuer',
+            style: 'cancel',
+            onPress: () => console.log('✅ Composition sauvegardée:', saved.id)
           }
-        },
-        {
-          text: 'OK',
-          onPress: () => console.log('✅ Composition sauvegardée:', saved.id)
-        }
-      ]
-    );
-  } catch (error) {
-    console.error('❌ Erreur lors de la sauvegarde:', error);
-    Alert.alert(
-      'Erreur',
-      'Impossible de sauvegarder la composition. Veuillez réessayer.'
-    );
-  } finally {
-    setIsSaving(false);
-  }
-};
+        ]
+      );
+    } catch (error) {
+      console.error('❌ Erreur lors de la sauvegarde:', error);
+      Alert.alert(
+        'Erreur',
+        'Impossible de sauvegarder la composition. Veuillez réessayer.'
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Fonction pour exporter la composition
   const handleExport = async () => {
     if (!compositionId) {
@@ -489,6 +501,13 @@ const handleSave = async () => {
           setIsDrawerOpen(false);
         }}
         activeSectionId={activeSectionId}
+      />
+
+      <SaveCompositionModal
+        visible={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        onSave={handleSaveWithComposer}
+        isNewComposition={!compositionId}
       />
     </View>
   );
