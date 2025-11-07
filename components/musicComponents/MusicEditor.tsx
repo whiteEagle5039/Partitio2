@@ -131,8 +131,6 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       borderColor: colors.primary,
     },
     sectionName: {
-      fontSize: 15,
-      fontWeight: 'bold',
       color: colors.text,
       paddingHorizontal: 4,
       paddingVertical: 8,
@@ -363,10 +361,10 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       
       if (scrollRef) {
         // Petite animation de "nudge" pour montrer qu'on peut slider
-        scrollRef.scrollTo({ x: currentPosition + 20, animated: true });
+        scrollRef.scrollTo({ x: currentPosition + 120, animated: true });
         setTimeout(() => {
           scrollRef.scrollTo({ x: currentPosition, animated: true });
-        }, 150);
+        }, 180);
       }
     }
   }, [activeSectionId]);
@@ -708,7 +706,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                       <TouchableOpacity 
                         onPress={() => startEditingSection(section.id, section.name)}
                       >
-                        <TextComponent style={styles.sectionName}>
+                        <TextComponent variante='subtitle3' style={styles.sectionName}>
                           {section.name}
                         </TextComponent>
                       </TouchableOpacity>
