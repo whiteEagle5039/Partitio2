@@ -56,7 +56,13 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
-
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
+  // Ajouter ces états au début du composant
+  const [contentScrollX, setContentScrollX] = useState(0);
+  const [contentContainerWidth, setContentContainerWidth] = useState(0);
+  const [contentContentWidth, setContentContentWidth] = useState(width * 2);
+  const contentScrollRef = useRef<ScrollView>(null);
   // Forcer la mise à jour des TextInputs quand la composition change
   useEffect(() => {
     const activeSection = composition.sections.find(s => s.id === activeSectionId);
@@ -309,6 +315,31 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     sheetMetaText: {
       fontSize: 14,
       color: colors.text2,
+    },
+    contentcrollArrow: {
+      position: 'absolute',
+      top: '50%',
+      marginTop: -12,
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: colors.card2,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 20,
+      opacity: 0.95,
+      // subtle shadow for arrows
+      elevation: 6,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.18,
+      shadowRadius: 4,
+    },
+    leftArrow: {
+      left: 8,
+    },
+    rightArrow: {
+      right: 8,
     },
   });
 
@@ -726,22 +757,64 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
 
               {/* Contenu de la section (portées + paroles déplaçables horizontalement) */}
               {!isCollapsed && (
-                <ScrollView
-                  horizontal
-                  pagingEnabled={false}
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ width: width * 2 }}
-                >
-                  <View style={[
-                    styles.staffContainer,
-                    isActive && styles.activeStaffContainer,
-                    { width }
-                  ]}>
-                    {renderStaffLines(section)}
-                  </View>
+                <>
+                  <ScrollView
+                    ref={contentScrollRef}
+                    horizontal
+                    pagingEnabled={false}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ width: width * 2 }}
+                    onScroll={(event) => {
+                      const offsetX = event.nativeEvent.contentOffset.x;
+                      setContentScrollX(offsetX);
+                      
+                      // Afficher la flèche gauche si on n'est pas au début
+                      setShowLeftArrow(offsetX > 10);
+                      
+                      // Afficher la flèche droite si on n'est pas à la fin
+                      const maxScroll = contentContentWidth - contentContainerWidth;
+                      setShowRightArrow(offsetX < maxScroll - 10);
+                    }}
+                    onLayout={(event) => {
+                      setContentContainerWidth(event.nativeEvent.layout.width);
+                    }}
+                    scrollEventThrottle={16}
+                  >
+                    <View style={[
+                      styles.staffContainer,
+                      isActive && styles.activeStaffContainer,
+                      { width }
+                    ]}>
+                      {renderStaffLines(section)}
+                    </View>
 
-                  {renderLyrics(section)}
-                </ScrollView>
+                    {renderLyrics(section)}
+                  </ScrollView>
+                  {showLeftArrow && (
+                    <TouchableOpacity
+                      style={[styles.contentcrollArrow, styles.leftArrow]}
+                      onPress={() => {
+                        const target = Math.max(0, contentScrollX - 120);
+                        contentScrollRef.current?.scrollTo({ x: target, animated: true });
+                      }}
+                    >
+                      <TextComponent style={{ color: colors.text, fontSize: 18 }}>{'‹'}</TextComponent>
+                    </TouchableOpacity>
+                  )}
+      
+                  {showRightArrow && (
+                    <TouchableOpacity
+                      style={[styles.contentcrollArrow, styles.rightArrow]}
+                      onPress={() => {
+                        const maxX = Math.max(0, contentContentWidth - contentContainerWidth);
+                        const target = Math.min(maxX, contentScrollX + 120);
+                        contentScrollRef.current?.scrollTo({ x: target, animated: true });
+                      }}
+                    >
+                      <TextComponent style={{ color: colors.text, fontSize: 18 }}>{'›'}</TextComponent>
+                    </TouchableOpacity>
+                  )}
+                </>
               )}
 
               {/* Bouton d'ajout de section après chaque section */}
