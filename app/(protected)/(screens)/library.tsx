@@ -167,10 +167,17 @@ export default function LibraryScreen() {
   };
 
   // Gestionnaires d'événements simplifiés
-  const handleContentPress = (content: Content) => {
-    console.log(`Naviguer vers le contenu: ${content.title}`);
-    // Navigation vers le détail du contenu
-    // router.push(`/content/${content.id}`);
+  const handleContentPress = (contentOrId: Content | string) => {
+    // Si c'est une composition (string ID)
+    if (typeof contentOrId === 'string') {
+      console.log(`Naviguer vers la composition: ${contentOrId}`);
+      router.push(`/compositionPreview?id=${contentOrId}`);
+      return;
+    }
+    
+    // Sinon, c'est un objet Content classique
+    console.log(`Naviguer vers le contenu: ${contentOrId.title}`);
+    // router.push(`/content/${contentOrId.id}`);
   };
 
   const handleFolderPress = (folder: FolderType) => {
@@ -346,7 +353,14 @@ export default function LibraryScreen() {
       case '2': // Cantiques
         return <CantiquesView content={content} {...commonProps} />;
       case '3': // Compositions
-        return <CompositionsView content={content} {...commonProps} />;
+        return (
+          <CompositionsView 
+            onContentPress={(id: string) => {
+              console.log(`Naviguer vers la composition: ${id}`);
+              router.push(`/compositionPreview?id=${id}`);
+            }}
+          />
+        );
       case '4': // Chansons
         return <ChansonsView content={content} {...commonProps} />;
       case '5': // Leçons

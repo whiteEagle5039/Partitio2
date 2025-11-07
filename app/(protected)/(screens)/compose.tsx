@@ -283,50 +283,112 @@ export default function ComposeScreen() {
   };
 
   // Fonction de sauvegarde améliorée
-  const handleSave = async () => {
-    if (isSaving) return;
+  // const handleSave = async () => {
+  //   if (isSaving) return;
     
-    setIsSaving(true);
+  //   setIsSaving(true);
     
-    try {
-      // Demander le nom du compositeur si c'est une nouvelle composition
-      let composerName = 'Anonyme';
+  //   try {
+  //     // Demander le nom du compositeur si c'est une nouvelle composition
+  //     let composerName = 'Anonyme';
       
-      if (!compositionId) {
-        // TODO: Afficher un dialogue pour demander le nom du compositeur
-        // Pour l'instant on utilise une valeur par défaut
-        composerName = 'John .D';
-      }
+  //     if (!compositionId) {
+  //       // TODO: Afficher un dialogue pour demander le nom du compositeur
+  //       // Pour l'instant on utilise une valeur par défaut
+  //       composerName = 'John .D';
+  //     }
 
-      const saved = await saveComposition(composition, composerName, compositionId);
+  //     const saved = await saveComposition(composition, composerName, compositionId);
       
-      if (!compositionId) {
-        setCompositionId(saved.id);
-      }
+  //     if (!compositionId) {
+  //       setCompositionId(saved.id);
+  //     }
       
-      setHasUnsavedChanges(false);
+  //     setHasUnsavedChanges(false);
       
-      Alert.alert(
-        'Succès',
-        'Composition sauvegardée avec succès !',
-        [
-          {
-            text: 'OK',
-            onPress: () => console.log('✅ Composition sauvegardée:', saved.id)
-          }
-        ]
-      );
-    } catch (error) {
-      console.error('❌ Erreur lors de la sauvegarde:', error);
-      Alert.alert(
-        'Erreur',
-        'Impossible de sauvegarder la composition. Veuillez réessayer.'
-      );
-    } finally {
-      setIsSaving(false);
+  //     Alert.alert(
+  //       'Succès',
+  //       'Composition sauvegardée avec succès !',
+  //       [
+  //         {
+  //           text: 'OK',
+  //           onPress: () => console.log('✅ Composition sauvegardée:', saved.id)
+  //         }
+  //       ]
+  //     );
+  //   } catch (error) {
+  //     console.error('❌ Erreur lors de la sauvegarde:', error);
+  //     Alert.alert(
+  //       'Erreur',
+  //       'Impossible de sauvegarder la composition. Veuillez réessayer.'
+  //     );
+  //   } finally {
+  //     setIsSaving(false);
+  //   }
+  // };
+
+  // Remplacer la fonction handleSave dans compose.tsx
+
+const handleSave = async () => {
+  if (isSaving) return;
+  
+  setIsSaving(true);
+  
+  try {
+    // Demander le nom du compositeur si c'est une nouvelle composition
+    let composerName = 'Anonyme';
+    
+    if (!compositionId) {
+      // TODO: Afficher un dialogue pour demander le nom du compositeur
+      // Pour l'instant on utilise une valeur par défaut
+      composerName = 'John .D';
     }
-  };
 
+    console.log('💾 Sauvegarde en cours...');
+    console.log('📝 Composition ID actuel:', compositionId);
+    console.log('📝 Données:', {
+      title: composition.title,
+      sections: composition.sections.length,
+    });
+
+    const saved = await saveComposition(composition, composerName, compositionId);
+    
+    console.log('✅ Composition sauvegardée avec ID:', saved.id);
+    
+    if (!compositionId) {
+      setCompositionId(saved.id);
+      console.log('🆕 Nouvel ID défini:', saved.id);
+    }
+    
+    setHasUnsavedChanges(false);
+    
+    Alert.alert(
+      'Succès',
+      'Composition sauvegardée avec succès !',
+      [
+        {
+          text: 'Voir',
+          onPress: () => {
+            console.log('👀 Navigation vers preview avec ID:', saved.id);
+            router.push(`/compositionPreview?id=${saved.id}`);
+          }
+        },
+        {
+          text: 'OK',
+          onPress: () => console.log('✅ Composition sauvegardée:', saved.id)
+        }
+      ]
+    );
+  } catch (error) {
+    console.error('❌ Erreur lors de la sauvegarde:', error);
+    Alert.alert(
+      'Erreur',
+      'Impossible de sauvegarder la composition. Veuillez réessayer.'
+    );
+  } finally {
+    setIsSaving(false);
+  }
+};
   // Fonction pour exporter la composition
   const handleExport = async () => {
     if (!compositionId) {

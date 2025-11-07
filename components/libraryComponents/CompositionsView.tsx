@@ -4,6 +4,7 @@ import { Edit3, Music } from 'lucide-react-native';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useCompositionStorage } from '@/utils/CompositionStorage';
+import { router } from 'expo-router';
 
 interface CompositionMetadata {
   id: string;
@@ -160,14 +161,32 @@ export const CompositionsView: React.FC<CompositionsViewProps> = ({ onContentPre
       </View>
     );
   }
-
+  const handleCompositionPress = (compositionId: string) => {
+    console.log('🎵 Composition cliquée, ID:', compositionId);
+    console.log('📍 onContentPress existe?', !!onContentPress);
+    console.log('📍 router existe?', !!router);
+    
+    if (!compositionId) {
+      console.error('❌ ID de composition invalide');
+      return;
+    }
+    
+    if (onContentPress) {
+      console.log('✅ Appel de onContentPress');
+      onContentPress(compositionId);
+    } else {
+      console.log('✅ Navigation par défaut');
+      console.log('🔍 Navigation vers /compositionPreview?id=' + compositionId);
+      router.push(`/compositionPreview?id=${compositionId}`);
+    }
+  };
   return (
     <View style={styles.container}>
       {compositions.map((composition) => (
         <TouchableOpacity
           key={composition.id}
           style={styles.listItem}
-          onPress={() => onContentPress?.(composition.id)}
+          onPress={() => handleCompositionPress(composition.id)}
           activeOpacity={0.7}
         >
           <View style={[styles.listThumbnail, { backgroundColor: `${colors.primary}15` }]}>
