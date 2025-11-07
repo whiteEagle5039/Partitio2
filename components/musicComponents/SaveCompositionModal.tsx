@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { X, Save, Library } from 'lucide-react-native';
+import { TextComponent } from '@/components/uxComponents/TextComponent';
+
 
 interface SaveCompositionModalProps {
   visible: boolean;
@@ -77,11 +79,7 @@ export const SaveCompositionModal: React.FC<SaveCompositionModalProps> = ({
       alignItems: 'center',
       marginBottom: 20,
     },
-    title: {
-      fontSize: 22,
-      fontWeight: '700',
-      color: colors.text,
-    },
+
     closeButton: {
       padding: 4,
     },
@@ -102,6 +100,8 @@ export const SaveCompositionModal: React.FC<SaveCompositionModalProps> = ({
       color: colors.text,
       borderWidth: 1,
       borderColor: colors.border,
+      fontFamily: 'Tiempos-Regular',
+      lineHeight: 20,
     },
     infoContainer: {
       flexDirection: 'row',
@@ -113,9 +113,7 @@ export const SaveCompositionModal: React.FC<SaveCompositionModalProps> = ({
     },
     infoText: {
       flex: 1,
-      fontSize: 14,
       color: colors.text,
-      lineHeight: 20,
     },
     buttonContainer: {
       flexDirection: 'row',
@@ -129,7 +127,7 @@ export const SaveCompositionModal: React.FC<SaveCompositionModalProps> = ({
       justifyContent: 'center',
       padding: 14,
       borderRadius: 12,
-      gap: 8,
+      gap: 4,
     },
     cancelButton: {
       backgroundColor: colors.border,
@@ -171,9 +169,9 @@ export const SaveCompositionModal: React.FC<SaveCompositionModalProps> = ({
         
         <View style={styles.container}>
           <View style={styles.header}>
-            <Text style={styles.title}>
+            <TextComponent variante='subtitle2' color={colors.text}>
               {isNewComposition ? 'Sauvegarder la composition' : 'Enregistrer les modifications'}
-            </Text>
+            </TextComponent>
             <TouchableOpacity
               onPress={handleClose}
               style={styles.closeButton}
@@ -187,7 +185,7 @@ export const SaveCompositionModal: React.FC<SaveCompositionModalProps> = ({
             {isNewComposition && (
               <>
                 <View>
-                  <Text style={styles.label}>Nom de l'auteur</Text>
+                  <TextComponent variante="subtitle3" style={styles.label}>Nom de l'auteur</TextComponent>
                   <TextInput
                     style={styles.input}
                     placeholder="Entrez votre nom"
@@ -201,9 +199,9 @@ export const SaveCompositionModal: React.FC<SaveCompositionModalProps> = ({
 
                 <View style={styles.infoContainer}>
                   <Library size={20} color={colors.primary} style={{ marginTop: 2 }} />
-                  <Text style={styles.infoText}>
+                  <TextComponent variante='body4' style={styles.infoText}>
                     Vous pourrez retrouver et consulter votre composition à tout moment dans la bibliothèque.
-                  </Text>
+                  </TextComponent>
                 </View>
               </>
             )}
@@ -211,9 +209,9 @@ export const SaveCompositionModal: React.FC<SaveCompositionModalProps> = ({
             {!isNewComposition && (
               <View style={styles.infoContainer}>
                 <Library size={20} color={colors.primary} style={{ marginTop: 2 }} />
-                <Text style={styles.infoText}>
+                <TextComponent variante='body4' style={styles.infoText}>
                   Les modifications seront enregistrées. Retrouvez votre composition dans la bibliothèque.
-                </Text>
+                </TextComponent>
               </View>
             )}
 
@@ -223,9 +221,9 @@ export const SaveCompositionModal: React.FC<SaveCompositionModalProps> = ({
                 onPress={handleClose}
                 disabled={isSaving}
               >
-                <Text style={[styles.buttonText, styles.cancelButtonText]}>
+                <TextComponent variante='subtitle3' style={[styles.buttonText, styles.cancelButtonText]}>
                   Annuler
-                </Text>
+                </TextComponent>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -238,9 +236,9 @@ export const SaveCompositionModal: React.FC<SaveCompositionModalProps> = ({
                 ) : (
                   <>
                     <Save size={18} color="#FFFFFF" />
-                    <Text style={[styles.buttonText, styles.saveButtonText]}>
+                    <TextComponent variante='subtitle3' style={[styles.buttonText, styles.saveButtonText]}>
                       Sauvegarder
-                    </Text>
+                    </TextComponent>
                   </>
                 )}
               </TouchableOpacity>

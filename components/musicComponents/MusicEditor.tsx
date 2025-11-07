@@ -288,10 +288,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     },
     emptyMessage: {
       textAlign: 'center',
-      fontStyle: 'italic',
-      color: colors.text2,
       marginVertical: 40,
-      fontSize: 16,
     },
     // Minimal sheet title area (not a floating banner)
     sheetHeader: {
@@ -301,8 +298,6 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       marginBottom: 4,
     },
     sheetTitle: {
-      fontSize: 18,
-      fontWeight: '700',
       color: colors.text,
       marginBottom: 2,
       textAlign: 'left',
