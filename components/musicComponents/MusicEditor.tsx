@@ -56,13 +56,10 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
-  const [showLeftArrow, setShowLeftArrow] = useState(false);
-  const [showRightArrow, setShowRightArrow] = useState(false);
-  // Ajouter ces états au début du composant
-  const [contentScrollX, setContentScrollX] = useState(0);
-  const [contentContainerWidth, setContentContainerWidth] = useState(0);
-  const [contentContentWidth, setContentContentWidth] = useState(width * 2);
-  const contentScrollRef = useRef<ScrollView>(null);
+  // États pour gérer la position de scroll horizontal par section
+  const [sectionScrollPositions, setSectionScrollPositions] = useState<{ [key: string]: number }>({});
+  const sectionScrollRefs = useRef<{ [key: string]: ScrollView | null }>({});
+
   // Forcer la mise à jour des TextInputs quand la composition change
   useEffect(() => {
     const activeSection = composition.sections.find(s => s.id === activeSectionId);
@@ -316,31 +313,6 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       fontSize: 14,
       color: colors.text2,
     },
-    contentcrollArrow: {
-      position: 'absolute',
-      top: '50%',
-      marginTop: -12,
-      width: 24,
-      height: 24,
-      borderRadius: 12,
-      backgroundColor: colors.card2,
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 20,
-      opacity: 0.95,
-      // subtle shadow for arrows
-      elevation: 6,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.18,
-      shadowRadius: 4,
-    },
-    leftArrow: {
-      left: 8,
-    },
-    rightArrow: {
-      right: 8,
-    },
   });
 
   // Fonction pour ajouter une nouvelle section
@@ -364,6 +336,40 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     onCompositionChange(updatedComposition);
     onSectionChange(newSection.id);
   };
+
+  // Fonction pour basculer entre SATB et Lyrics
+  const toggleSectionContent = (sectionId: string) => {
+    const currentPosition = sectionScrollPositions[sectionId] || 0;
+    const scrollRef = sectionScrollRefs.current[sectionId];
+    
+    if (!scrollRef) return;
+    
+    // Si on est sur SATB (position 0), aller vers Lyrics (position width)
+    // Si on est sur Lyrics (position width), revenir sur SATB (position 0)
+    const newPosition = currentPosition < width / 2 ? width : 0;
+    
+    scrollRef.scrollTo({ x: newPosition, animated: true });
+    setSectionScrollPositions(prev => ({
+      ...prev,
+      [sectionId]: newPosition
+    }));
+  };
+
+  // Animation de slide au changement de section active
+  useEffect(() => {
+    if (activeSectionId) {
+      const scrollRef = sectionScrollRefs.current[activeSectionId];
+      const currentPosition = sectionScrollPositions[activeSectionId] || 0;
+      
+      if (scrollRef) {
+        // Petite animation de "nudge" pour montrer qu'on peut slider
+        scrollRef.scrollTo({ x: currentPosition + 20, animated: true });
+        setTimeout(() => {
+          scrollRef.scrollTo({ x: currentPosition, animated: true });
+        }, 150);
+      }
+    }
+  }, [activeSectionId]);
 
   // Fonction pour basculer l'état d'effondrement d'une section
   const toggleSectionCollapse = (sectionId: string) => {
@@ -724,7 +730,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                     <>
                       <TouchableOpacity 
                         style={styles.actionButton}
-                        onPress={() => startEditingSection(section.id, section.name)}
+                        onPress={() => toggleSectionContent(section.id)}
                       >
                         <Edit3 size={16} color={colors.text2} />
                       </TouchableOpacity>
@@ -757,64 +763,32 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
 
               {/* Contenu de la section (portées + paroles déplaçables horizontalement) */}
               {!isCollapsed && (
-                <>
-                  <ScrollView
-                    ref={contentScrollRef}
-                    horizontal
-                    pagingEnabled={false}
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ width: width * 2 }}
-                    onScroll={(event) => {
-                      const offsetX = event.nativeEvent.contentOffset.x;
-                      setContentScrollX(offsetX);
-                      
-                      // Afficher la flèche gauche si on n'est pas au début
-                      setShowLeftArrow(offsetX > 10);
-                      
-                      // Afficher la flèche droite si on n'est pas à la fin
-                      const maxScroll = contentContentWidth - contentContainerWidth;
-                      setShowRightArrow(offsetX < maxScroll - 10);
-                    }}
-                    onLayout={(event) => {
-                      setContentContainerWidth(event.nativeEvent.layout.width);
-                    }}
-                    scrollEventThrottle={16}
-                  >
-                    <View style={[
-                      styles.staffContainer,
-                      isActive && styles.activeStaffContainer,
-                      { width }
-                    ]}>
-                      {renderStaffLines(section)}
-                    </View>
+                
+                <ScrollView
+                  ref={(ref) => { sectionScrollRefs.current[section.id] = ref; }}
+                  horizontal
+                  pagingEnabled={false}
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ width: width * 2 }}
+                  onScroll={(event) => {
+                    const offsetX = event.nativeEvent.contentOffset.x;
+                    setSectionScrollPositions(prev => ({
+                      ...prev,
+                      [section.id]: offsetX
+                    }));
+                  }}
+                  scrollEventThrottle={16}
+                >
+                  <View style={[
+                    styles.staffContainer,
+                    isActive && styles.activeStaffContainer,
+                    { width }
+                  ]}>
+                    {renderStaffLines(section)}
+                  </View>
 
-                    {renderLyrics(section)}
-                  </ScrollView>
-                  {showLeftArrow && (
-                    <TouchableOpacity
-                      style={[styles.contentcrollArrow, styles.leftArrow]}
-                      onPress={() => {
-                        const target = Math.max(0, contentScrollX - 120);
-                        contentScrollRef.current?.scrollTo({ x: target, animated: true });
-                      }}
-                    >
-                      <TextComponent style={{ color: colors.text, fontSize: 18 }}>{'‹'}</TextComponent>
-                    </TouchableOpacity>
-                  )}
-      
-                  {showRightArrow && (
-                    <TouchableOpacity
-                      style={[styles.contentcrollArrow, styles.rightArrow]}
-                      onPress={() => {
-                        const maxX = Math.max(0, contentContentWidth - contentContainerWidth);
-                        const target = Math.min(maxX, contentScrollX + 120);
-                        contentScrollRef.current?.scrollTo({ x: target, animated: true });
-                      }}
-                    >
-                      <TextComponent style={{ color: colors.text, fontSize: 18 }}>{'›'}</TextComponent>
-                    </TouchableOpacity>
-                  )}
-                </>
+                  {renderLyrics(section)}
+                </ScrollView>
               )}
 
               {/* Bouton d'ajout de section après chaque section */}
