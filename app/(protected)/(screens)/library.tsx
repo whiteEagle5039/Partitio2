@@ -67,30 +67,6 @@ export default function LibraryScreen() {
       flex: 1,
       paddingTop: 10,
     },
-    // Categories styles
-    statsContainer: {
-      flexDirection: 'row',
-      paddingHorizontal: 15,
-      paddingVertical: 16,
-      gap: 12,
-    },
-    statCard: {
-      flex: 1,
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      padding: 16,
-      alignItems: 'center',
-      borderColor: colors.border,
-      borderWidth: 1,
-    },
-    statIcon: {
-      marginBottom: 8,
-      width: 50,
-      height: 50,
-      borderRadius: 30,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
     listContainer: {
       paddingHorizontal: 15,
     },
@@ -292,23 +268,6 @@ export default function LibraryScreen() {
 
     return (
       <>
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: `${colors.primary}15` }]}>
-              <Library size={24} color={colors.primary} />
-            </View>
-            <TextComponent variante="subtitle1">{totalCategories}</TextComponent>
-            <TextComponent variante="body2" color={colors.text2}>Catégories</TextComponent>
-          </View>
-          <View style={styles.statCard}>
-            <View style={[styles.statIcon, { backgroundColor: `${colors.primary}15` }]}>
-              <Folder size={24} color={colors.primary} />
-            </View>
-            <TextComponent variante="subtitle1">{totalFolders}</TextComponent>
-            <TextComponent variante="body2" color={colors.text2}>Dossiers</TextComponent>
-          </View>
-        </View>
-
         <View style={styles.listContainer}>
           {filteredCategories.map((category: Category) => {
             const IconComponent = getIconComponent(category.icon);

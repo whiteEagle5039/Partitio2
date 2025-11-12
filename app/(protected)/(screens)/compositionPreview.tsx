@@ -70,6 +70,7 @@ export default function CompositionPreviewScreen() {
     container: {
       flex: 1,
       backgroundColor: colors.background,
+      paddingTop: 10,
     },
     header: {
       flexDirection: 'row',
@@ -88,6 +89,7 @@ export default function CompositionPreviewScreen() {
     },
     headerTitle: {
       marginLeft: 12,
+      marginTop: 8,
     },
     headerActions: {
       flexDirection: 'row',
@@ -102,12 +104,12 @@ export default function CompositionPreviewScreen() {
       alignItems: 'center',
     },
     scrollContent: {
-      padding: 20,
+      padding: 8,
     },
     pageContainer: {
       backgroundColor: 'white',
       borderRadius: 8,
-      padding: 24,
+      padding: 15,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.1,
@@ -115,7 +117,6 @@ export default function CompositionPreviewScreen() {
       elevation: 4,
     },
     pageHeader: {
-      alignItems: 'center',
       marginBottom: 24,
       borderBottomWidth: 2,
       borderBottomColor: '#333',
@@ -128,17 +129,12 @@ export default function CompositionPreviewScreen() {
       color: '#666',
     },
     compositionTitle: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: '#000',
       textAlign: 'center',
-      marginBottom: 8,
     },
     compositionMeta: {
       flexDirection: 'row',
-      justifyContent: 'center',
-      gap: 16,
-      marginTop: 8,
+      // gap: ,
+      justifyContent: 'space-between'
     },
     metaItem: {
       color: '#666',
@@ -148,14 +144,9 @@ export default function CompositionPreviewScreen() {
       marginBottom: 32,
     },
     sectionHeader: {
-      marginBottom: 16,
+      marginBottom: 15,
     },
-    sectionTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: '#000',
-      textDecorationLine: 'underline',
-    },
+   
     lyricsContainer: {
       backgroundColor: '#f9f9f9',
       padding: 12,
@@ -163,19 +154,17 @@ export default function CompositionPreviewScreen() {
       marginBottom: 16,
       borderLeftWidth: 3,
       borderLeftColor: colors.primary,
+      marginTop: 15,
     },
     lyricsText: {
       fontSize: 14,
       color: '#333',
       lineHeight: 20,
     },
-    voicesContainer: {
-      marginTop: 8,
-    },
+  
     voiceRow: {
       flexDirection: 'row',
-      marginBottom: 12,
-      paddingVertical: 8,
+      paddingVertical: 10,
       borderBottomWidth: 1,
       borderBottomColor: '#e0e0e0',
     },
@@ -205,7 +194,6 @@ export default function CompositionPreviewScreen() {
     },
     footerText: {
       fontSize: 12,
-      color: '#999',
     },
   });
 
@@ -252,8 +240,8 @@ export default function CompositionPreviewScreen() {
           <TouchableOpacity onPress={() => router.back()}>
             <ArrowLeft size={24} color={colors.text} />
           </TouchableOpacity>
-          <View style={styles.headerTitle}>
-            <TextComponent variante="subtitle3">
+          <View style={{ flexShrink: 1, overflow: 'hidden' }}>
+            <TextComponent variante="subtitle2" style={styles.headerTitle} numberOfLines={1}>
               {composition.title}
             </TextComponent>
           </View>
@@ -278,49 +266,39 @@ export default function CompositionPreviewScreen() {
           <View style={styles.pageContainer}>
             {/* Page Header */}
             <View style={styles.pageHeader}>
-              <TextComponent style={styles.pageNumber}>3/4</TextComponent>
               
-              <TextComponent style={styles.compositionTitle}>
-                {composition.title}
-              </TextComponent>
-              
-              <View style={styles.compositionMeta}>
-                <TextComponent style={styles.metaItem}>
-                  Tonalité: {composition.key}
-                </TextComponent>
-                <TextComponent style={styles.metaItem}>•</TextComponent>
-                <TextComponent style={styles.metaItem}>
-                  Tempo: {composition.tempo}
-                </TextComponent>
-              </View>
-              
+              {/*               
               {composition.composer && (
                 <TextComponent style={[styles.metaItem, { marginTop: 4 }]}>
                   Compositeur: {composition.composer}
                 </TextComponent>
-              )}
+              )} */}
+              
+              <View style={styles.compositionMeta}>
+                <TextComponent style={styles.metaItem}>
+                  {composition.key}
+                </TextComponent>
+                <TextComponent style={styles.metaItem}>
+                  {composition.tempo}
+                </TextComponent>
+              </View>
+              <View>
+                <TextComponent variante="subtitle2" style={styles.compositionTitle}>
+                  {composition.title}
+                </TextComponent>
+              </View>
             </View>
 
             {/* Sections */}
             {composition.sections.map((section, index) => (
               <View key={section.id} style={styles.sectionContainer}>
                 <View style={styles.sectionHeader}>
-                  <TextComponent style={styles.sectionTitle}>
-                    {section.name}
+                  <TextComponent variante='subtitle3'>
+                    {section.name} :
                   </TextComponent>
                 </View>
-
-                {/* Lyrics if available */}
-                {section.lyrics && (
-                  <View style={styles.lyricsContainer}>
-                    <TextComponent style={styles.lyricsText}>
-                      {section.lyrics}
-                    </TextComponent>
-                  </View>
-                )}
-
-                {/* Voices */}
-                <View style={styles.voicesContainer}>
+                 {/* Voices */}
+                <View>
                   {/* Soprano */}
                   <View style={styles.voiceRow}>
                     <TextComponent style={styles.voiceLabel}>
@@ -381,13 +359,21 @@ export default function CompositionPreviewScreen() {
                     </TextComponent>
                   </View>
                 </View>
+                {/* Lyrics if available */}
+                {section.lyrics && (
+                  <View style={styles.lyricsContainer}>
+                    <TextComponent style={styles.lyricsText}>
+                      {section.lyrics}
+                    </TextComponent>
+                  </View>
+                )}
               </View>
             ))}
 
             {/* Footer */}
             <View style={styles.footer}>
-              <TextComponent style={styles.footerText}>
-                Créé le {new Date().toLocaleDateString('fr-FR')}
+              <TextComponent color={colors.primary} style={styles.footerText}>
+                Le {new Date().toLocaleDateString('fr-FR')}
               </TextComponent>
             </View>
           </View>

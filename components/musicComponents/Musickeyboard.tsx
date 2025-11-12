@@ -34,9 +34,7 @@ interface Suggestion {
 export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
   activeVoice,
   onVoiceChange,
-  // onInsertSymbol,
   onInsertNote,
-  // onInsertMeasure,
   onDeleteLast,
   onClose,
   currentContent = '',
