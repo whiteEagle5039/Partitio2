@@ -69,7 +69,7 @@ export default function CompositionPreviewScreen() {
 
   // ✅ Fonction pour vérifier si une voix a du contenu
   const hasVoiceContent = (voice: string): boolean => {
-    return voice && voice.trim() !== '' && voice.trim() !== '(vide)';
+    return !!voice && voice.trim() !== '' && voice.trim() !== '(vide)';
   };
 
   // ✅ Fonction pour vérifier si une section a au moins une voix non vide

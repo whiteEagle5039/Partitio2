@@ -28,9 +28,7 @@ interface MusicEditorProps {
   activeSectionId: string;
   onVoiceChange: (voice: 'S' | 'A' | 'T' | 'B') => void;
   onSectionChange: (sectionId: string) => void;
-  // Cursor selection for the active staff (optional)
   cursorSelection?: { start: number; end: number } | null;
-  // Called when a staff TextInput selection changes
   onSelectionChange?: (voice: 'S' | 'A' | 'T' | 'B', sectionId: string, selection: { start: number; end: number }) => void;
   onStaffFocus?: (voice: 'S' | 'A' | 'T' | 'B', sectionId: string) => void;
 }
@@ -52,30 +50,35 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
   const scrollViewRef = useRef<ScrollView>(null);
   const inputRefs = useRef<{ [key: string]: TextInput | null }>({});
   
-  // États pour la gestion des sections
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
-  // États pour gérer la position de scroll horizontal par section
   const [sectionScrollPositions, setSectionScrollPositions] = useState<{ [key: string]: number }>({});
   const sectionScrollRefs = useRef<{ [key: string]: ScrollView | null }>({});
 
-  // Forcer la mise à jour des TextInputs quand la composition change
-  useEffect(() => {
-    const activeSection = composition.sections.find(s => s.id === activeSectionId);
-    if (!activeSection) return;
+  // ✅ État local pour gérer le contenu des TextInputs de manière contrôlée
+  const [localSectionContent, setLocalSectionContent] = useState<{[sectionId: string]: {
+    soprano: string;
+    alto: string;
+    tenor: string;
+    bass: string;
+    lyrics: string;
+  }}>({});
 
-    const voices = ['S', 'A', 'T', 'B'] as const;
-    voices.forEach((voice) => {
-      const inputKey = `${activeSectionId}-${voice}`;
-      const ref = inputRefs.current[inputKey];
-      if (ref) {
-        const voiceKey = voice.toLowerCase() as 'soprano' | 'alto' | 'tenor' | 'bass';
-        const content = activeSection[voiceKey] || '';
-        ref.setNativeProps({ text: content });
-      }
+  // ✅ Initialiser le contenu local quand la composition change
+  useEffect(() => {
+    const newContent: typeof localSectionContent = {};
+    composition.sections.forEach(section => {
+      newContent[section.id] = {
+        soprano: section.soprano || '',
+        alto: section.alto || '',
+        tenor: section.tenor || '',
+        bass: section.bass || '',
+        lyrics: section.lyrics || '',
+      };
     });
-  }, [composition, activeSectionId]);
+    setLocalSectionContent(newContent);
+  }, [composition.sections.length]); // Ne se déclenche que lors de l'ajout/suppression de sections
 
   const styles = StyleSheet.create({
     container: {
@@ -291,7 +294,6 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       textAlign: 'center',
       marginVertical: 40,
     },
-    // Minimal sheet title area (not a floating banner)
     sheetHeader: {
       paddingVertical: 8,
       paddingHorizontal: 12,
@@ -313,7 +315,6 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     },
   });
 
-  // Fonction pour ajouter une nouvelle section
   const addNewSection = () => {
     const newSectionNumber = composition.sections.length + 1;
     const newSection: Section = {
@@ -335,15 +336,12 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     onSectionChange(newSection.id);
   };
 
-  // Fonction pour basculer entre SATB et Lyrics
   const toggleSectionContent = (sectionId: string) => {
     const currentPosition = sectionScrollPositions[sectionId] || 0;
     const scrollRef = sectionScrollRefs.current[sectionId];
     
     if (!scrollRef) return;
     
-    // Si on est sur SATB (position 0), aller vers Lyrics (position width)
-    // Si on est sur Lyrics (position width), revenir sur SATB (position 0)
     const newPosition = currentPosition < width / 2 ? width : 0;
     
     scrollRef.scrollTo({ x: newPosition, animated: true });
@@ -353,14 +351,12 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     }));
   };
 
-  // Animation de slide au changement de section active
   useEffect(() => {
     if (activeSectionId) {
       const scrollRef = sectionScrollRefs.current[activeSectionId];
       const currentPosition = sectionScrollPositions[activeSectionId] || 0;
       
       if (scrollRef) {
-        // Petite animation de "nudge" pour montrer qu'on peut slider
         scrollRef.scrollTo({ x: currentPosition + 120, animated: true });
         setTimeout(() => {
           scrollRef.scrollTo({ x: currentPosition, animated: true });
@@ -369,7 +365,6 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     }
   }, [activeSectionId]);
 
-  // Fonction pour basculer l'état d'effondrement d'une section
   const toggleSectionCollapse = (sectionId: string) => {
     const newCollapsed = new Set(collapsedSections);
     if (newCollapsed.has(sectionId)) {
@@ -380,13 +375,11 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     setCollapsedSections(newCollapsed);
   };
 
-  // Fonction pour commencer l'édition du nom d'une section
   const startEditingSection = (sectionId: string, currentName: string) => {
     setEditingSection(sectionId);
     setEditingName(currentName);
   };
 
-  // Fonction pour sauvegarder le nouveau nom de section
   const saveEditingSection = () => {
     if (editingSection && editingName.trim()) {
       const updatedSections = composition.sections.map(section => 
@@ -405,13 +398,11 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     setEditingName('');
   };
 
-  // Fonction pour annuler l'édition
   const cancelEditingSection = () => {
     setEditingSection(null);
     setEditingName('');
   };
 
-  // Fonction pour supprimer une section
   const deleteSection = (sectionId: string) => {
     Alert.alert(
       'Supprimer la section',
@@ -428,7 +419,6 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
               sections: updatedSections,
             });
             
-            // Si c'était la section active, passer à la première disponible
             if (activeSectionId === sectionId && updatedSections.length > 0) {
               onSectionChange(updatedSections[0].id);
             }
@@ -438,7 +428,20 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     );
   };
 
+  // ✅ Fonction de mise à jour CORRIGÉE
   const updateSection = (sectionId: string, voice: string, content: string) => {
+    console.log(`📝 Mise à jour: Section=${sectionId}, Voice=${voice}, Content="${content}"`);
+    
+    // Mettre à jour l'état local immédiatement
+    setLocalSectionContent(prev => ({
+      ...prev,
+      [sectionId]: {
+        ...prev[sectionId],
+        [voice.toLowerCase()]: content,
+      }
+    }));
+
+    // Mettre à jour la composition
     const updatedSections = composition.sections.map(section => {
       if (section.id === sectionId) {
         return {
@@ -455,25 +458,23 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     });
   };
 
-  // Rendu des lignes de mesure pour un système de portées
-  const renderSystemMeasureLines = (maxLength: number) => {
+  const renderSystemMeasureLines = (section: Section) => {
+    const maxLength = Math.max(
+      section.soprano.length,
+      section.alto.length,
+      section.tenor.length,
+      section.bass.length
+    );
+    
     const lines = [];
     let position = 12;
     let measureCount = 0;
     
     for (let i = 0; i < maxLength; i++) {
-      const hasBarLine = composition.sections
-        .find(s => s.id === activeSectionId)
-        ?.soprano.charAt(i) === '|' ||
-        composition.sections
-          .find(s => s.id === activeSectionId)
-          ?.alto.charAt(i) === '|' ||
-        composition.sections
-          .find(s => s.id === activeSectionId)
-          ?.tenor.charAt(i) === '|' ||
-        composition.sections
-          .find(s => s.id === activeSectionId)
-          ?.bass.charAt(i) === '|';
+      const hasBarLine = section.soprano.charAt(i) === '|' ||
+        section.alto.charAt(i) === '|' ||
+        section.tenor.charAt(i) === '|' ||
+        section.bass.charAt(i) === '|';
 
       if (hasBarLine) {
         measureCount++;
@@ -494,7 +495,6 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     return lines;
   };
 
-  // Rendu des lignes de mesure pour une voix individuelle
   const renderMeasureLines = (text: string) => {
     const lines = [];
     let position = 12;
@@ -520,8 +520,9 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     return lines;
   };
 
-  // Composant séparé pour le panneau de paroles
   const renderLyrics = (section: Section) => {
+    const currentLyrics = localSectionContent[section.id]?.lyrics ?? section.lyrics ?? '';
+    
     return (
       <View style={styles.lyricsContainer}>
         <TextComponent variante="subtitle2" style={{ marginBottom: 8 }}>
@@ -529,7 +530,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
         </TextComponent>
         <TextInput
           style={styles.lyricsInput}
-          value={section.lyrics ?? ''}
+          value={currentLyrics}
           onChangeText={(text) => updateSection(section.id, 'lyrics', text)}
           placeholder="Écrivez ici les paroles associées à cette section..."
           placeholderTextColor={colors.primary + '50'}
@@ -542,29 +543,26 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
 
   const renderStaffLines = (section: Section) => {
     const voices = [
-      { key: 'S', label: 'S', content: section.soprano, name: 'Soprano' },
-      { key: 'A', label: 'A', content: section.alto, name: 'Alto' },
-      { key: 'T', label: 'T', content: section.tenor, name: 'Ténor' },
-      { key: 'B', label: 'B', content: section.bass, name: 'Basse' },
+      { key: 'S', label: 'S', voiceKey: 'soprano', name: 'Soprano' },
+      { key: 'A', label: 'A', voiceKey: 'alto', name: 'Alto' },
+      { key: 'T', label: 'T', voiceKey: 'tenor', name: 'Ténor' },
+      { key: 'B', label: 'B', voiceKey: 'bass', name: 'Basse' },
     ];
 
-    const maxLength = Math.max(
-      section.soprano.length,
-      section.alto.length,
-      section.tenor.length,
-      section.bass.length
-    );
-
-    // Retourne uniquement le système de portées (sans ScrollView horizontal ni paroles)
     return (
       <View style={styles.staffSystem}>
         <View style={styles.measureOverlay}>
-          {activeSectionId === section.id && renderSystemMeasureLines(maxLength)}
+          {activeSectionId === section.id && renderSystemMeasureLines(section)}
         </View>
 
         {voices.map((voice) => {
           const isActive = activeVoice === voice.key && activeSectionId === section.id;
           const inputKey = `${section.id}-${voice.key}`;
+          
+          // ✅ Utiliser le contenu local
+          const currentContent = localSectionContent[section.id]?.[voice.voiceKey as 'soprano' | 'alto' | 'tenor' | 'bass'] 
+            ?? section[voice.voiceKey as 'soprano' | 'alto' | 'tenor' | 'bass'] 
+            ?? '';
 
           return (
             <View key={voice.key} style={styles.staffLine}>
@@ -577,7 +575,6 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                   onVoiceChange(voice.key as 'S' | 'A' | 'T' | 'B');
                   onSectionChange(section.id);
                   onStaffFocus?.(voice.key as 'S' | 'A' | 'T' | 'B', section.id);
-                  // Focus programmatiquement le bon input
                   setTimeout(() => {
                     inputRefs.current[inputKey]?.focus();
                   }, 100);
@@ -593,9 +590,10 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
 
               <View style={styles.staffContent}>
                 <View style={styles.measureOverlay}>
-                  {renderMeasureLines(voice.content)}
+                  {renderMeasureLines(currentContent)}
                 </View>
 
+                {/* ✅ TextInput contrôlé avec value au lieu de defaultValue */}
                 <TextInput
                   key={inputKey}
                   ref={(ref) => { inputRefs.current[inputKey] = ref; }}
@@ -603,10 +601,9 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                     styles.staffInput,
                     isActive && styles.activeStaff,
                   ]}
-                  defaultValue={voice.content}
+                  value={currentContent}
                   onChangeText={(text) => {
                     updateSection(section.id, voice.key, text);
-                    inputRefs.current[inputKey]?.focus();
                   }}
                   onFocus={() => {
                     onVoiceChange(voice.key as 'S' | 'A' | 'T' | 'B');
@@ -617,13 +614,13 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                     const sel = e.nativeEvent.selection;
                     onSelectionChange?.(voice.key as 'S' | 'A' | 'T' | 'B', section.id, { start: sel.start, end: sel.end });
                   }}
-                   placeholder={`${voice.name}`}
-                   placeholderTextColor={colors.text2 +'50'}
-                   multiline={false}
-                   scrollEnabled={false}
-                   showSoftInputOnFocus={false}
-                   editable={true}
-                 />
+                  placeholder={`${voice.name}`}
+                  placeholderTextColor={colors.text2 +'50'}
+                  multiline={false}
+                  scrollEnabled={false}
+                  showSoftInputOnFocus={false}
+                  editable={true}
+                />
               </View>
             </View>
           );
@@ -639,27 +636,27 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
           <View style={styles.sheetHeader}>
             <TextComponent variante="subtitle2" style={styles.sheetTitle}>
               {composition.title || 'Sans titre'}
-          </TextComponent>
-          <View style={styles.sheetMetaRow}>
-            <TextComponent variante="body4" style={styles.sheetMetaText}>{composition.key || '-'}</TextComponent>
-            <TextComponent variante="body4" style={[styles.sheetMetaText, { marginLeft: 12 }]}>{composition.tempo || '-'}</TextComponent>
+            </TextComponent>
+            <View style={styles.sheetMetaRow}>
+              <TextComponent variante="body4" style={styles.sheetMetaText}>{composition.key || '-'}</TextComponent>
+              <TextComponent variante="body4" style={[styles.sheetMetaText, { marginLeft: 12 }]}>{composition.tempo || '-'}</TextComponent>
+            </View>
           </View>
-        </View>
 
-        <TextComponent variante="body2" color={colors.text2} style={styles.emptyMessage}>
-          Votre inspiration commence ici...{'\n'}
-          Commencez par ajouter une section.
-        </TextComponent>
-        <TouchableOpacity style={styles.addSectionButton} onPress={addNewSection}>
-          <Plus size={24} color={colors.primary} />
-          <TextComponent style={styles.addSectionText}>
-            Ajouter une section
+          <TextComponent variante="body2" color={colors.text2} style={styles.emptyMessage}>
+            Votre inspiration commence ici...{'\n'}
+            Commencez par ajouter une section.
           </TextComponent>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
-  );
-}
+          <TouchableOpacity style={styles.addSectionButton} onPress={addNewSection}>
+            <Plus size={24} color={colors.primary} />
+            <TextComponent style={styles.addSectionText}>
+              Ajouter une section
+            </TextComponent>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -668,7 +665,6 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
         style={styles.sectionsContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Sheet title written on the page (not a banner) */}
         <View style={styles.sheetHeader}>
           <TextComponent variante="subtitle2" style={styles.sheetTitle}>
             {composition.title || 'Sans titre'}
@@ -686,7 +682,6 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
 
           return (
             <View key={section.id} style={styles.sectionContainer}>
-              {/* En-tête de section avec contrôles */}
               <View style={[
                 styles.sectionHeader,
                 isActive && styles.activeSectionHeader
@@ -760,9 +755,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                 </View>
               </View>
 
-              {/* Contenu de la section (portées + paroles déplaçables horizontalement) */}
               {!isCollapsed && (
-                
                 <ScrollView
                   ref={(ref) => { sectionScrollRefs.current[section.id] = ref; }}
                   horizontal
@@ -790,7 +783,6 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                 </ScrollView>
               )}
 
-              {/* Bouton d'ajout de section après chaque section */}
               {index === composition.sections.length - 1 && (
                 <TouchableOpacity 
                   style={styles.addSectionButton} 
