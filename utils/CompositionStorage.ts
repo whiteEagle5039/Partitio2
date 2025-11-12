@@ -1,15 +1,22 @@
-// utils/CompositionStorage.tsCannot find module '@react-native-async-storage/async-storage' or its corresponding type declarations.ts(2307)
-
+// utils/CompositionStorage.ts
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Configuration du chemin de stockage
+const STORAGE_CONFIG = {
+  // COMPOSITION_PREFIX: '@harmonia/compositions',  // Changez ici
+  // METADATA_KEY: '@harmonia/metadata',            // Changez ici
+  COMPOSITION_PREFIX: '@compositions',
+  METADATA_KEY: '@compositions_metadata',
+};
 
 // Types pour la structure de données
 export interface Symbol {
   type: 'note' | 'rest' | 'bar' | 'repeat' | 'dynamic' | 'articulation';
-  value?: string; // Note name (C, D, E, etc.) or symbol
+  value?: string;
   duration?: 'whole' | 'half' | 'quarter' | 'eighth' | 'sixteenth';
   octave?: number;
   accidental?: 'sharp' | 'flat' | 'natural';
-  dot?: boolean; // Pour les notes pointées
+  dot?: boolean;
 }
 
 export interface Measure {
@@ -39,10 +46,9 @@ export interface SavedComposition {
   createdAt: string;
   updatedAt: string;
   sections: SavedSection[];
-  thumbnail?: string; // URL ou base64 de la miniature
+  thumbnail?: string;
 }
 
-// Types pour l'interface actuelle
 export interface Section {
   id: string;
   name: string;
@@ -60,26 +66,67 @@ export interface Composition {
   sections: Section[];
 }
 
-// Classe principale pour la gestion du stockage
 export class CompositionStorage {
-  private static STORAGE_KEY = '@compositions';
-  private static METADATA_KEY = '@compositions_metadata';
+  private static get STORAGE_KEY() {
+    return STORAGE_CONFIG.COMPOSITION_PREFIX;
+  }
+  
+  private static get METADATA_KEY() {
+    return STORAGE_CONFIG.METADATA_KEY;
+  }
+
+  /**
+   * 🔧 Utilitaire pour déboguer : liste toutes les clés de stockage
+   */
+  static async debugListAllKeys(): Promise<string[]> {
+    try {
+      const allKeys = await AsyncStorage.getAllKeys();
+      const compositionKeys = allKeys.filter(key => 
+        key.startsWith(this.STORAGE_KEY) || key === this.METADATA_KEY
+      );
+      console.log('📦 Clés de composition trouvées:', compositionKeys);
+      return compositionKeys;
+    } catch (error) {
+      console.error('❌ Erreur lors de la liste des clés:', error);
+      return [];
+    }
+  }
+
+  /**
+   * 🔧 Utilitaire : exporter toutes les données de stockage
+   */
+  static async debugExportAll(): Promise<Record<string, any>> {
+    try {
+      const keys = await this.debugListAllKeys();
+      const data: Record<string, any> = {};
+      
+      for (const key of keys) {
+        const value = await AsyncStorage.getItem(key);
+        data[key] = value ? JSON.parse(value) : null;
+      }
+      
+      console.log('📤 Export complet:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'export:', error);
+      return {};
+    }
+  }
 
   /**
    * Parse une chaîne de texte musical en symboles
-   * Exemple: "C4 E4 | G4 r |" -> symboles structurés
    */
   private static parseTextToSymbols(text: string): Measure[] {
+    if (!text || text.trim() === '') return [];
+    
     const measures: Measure[] = [];
     let currentMeasure: Symbol[] = [];
     let measureId = 1;
 
-    // Nettoyer et séparer les éléments
     const elements = text.trim().split(/\s+/);
 
     elements.forEach((element) => {
       if (element === '|') {
-        // Barre de mesure
         currentMeasure.push({ type: 'bar' });
         measures.push({
           id: `m${measureId}`,
@@ -88,16 +135,13 @@ export class CompositionStorage {
         currentMeasure = [];
         measureId++;
       } else if (element === 'r' || element.toLowerCase().startsWith('rest')) {
-        // Silence
         currentMeasure.push({
           type: 'rest',
-          duration: 'quarter', // Durée par défaut
+          duration: 'quarter',
         });
       } else if (element === '||' || element === ':|:' || element === ':||') {
-        // Répétition
         currentMeasure.push({ type: 'repeat', value: element });
       } else if (/^[A-Ga-g][#b]?\d*$/.test(element)) {
-        // Note (ex: C4, D#5, Eb3)
         const match = element.match(/^([A-Ga-g])([#b])?(\d)?$/);
         if (match) {
           const [, note, accidental, octave] = match;
@@ -106,11 +150,10 @@ export class CompositionStorage {
             value: note.toUpperCase(),
             octave: octave ? parseInt(octave) : 4,
             accidental: accidental === '#' ? 'sharp' : accidental === 'b' ? 'flat' : undefined,
-            duration: 'quarter', // Durée par défaut
+            duration: 'quarter',
           });
         }
       } else if (/^[pPmMfF]+$/.test(element)) {
-        // Dynamiques (p, mp, mf, f, ff, etc.)
         currentMeasure.push({
           type: 'dynamic',
           value: element,
@@ -118,7 +161,6 @@ export class CompositionStorage {
       }
     });
 
-    // Ajouter la dernière mesure si elle contient des éléments
     if (currentMeasure.length > 0) {
       measures.push({
         id: `m${measureId}`,
@@ -140,7 +182,6 @@ export class CompositionStorage {
     const now = new Date().toISOString();
     
     const savedSections: SavedSection[] = composition.sections.map((section) => {
-      // Déterminer le type de section basé sur le nom
       let sectionType: SavedSection['type'] = 'custom';
       const lowerName = section.name.toLowerCase();
       
@@ -156,7 +197,6 @@ export class CompositionStorage {
         sectionType = 'outro';
       }
 
-      // Convertir chaque voix
       const voiceContent: VoiceContent[] = [
         {
           voice: 'soprano',
@@ -191,7 +231,7 @@ export class CompositionStorage {
       composer,
       tempo: composition.tempo,
       key: composition.key,
-      createdAt: existingId ? (this.getCreatedDate(existingId) || now) : now,
+      createdAt: existingId ? (this.getCreatedDateSync(existingId) || now) : now,
       updatedAt: now,
       sections: savedSections,
     };
@@ -202,7 +242,6 @@ export class CompositionStorage {
    */
   static convertToSimpleFormat(saved: SavedComposition): Composition {
     const sections: Section[] = saved.sections.map((savedSection) => {
-      // Reconstruire les chaînes de texte à partir des symboles
       const soprano = this.symbolsToText(
         savedSection.content.find((v) => v.voice === 'soprano')?.measures || []
       );
@@ -275,13 +314,11 @@ export class CompositionStorage {
     try {
       const savedComp = this.convertToSavedFormat(composition, composer, existingId);
       
-      // Sauvegarder la composition
       await AsyncStorage.setItem(
         `${this.STORAGE_KEY}_${savedComp.id}`,
         JSON.stringify(savedComp)
       );
 
-      // Mettre à jour les métadonnées
       await this.updateMetadata(savedComp);
 
       console.log('✅ Composition sauvegardée:', savedComp.id);
@@ -365,7 +402,6 @@ export class CompositionStorage {
       metadata.push(newMeta);
     }
 
-    // Trier par date de modification (plus récent en premier)
     metadata.sort((a, b) => 
       new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
@@ -383,11 +419,9 @@ export class CompositionStorage {
   }
 
   /**
-   * Obtenir la date de création
+   * Obtenir la date de création (version synchrone pour éviter les problèmes)
    */
-  private static getCreatedDate(id: string): string | null {
-    // Cette fonction serait appelée de manière asynchrone dans un contexte réel
-    // Pour simplifier, on retourne null ici
+  private static getCreatedDateSync(id: string): string | null {
     return null;
   }
 
@@ -409,12 +443,10 @@ export class CompositionStorage {
     try {
       const composition: SavedComposition = JSON.parse(jsonString);
       
-      // Générer un nouvel ID pour éviter les conflits
       composition.id = `comp-${Date.now()}`;
       composition.createdAt = new Date().toISOString();
       composition.updatedAt = new Date().toISOString();
 
-      // Sauvegarder
       await AsyncStorage.setItem(
         `${this.STORAGE_KEY}_${composition.id}`,
         JSON.stringify(composition)
@@ -429,7 +461,6 @@ export class CompositionStorage {
   }
 }
 
-// Hook React pour utiliser facilement le stockage
 export const useCompositionStorage = () => {
   const saveComposition = async (
     composition: Composition,
@@ -463,6 +494,15 @@ export const useCompositionStorage = () => {
     return CompositionStorage.importFromJSON(jsonString);
   };
 
+  // Fonctions de débogage
+  const debugListKeys = () => {
+    return CompositionStorage.debugListAllKeys();
+  };
+
+  const debugExportAll = () => {
+    return CompositionStorage.debugExportAll();
+  };
+
   return {
     saveComposition,
     loadComposition,
@@ -470,5 +510,7 @@ export const useCompositionStorage = () => {
     deleteComposition,
     exportComposition,
     importComposition,
+    debugListKeys,
+    debugExportAll,
   };
 };

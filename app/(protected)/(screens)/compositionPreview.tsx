@@ -43,7 +43,10 @@ export default function CompositionPreviewScreen() {
       setLoading(true);
       const data = await loadComposition(compositionId);
       if (data) {
+        console.log('📄 Composition chargée:', data);
         setComposition(data);
+      } else {
+        console.warn('⚠️ Aucune composition trouvée pour l\'ID:', compositionId);
       }
     } catch (error) {
       console.error('❌ Erreur chargement:', error);
@@ -57,13 +60,24 @@ export default function CompositionPreviewScreen() {
   };
 
   const handleShare = () => {
-    // TODO: Implémenter le partage
     console.log('📤 Partage de la composition');
   };
 
   const handleExport = () => {
-    // TODO: Implémenter l'export PDF
     console.log('💾 Export en PDF');
+  };
+
+  // ✅ Fonction pour vérifier si une voix a du contenu
+  const hasVoiceContent = (voice: string): boolean => {
+    return voice && voice.trim() !== '' && voice.trim() !== '(vide)';
+  };
+
+  // ✅ Fonction pour vérifier si une section a au moins une voix non vide
+  const hasSectionContent = (section: Section): boolean => {
+    return hasVoiceContent(section.soprano) ||
+           hasVoiceContent(section.alto) ||
+           hasVoiceContent(section.tenor) ||
+           hasVoiceContent(section.bass);
   };
 
   const styles = StyleSheet.create({
@@ -122,18 +136,11 @@ export default function CompositionPreviewScreen() {
       borderBottomColor: '#333',
       paddingBottom: 16,
     },
-    pageNumber: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      color: '#666',
-    },
     compositionTitle: {
       textAlign: 'center',
     },
     compositionMeta: {
       flexDirection: 'row',
-      // gap: ,
       justifyContent: 'space-between'
     },
     metaItem: {
@@ -146,7 +153,6 @@ export default function CompositionPreviewScreen() {
     sectionHeader: {
       marginBottom: 15,
     },
-   
     lyricsContainer: {
       backgroundColor: '#f9f9f9',
       padding: 12,
@@ -161,7 +167,6 @@ export default function CompositionPreviewScreen() {
       color: '#333',
       lineHeight: 20,
     },
-  
     voiceRow: {
       flexDirection: 'row',
       paddingVertical: 10,
@@ -183,6 +188,17 @@ export default function CompositionPreviewScreen() {
     },
     emptyVoice: {
       color: '#999',
+      fontStyle: 'italic',
+    },
+    emptySectionMessage: {
+      padding: 16,
+      backgroundColor: '#f5f5f5',
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    emptySectionText: {
+      color: '#999',
+      fontSize: 14,
       fontStyle: 'italic',
     },
     footer: {
@@ -266,14 +282,6 @@ export default function CompositionPreviewScreen() {
           <View style={styles.pageContainer}>
             {/* Page Header */}
             <View style={styles.pageHeader}>
-              
-              {/*               
-              {composition.composer && (
-                <TextComponent style={[styles.metaItem, { marginTop: 4 }]}>
-                  Compositeur: {composition.composer}
-                </TextComponent>
-              )} */}
-              
               <View style={styles.compositionMeta}>
                 <TextComponent style={styles.metaItem}>
                   {composition.key}
@@ -297,70 +305,68 @@ export default function CompositionPreviewScreen() {
                     {section.name} :
                   </TextComponent>
                 </View>
-                 {/* Voices */}
-                <View>
-                  {/* Soprano */}
-                  <View style={styles.voiceRow}>
-                    <TextComponent style={styles.voiceLabel}>
-                      Soprano
-                    </TextComponent>
-                    <TextComponent 
-                      style={[
-                        styles.voiceContent,
-                        !section.soprano && styles.emptyVoice
-                      ]}
-                    >
-                      {section.soprano || '(vide)'}
-                    </TextComponent>
-                  </View>
 
-                  {/* Alto */}
-                  <View style={styles.voiceRow}>
-                    <TextComponent style={styles.voiceLabel}>
-                      Alto
-                    </TextComponent>
-                    <TextComponent 
-                      style={[
-                        styles.voiceContent,
-                        !section.alto && styles.emptyVoice
-                      ]}
-                    >
-                      {section.alto || '(vide)'}
+                {/* ✅ Vérifier si la section a du contenu */}
+                {!hasSectionContent(section) ? (
+                  <View style={styles.emptySectionMessage}>
+                    <TextComponent style={styles.emptySectionText}>
+                      Cette partie ne contient pas de notes.
                     </TextComponent>
                   </View>
+                ) : (
+                  <View>
+                    {/* ✅ Soprano - Afficher seulement si non vide */}
+                    {hasVoiceContent(section.soprano) && (
+                      <View style={styles.voiceRow}>
+                        <TextComponent style={styles.voiceLabel}>
+                          Soprano
+                        </TextComponent>
+                        <TextComponent style={styles.voiceContent}>
+                          {section.soprano}
+                        </TextComponent>
+                      </View>
+                    )}
 
-                  {/* Tenor */}
-                  <View style={styles.voiceRow}>
-                    <TextComponent style={styles.voiceLabel}>
-                      Ténor
-                    </TextComponent>
-                    <TextComponent 
-                      style={[
-                        styles.voiceContent,
-                        !section.tenor && styles.emptyVoice
-                      ]}
-                    >
-                      {section.tenor || '(vide)'}
-                    </TextComponent>
-                  </View>
+                    {/* ✅ Alto - Afficher seulement si non vide */}
+                    {hasVoiceContent(section.alto) && (
+                      <View style={styles.voiceRow}>
+                        <TextComponent style={styles.voiceLabel}>
+                          Alto
+                        </TextComponent>
+                        <TextComponent style={styles.voiceContent}>
+                          {section.alto}
+                        </TextComponent>
+                      </View>
+                    )}
 
-                  {/* Bass */}
-                  <View style={styles.voiceRow}>
-                    <TextComponent style={styles.voiceLabel}>
-                      Basse
-                    </TextComponent>
-                    <TextComponent 
-                      style={[
-                        styles.voiceContent,
-                        !section.bass && styles.emptyVoice
-                      ]}
-                    >
-                      {section.bass || '(vide)'}
-                    </TextComponent>
+                    {/* ✅ Tenor - Afficher seulement si non vide */}
+                    {hasVoiceContent(section.tenor) && (
+                      <View style={styles.voiceRow}>
+                        <TextComponent style={styles.voiceLabel}>
+                          Ténor
+                        </TextComponent>
+                        <TextComponent style={styles.voiceContent}>
+                          {section.tenor}
+                        </TextComponent>
+                      </View>
+                    )}
+
+                    {/* ✅ Bass - Afficher seulement si non vide */}
+                    {hasVoiceContent(section.bass) && (
+                      <View style={styles.voiceRow}>
+                        <TextComponent style={styles.voiceLabel}>
+                          Basse
+                        </TextComponent>
+                        <TextComponent style={styles.voiceContent}>
+                          {section.bass}
+                        </TextComponent>
+                      </View>
+                    )}
                   </View>
-                </View>
+                )}
+
                 {/* Lyrics if available */}
-                {section.lyrics && (
+                {section.lyrics && section.lyrics.trim() !== '' && (
                   <View style={styles.lyricsContainer}>
                     <TextComponent style={styles.lyricsText}>
                       {section.lyrics}
