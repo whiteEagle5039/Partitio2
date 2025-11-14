@@ -35,6 +35,12 @@ const styles = StyleSheet.create({
         fontWeight: "600",
         fontFamily: "Styrene-Medium"
     },
+    subtitle4: { 
+        fontSize: 14, 
+        lineHeight: 20, 
+        fontWeight: "600",
+        fontFamily: "Styrene-regular"
+    },
     header: { 
         fontSize: 32, 
         lineHeight: 36, 
@@ -73,6 +79,12 @@ const styles = StyleSheet.create({
         fontSize: 13, 
         lineHeight: 18,
         fontFamily: "Tiempos-Regular"
+    },
+
+    body6: { 
+        fontSize: 16, 
+        lineHeight: 18,
+        fontFamily: "Tiempos-Medium"
     },
     
     caption: { 

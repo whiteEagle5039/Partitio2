@@ -3,10 +3,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Configuration du chemin de stockage
 const STORAGE_CONFIG = {
-  // COMPOSITION_PREFIX: '@harmonia/compositions',  // Changez ici
-  // METADATA_KEY: '@harmonia/metadata',            // Changez ici
-  COMPOSITION_PREFIX: '@compositions',
-  METADATA_KEY: '@compositions_metadata',
+  COMPOSITION_PREFIX: '@harmonia/compositions',  
+  METADATA_KEY: '@harmonia/metadata',            
 };
 
 // Types pour la structure de données
@@ -114,8 +112,9 @@ export class CompositionStorage {
   }
 
   /**
-   * Parse une chaîne de texte musical en symboles
-   */
+ * Parse une chaîne de texte musical en symboles
+ * FIX: Ne pas perdre les notes lors du parsing
+ */
   private static parseTextToSymbols(text: string): Measure[] {
     if (!text || text.trim() === '') return [];
     
@@ -126,22 +125,64 @@ export class CompositionStorage {
     const elements = text.trim().split(/\s+/);
 
     elements.forEach((element) => {
+      // Si c'est une barre de mesure, créer une nouvelle mesure
       if (element === '|') {
+        // ✅ FIX: Ajouter la barre À LA MESURE ACTUELLE avant de créer une nouvelle mesure
         currentMeasure.push({ type: 'bar' });
-        measures.push({
-          id: `m${measureId}`,
-          symbols: [...currentMeasure],
-        });
+        
+        // Créer la mesure avec tout ce qu'elle contient
+        if (currentMeasure.length > 0) {
+          measures.push({
+            id: `m${measureId}`,
+            symbols: [...currentMeasure],
+          });
+          measureId++;
+        }
+        
+        // Vider pour la prochaine mesure
         currentMeasure = [];
-        measureId++;
-      } else if (element === 'r' || element.toLowerCase().startsWith('rest')) {
+      } 
+      // Si c'est un silence
+      else if (element === 'r' || element.toLowerCase().startsWith('rest')) {
         currentMeasure.push({
           type: 'rest',
           duration: 'quarter',
         });
-      } else if (element === '||' || element === ':|:' || element === ':||') {
+      } 
+      // Si c'est une répétition
+      else if (element === '||' || element === ':|:' || element === ':||') {
         currentMeasure.push({ type: 'repeat', value: element });
-      } else if (/^[A-Ga-g][#b]?\d*$/.test(element)) {
+      } 
+      // Si c'est une note (do, re, mi, fa, sol, la, si avec altérations possibles)
+      else if (/^(do|re|mi|fa|sol|la|si)[#b]?\d*$/i.test(element)) {
+        // Mapping des notes françaises vers notes anglaises
+        const noteMap: { [key: string]: string } = {
+          'do': 'do',
+          'ré': 're',
+          're': 're',
+          'mi': 'mi',
+          'fa': 'fa',
+          'sol':'sol',
+          'la': 'la',
+          'si': 'ti'
+        };
+        
+        const match = element.match(/^(do|re|ré|mi|fa|sol|la|si)([#b])?(\d)?$/i);
+        if (match) {
+          const [, noteName, accidental, octave] = match;
+          const englishNote = noteMap[noteName.toLowerCase()] || noteName.toUpperCase();
+          
+          currentMeasure.push({
+            type: 'note',
+            value: englishNote,
+            octave: octave ? parseInt(octave) : 4,
+            accidental: accidental === '#' ? 'sharp' : accidental === 'b' ? 'flat' : undefined,
+            duration: 'quarter',
+          });
+        }
+      }
+      // Si c'est une note anglaise (A-G)
+      else if (/^[A-Ga-g][#b]?\d*$/.test(element)) {
         const match = element.match(/^([A-Ga-g])([#b])?(\d)?$/);
         if (match) {
           const [, note, accidental, octave] = match;
@@ -153,14 +194,25 @@ export class CompositionStorage {
             duration: 'quarter',
           });
         }
-      } else if (/^[pPmMfF]+$/.test(element)) {
+      } 
+      // Si c'est une dynamique (p, f, mf, etc.)
+      else if (/^[pPmMfF]+$/.test(element)) {
         currentMeasure.push({
           type: 'dynamic',
           value: element,
         });
       }
+      // Si c'est de la ponctuation (: ; , .)
+      else if (/^[;:,.\-()]$/.test(element)) {
+        // On peut ignorer la ponctuation ou la stocker comme articulation
+        currentMeasure.push({
+          type: 'articulation',
+          value: element,
+        });
+      }
     });
 
+    // ✅ FIX: Ne pas oublier la dernière mesure si elle n'est pas terminée par une barre
     if (currentMeasure.length > 0) {
       measures.push({
         id: `m${measureId}`,

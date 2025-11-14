@@ -174,16 +174,12 @@ export default function CompositionPreviewScreen() {
       borderBottomColor: '#e0e0e0',
     },
     voiceLabel: {
-      width: 60,
-      fontSize: 14,
-      fontWeight: '600',
+      width: 20,
       color: '#000',
     },
     voiceContent: {
       flex: 1,
-      fontSize: 13,
       color: '#333',
-      fontFamily: 'monospace',
       letterSpacing: 2,
     },
     emptyVoice: {
@@ -302,7 +298,7 @@ export default function CompositionPreviewScreen() {
               <View key={section.id} style={styles.sectionContainer}>
                 <View style={styles.sectionHeader}>
                   <TextComponent variante='subtitle3'>
-                    {section.name} :
+                    {section.name} 
                   </TextComponent>
                 </View>
 
@@ -318,10 +314,10 @@ export default function CompositionPreviewScreen() {
                     {/* ✅ Soprano - Afficher seulement si non vide */}
                     {hasVoiceContent(section.soprano) && (
                       <View style={styles.voiceRow}>
-                        <TextComponent style={styles.voiceLabel}>
-                          Soprano
+                        <TextComponent variante='body6'  style={styles.voiceLabel}>
+                          S: 
                         </TextComponent>
-                        <TextComponent style={styles.voiceContent}>
+                        <TextComponent variante='subtitle4' style={styles.voiceContent}>
                           {section.soprano}
                         </TextComponent>
                       </View>
@@ -330,10 +326,10 @@ export default function CompositionPreviewScreen() {
                     {/* ✅ Alto - Afficher seulement si non vide */}
                     {hasVoiceContent(section.alto) && (
                       <View style={styles.voiceRow}>
-                        <TextComponent style={styles.voiceLabel}>
-                          Alto
+                        <TextComponent variante='body6'  style={styles.voiceLabel}>
+                          A:
                         </TextComponent>
-                        <TextComponent style={styles.voiceContent}>
+                        <TextComponent variante='subtitle4' style={styles.voiceContent}>
                           {section.alto}
                         </TextComponent>
                       </View>
@@ -342,10 +338,10 @@ export default function CompositionPreviewScreen() {
                     {/* ✅ Tenor - Afficher seulement si non vide */}
                     {hasVoiceContent(section.tenor) && (
                       <View style={styles.voiceRow}>
-                        <TextComponent style={styles.voiceLabel}>
-                          Ténor
+                        <TextComponent variante='body6'  style={styles.voiceLabel}>
+                          T:
                         </TextComponent>
-                        <TextComponent style={styles.voiceContent}>
+                        <TextComponent variante='subtitle4' style={styles.voiceContent}>
                           {section.tenor}
                         </TextComponent>
                       </View>
@@ -354,10 +350,10 @@ export default function CompositionPreviewScreen() {
                     {/* ✅ Bass - Afficher seulement si non vide */}
                     {hasVoiceContent(section.bass) && (
                       <View style={styles.voiceRow}>
-                        <TextComponent style={styles.voiceLabel}>
-                          Basse
+                        <TextComponent variante='body6'  style={styles.voiceLabel}>
+                          B:
                         </TextComponent>
-                        <TextComponent style={styles.voiceContent}>
+                        <TextComponent variante='subtitle4' style={styles.voiceContent}>
                           {section.bass}
                         </TextComponent>
                       </View>

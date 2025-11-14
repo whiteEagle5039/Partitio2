@@ -603,10 +603,9 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                     styles.staffInput,
                     isActive && styles.activeStaff,
                   ]}
-                  defaultValue={voice.content}
+                  value={voice.content}
                   onChangeText={(text) => {
                     updateSection(section.id, voice.key, text);
-                    inputRefs.current[inputKey]?.focus();
                   }}
                   onFocus={() => {
                     onVoiceChange(voice.key as 'S' | 'A' | 'T' | 'B');

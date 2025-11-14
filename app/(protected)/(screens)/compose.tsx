@@ -226,6 +226,8 @@ export default function ComposeScreen() {
     },
   });
 
+  // Fix pour handleInsertNote dans compose.tsx
+
   const handleInsertNote = (note: string) => {
     console.log('🎵 handleInsertNote appelé avec:', note);
     
@@ -235,8 +237,19 @@ export default function ComposeScreen() {
         return;
     }
 
-    const voiceKey = activeVoice.toLowerCase() as keyof Omit<Section, 'id' | 'name'>;
+    // ✅ FIX: Mapper correctement les voix S/A/T/B vers soprano/alto/tenor/bass
+    const voiceMapping = {
+      'S': 'soprano',
+      'A': 'alto',
+      'T': 'tenor',
+      'B': 'bass'
+    } as const;
+    
+    const voiceKey = voiceMapping[activeVoice] as keyof Omit<Section, 'id' | 'name'>;
     const currentContent = currentSection[voiceKey] || '';
+    
+    console.log('📝 Voix active:', activeVoice, '-> Clé:', voiceKey);
+    console.log('📝 Contenu actuel:', currentContent);
     
     const sel = cursorSelection || { start: currentContent.length, end: currentContent.length };
     const before = currentContent.slice(0, sel.start);
@@ -244,6 +257,8 @@ export default function ComposeScreen() {
     const insertText = note + ' ';
     const newContent = before + insertText + after;
 
+    console.log('📝 Nouveau contenu:', newContent);
+    
     updateSectionContent(activeSectionId, voiceKey, newContent);
     const newPos = before.length + insertText.length;
     setCursorSelection({ start: newPos, end: newPos });
@@ -253,7 +268,15 @@ export default function ComposeScreen() {
     const currentSection = composition.sections.find(s => s.id === activeSectionId);
     if (!currentSection) return;
 
-    const voiceKey = activeVoice.toLowerCase() as keyof Omit<Section, 'id' | 'name'>;
+    // ✅ FIX: Même mapping ici
+    const voiceMapping = {
+      'S': 'soprano',
+      'A': 'alto',
+      'T': 'tenor',
+      'B': 'bass'
+    } as const;
+    
+    const voiceKey = voiceMapping[activeVoice] as keyof Omit<Section, 'id' | 'name'>;
     const currentContent = currentSection[voiceKey] || '';
     const sel = cursorSelection || { start: currentContent.length, end: currentContent.length };
     
@@ -274,16 +297,22 @@ export default function ComposeScreen() {
   };
 
   const updateSectionContent = (sectionId: string, voice: keyof Omit<Section, 'id' | 'name'>, content: string) => {
-    setComposition(prev => ({
-      ...prev,
-      sections: prev.sections.map(section =>
-        section.id === sectionId
-          ? { ...section, [voice]: content }
-          : section
-      )
-    }));
+    console.log('📝 updateSectionContent appelé:', { sectionId, voice, content });
+    
+    setComposition(prev => {
+      const updated = {
+        ...prev,
+        sections: prev.sections.map(section =>
+          section.id === sectionId
+            ? { ...section, [voice]: content }
+            : section
+        )
+      };
+      
+      console.log('📝 État mis à jour:', updated.sections.find(s => s.id === sectionId)?.[voice]);
+      return updated;
+    });
   };
-
   const handleStaffFocus = (voice: 'S' | 'A' | 'T' | 'B', sectionId: string) => {
     setActiveVoice(voice);
     setActiveSectionId(sectionId);
@@ -444,7 +473,21 @@ export default function ComposeScreen() {
             onInsertNote={handleInsertNote}
             onDeleteLast={handleDeleteLast}
             onClose={() => setShowKeyboard(false)}
-            currentContent={composition.sections.find(s => s.id === activeSectionId)?.[activeVoice.toLowerCase() as keyof Section] as string}
+            currentContent={(() => {
+              const currentSection = composition.sections.find(s => s.id === activeSectionId);
+              if (!currentSection) return '';
+              
+              // ✅ FIX: Mapper correctement la voix
+              const voiceMapping = {
+                'S': 'soprano',
+                'A': 'alto',
+                'T': 'tenor',
+                'B': 'bass'
+              } as const;
+              
+              const voiceKey = voiceMapping[activeVoice];
+              return currentSection[voiceKey] || '';
+            })()}
           />
         </View>
       )}
