@@ -39,7 +39,7 @@ export function Header() {
       <View style={styles.logo}>
         <Music size={28} color={colors.primary} />
         <TextComponent style={styles.logoText} variante="subtitle2">
-          Partitio
+          harmonia
         </TextComponent>
       </View>
       

@@ -1,5 +1,5 @@
 /**
- * Palette de couleurs moderne pour Partitio
+ * Palette de couleurs moderne pour harmonia
  * Thème musical avec des tons sophistiqués
  */
 const tintColorLight = '#6366F1';

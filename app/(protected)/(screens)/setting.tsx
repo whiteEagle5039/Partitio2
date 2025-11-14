@@ -3,17 +3,17 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
 import {
-  ArrowLeft,
-  Bell,
-  ChevronRight,
-  Download,
-  HelpCircle,
-  Info,
-  LucideIcon,
-  Moon,
-  RefreshCw,
-  Shield,
-  Trash2
+    ArrowLeft,
+    Bell,
+    ChevronRight,
+    Download,
+    HelpCircle,
+    Info,
+    LucideIcon,
+    Moon,
+    RefreshCw,
+    Shield,
+    Trash2
 } from 'lucide-react-native';
 import React from 'react';
 import { ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
@@ -339,10 +339,10 @@ export default function SettingsScreen() {
           {/* Informations de version */}
           <View style={styles.versionInfo}>
             <TextComponent variante="body4" color={colors.text2}>
-              Partitio v1.0.0
+              Harmonia v1.0.0
             </TextComponent>
             <TextComponent variante="body4" color={colors.text2} style={{ marginTop: 4 }}>
-              © 2025 Partitio. Tous droits réservés.
+              © 2025 Harmonia. Tous droits réservés.
             </TextComponent>
             <TextComponent variante="body4" color={colors.text2} style={{ marginTop: 4 }}>
               By Jemuel G. ANIFA

@@ -1,5 +1,5 @@
 /**
- * Palette de couleurs moderne pour Partitio
+ * Palette de couleurs moderne pour harmonia
  * Inspirée du design de Claude - tons légers et sophistiqués
  */
 const tintColorLight = '#D97706';

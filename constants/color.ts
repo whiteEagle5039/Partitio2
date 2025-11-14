@@ -1,5 +1,5 @@
 /**
- * Palette de couleurs moderne pour Partitio
+ * Palette de couleurs moderne pour harmonia
  * Basée exactement sur les couleurs de Claude d'Anthropic
  */
 const tintColorLight = '#D97757';

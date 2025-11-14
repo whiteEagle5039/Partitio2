@@ -275,7 +275,7 @@ export default function HomeScreen() {
         <EmptyStateCard
           icon={TrendingUp}
           title="Découvrez les tendances"
-          subtitle="Connectez-vous pour voir les partitions les plus populaires de la communauté."
+          subtitle="Connectez-vous pour voir les notes les plus populaires de la communauté."
           actionText="Se connecter"
           onActionPress={() => router.push('/homescreen')} // ✅ CORRECTION: Route vers login
           colors={colors}
@@ -357,7 +357,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={styles.logo}>
             <TextComponent variante='body1' style={styles.logoText}>
-              Partitio
+              Harmonia
             </TextComponent>
           </View>
           

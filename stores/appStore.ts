@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 // Types existants...
 export interface SheetMusic {
@@ -112,7 +112,7 @@ interface AppState {
   navigationLevel: 'categories' | 'folders' | 'content';
   setNavigationLevel: (level: 'categories' | 'folders' | 'content') => void;
   
-  // Partitions
+  // harmonians
   sheetMusic: SheetMusic[];
   downloadedSheets: SheetMusic[];
   addSheetMusic: (sheet: SheetMusic) => void;
@@ -151,7 +151,7 @@ export const useAppStore = create<AppState>()(
       user: {
         id: '1',
         name: 'Owen',
-        email: 'user@partitio.com',
+        email: 'user@harmonia.com',
         storageUsed: 25.2,
         storageLimit: 100,
       },
@@ -588,7 +588,7 @@ export const useAppStore = create<AppState>()(
       })),
     }),
     {
-      name: 'partitio-store', // nom unique pour le stockage
+      name: 'harmonia-store', // nom unique pour le stockage
       storage: createJSONStorage(() => ({
         // Vous pouvez utiliser AsyncStorage pour React Native
         getItem: async (name: string) => {

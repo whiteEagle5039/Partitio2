@@ -14,8 +14,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Composant pour l'icône Partitio (remplace l'étoile Claude)
-const PartitioIcon = ({ size = 32, color }: { size?: number; color: string }) => (
+// Composant pour l'icône harmonia (remplace l'étoile Claude)
+const HarmoniaIcon = ({ size = 32, color }: { size?: number; color: string }) => (
   <View style={{
     width: size,
     height: size,
@@ -199,15 +199,15 @@ export default function EmailAuthScreen() {
           <Animated.View style={{ opacity: fadeAnim }}>
             {/* Logo et nom de l'app */}
             <View style={styles.logoContainer}>
-              <PartitioIcon size={64} color={colors.primary} />
+              <HarmoniaIcon size={64} color={colors.primary} />
               <TextComponent style={styles.logoText} color={colors.text} variante='body1'>
-                Partitio
+                Harmonia
               </TextComponent>
             </View>
 
             {/* Titre principal */}
             <TextComponent variante="body2" style={styles.title}>
-              Faites votre meilleur travail avec Partitio
+              Faites votre meilleur travail avec Harmonia
             </TextComponent>
 
             {/* Bouton Google */}
@@ -290,7 +290,7 @@ export default function EmailAuthScreen() {
             <TextComponent variante="body4" style={styles.linkText}>
               Politique d'utilisation
             </TextComponent>
-            {' '}de Partitio, et reconnaissez leur{' '}
+            {' '}d'Harmonia, et reconnaissez leur{' '}
             <TextComponent variante="body4" style={styles.linkText}>
               Politique de confidentialité
             </TextComponent>
@@ -298,7 +298,7 @@ export default function EmailAuthScreen() {
           </TextComponent>
           
           <TextComponent variante="body4" style={styles.companyName}>
-            PARTITIO * By Jemuel G. ANIFA
+            Harmonia · By Jemuel G. ANIFA
           </TextComponent>
         </Animated.View>
       </SafeAreaView>

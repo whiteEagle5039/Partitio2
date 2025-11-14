@@ -15,8 +15,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Composant pour l'icône Partitio
-const PartitioIcon = ({ size = 32, color }: { size?: number; color: string }) => (
+// Composant pour l'icône harmonia
+const harmoniaIcon = ({ size = 32, color }: { size?: number; color: string }) => (
   <View style={{
     width: size,
     height: size,
@@ -98,7 +98,7 @@ export default function VerificationCodeScreen() {
         const user = {
           id: '1',
           name: 'Owen',
-          email: email || 'user@partitio.com',
+          email: email || 'user@harmonia.com',
           storageUsed: 25.2,
           storageLimit: 100,
         };
@@ -251,9 +251,9 @@ export default function VerificationCodeScreen() {
         <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
           {/* Logo et nom de l'app */}
           <View style={styles.logoContainer}>
-            <PartitioIcon size={64} color={colors.primary} />
+            <harmoniaIcon size={64} color={colors.primary} />
             <TextComponent style={styles.logoText} color={colors.text} variante='body1'>
-              Partitio
+              harmonia
             </TextComponent>
           </View>
 

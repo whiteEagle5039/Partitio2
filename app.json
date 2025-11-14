@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "partitio",
-    "slug": "partitio",
+    "name": "harmonia",
+    "slug": "harmonia",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "partitio",
+    "scheme": "harmonia",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.partitio"
+      "bundleIdentifier": "com.anonymous.harmonia"
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +18,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.partitio"
+      "package": "com.anonymous.harmonia"
     },
     "web": {
       "bundler": "metro",

@@ -139,7 +139,7 @@ export function DrawerMenu() {
             </TextComponent>
             <TextComponent variante="body1">'s Work</TextComponent>
             {/* <TextComponent variante="caption" color={colors.text2}>
-              {user?.email || 'user@partitio.com'}
+              {user?.email || 'user@harmonia.com'}
             </TextComponent> */}
           </View>
         </View>

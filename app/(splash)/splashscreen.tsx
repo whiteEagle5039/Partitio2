@@ -196,7 +196,7 @@ export default function SplashScreen() {
           },
         ]}
       >
-        <TextComponent variante="body0">Partitio</TextComponent>
+        <TextComponent variante="body0">Harmonia</TextComponent>
       </Animated.View>
 
       {/* Container des icônes avec rotation globale */}

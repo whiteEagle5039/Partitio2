@@ -1,16 +1,4 @@
-import {
-  ArrowLeft,
-  Award,
-  Calendar,
-  Download,
-  Edit,
-  File as FileIcon // ✅ Renommé pour éviter le conflit avec File natif
-  ,
-
-  Mail,
-  Music,
-  Share2
-} from 'lucide-react-native';
+import {ArrowLeft,Award,Calendar,Download,Edit,File as FileIcon ,Mail,Music,Share2} from 'lucide-react-native';
 import React from 'react';
 import { Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -240,7 +228,7 @@ export default function ProfileScreen() {
             <View style={styles.email}>
               <Mail size={16} color={colors.text2} />
               <TextComponent variante="body2" color={colors.text2} style={{ marginLeft: 8 }}>
-                {user?.email || 'user@partitio.com'}
+                {user?.email || 'user@harmonia.com'}
               </TextComponent>
             </View>
             
