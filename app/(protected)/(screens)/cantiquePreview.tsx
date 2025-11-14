@@ -283,13 +283,32 @@ export default function CantiquePreviewScreen() {
       fontSize: 14,
       fontStyle: 'italic',
     },
-    lyricsContainer: {
-      backgroundColor: '#f9f9f9',
+    // Styles pour les paroles regroupées en bas
+    allLyricsContainer: {
+      marginTop: 32,
+      borderTopWidth: 2,
+      borderTopColor: '#333',
+      paddingTop: 24,
+    },
+    lyricsHeaderContainer: {
+      marginBottom: 16,
+      alignItems: 'center',
+    },
+    lyricsHeader: {
+      color: colors.primary,
+      fontWeight: 'bold',
+    },
+    lyricsSection: {
+      marginBottom: 20,
       padding: 12,
-      borderRadius: 4,
-      marginTop: 16,
       borderLeftWidth: 3,
       borderLeftColor: colors.primary,
+      backgroundColor: '#f9f9f9',
+    },
+    lyricsSectionTitle: {
+      fontWeight: 'bold',
+      color: '#666',
+      marginBottom: 8,
     },
     lyricsText: {
       fontSize: 14,
@@ -405,17 +424,32 @@ export default function CantiquePreviewScreen() {
                 </View>
 
                 {renderSection(section)}
-
-                {/* Lyrics if available */}
-                {section.lyrics && section.lyrics.trim() !== '' && (
-                  <View style={styles.lyricsContainer}>
-                    <TextComponent style={styles.lyricsText}>
-                      {section.lyrics}
-                    </TextComponent>
-                  </View>
-                )}
               </View>
             ))}
+
+            {/* Lyrics regroupées en bas */}
+            {cantique.sections.some(s => s.lyrics && s.lyrics.trim() !== '') && (
+              <View style={styles.allLyricsContainer}>
+                <View style={styles.lyricsHeaderContainer}>
+                  <TextComponent variante='subtitle3' style={styles.lyricsHeader}>
+                    Paroles
+                  </TextComponent>
+                </View>
+                
+                {cantique.sections.map((section) => (
+                  section.lyrics && section.lyrics.trim() !== '' && (
+                    <View key={`lyrics-${section.id}`} style={styles.lyricsSection}>
+                      <TextComponent variante='body6' style={styles.lyricsSectionTitle}>
+                        {section.name}
+                      </TextComponent>
+                      <TextComponent style={styles.lyricsText}>
+                        {section.lyrics}
+                      </TextComponent>
+                    </View>
+                  )
+                ))}
+              </View>
+            )}
 
             {/* Footer */}
             <View style={styles.footer}>
