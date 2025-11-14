@@ -264,21 +264,7 @@ export const useAppStore = create<AppState>()(
           folderCount: 0,
           totalcontent: 3,
           folders: [],
-          content: [
-            {
-              id: 'c4',
-              title: 'Ma première composition',
-              content: 'Contenu de ma première composition...',
-              description: 'Mélodie originale en Do majeur',
-              thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
-              isDownloaded: true,
-              dateAdded: new Date(),
-              createdAt: new Date(),
-              lastModified: new Date(),
-              isPublic: false,
-              fileSize: 1.2
-            }
-          ]
+          content: []
         },
         {
           id: '4',
@@ -305,48 +291,6 @@ export const useAppStore = create<AppState>()(
               composer: 'Leonard Cohen',
               author: 'Arrangement SATB'
             },
-            {
-              id: 'ch2',
-              title: 'Ave Maria',
-              content: 'Contenu de Ave Maria arrangement choral...',
-              description: 'Arrangement choral classique',
-              thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
-              isDownloaded: false,
-              dateAdded: new Date(),
-              createdAt: new Date(),
-              lastModified: new Date(),
-              isPublic: true,
-              composer: 'Franz Schubert',
-              author: 'Arrangement Choral'
-            },
-            {
-              id: 'ch3',
-              title: 'Amazing Grace Choral',
-              content: 'Contenu de Amazing Grace arrangement choral...',
-              description: 'Version chorale traditionnelle',
-              thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
-              isDownloaded: true,
-              dateAdded: new Date(),
-              createdAt: new Date(),
-              lastModified: new Date(),
-              isPublic: true,
-              composer: 'John Newton',
-              author: 'Arrangement Traditionnel'
-            },
-            {
-              id: 'ch4',
-              title: 'How Great Thou Art Choir',
-              content: 'Contenu de How Great Thou Art arrangement choir...',
-              description: 'Arrangement pour grand chœur',
-              thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
-              isDownloaded: false,
-              dateAdded: new Date(),
-              createdAt: new Date(),
-              lastModified: new Date(),
-              isPublic: true,
-              composer: 'Carl Boberg',
-              author: 'Arrangement Grand Chœur'
-            }
           ]
         },
         {
@@ -381,57 +325,6 @@ export const useAppStore = create<AppState>()(
                   isPublic: true,
                   author: 'Prof. Marie Dubois'
                 },
-                {
-                  id: 'c6',
-                  title: 'Les Accords de Base',
-                  content: 'Leçon détaillée sur les accords majeurs, mineurs et septième. Apprenez la théorie et la pratique...',
-                  description: 'Majeurs, mineurs et septième',
-                  thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
-                  isDownloaded: true,
-                  dateAdded: new Date(),
-                  createdAt: new Date(),
-                  lastModified: new Date(),
-                  isPublic: true,
-                  author: 'Prof. Marie Dubois'
-                },
-                {
-                  id: 'c7',
-                  title: 'Exercices Pratiques',
-                  content: 'Série d\'exercices pratiques incluant gammes et arpèges. Techniques pour améliorer votre dextérité...',
-                  description: 'Gammes et arpèges',
-                  thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
-                  isDownloaded: false,
-                  dateAdded: new Date(),
-                  createdAt: new Date(),
-                  lastModified: new Date(),
-                  isPublic: true,
-                  author: 'Prof. Marie Dubois'
-                }
-              ]
-            },
-            {
-              id: 'f6',
-              name: 'Cours de Guitare',
-              description: 'Techniques de guitare acoustique',
-              thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
-              courseCount: 4,
-              categoryId: '5',
-              createdAt: new Date(),
-              author: 'Jean-Paul Martin',
-              content: [
-                {
-                  id: 'c8',
-                  title: 'Accords Ouverts',
-                  content: 'Guide complet des accords ouverts à la guitare. Apprenez les positions de base et les transitions...',
-                  description: 'Les accords de base en position ouverte',
-                  thumbnail: 'https://images.pexels.com/photos/1407322/pexels-photo-1407322.jpeg?auto=compress&cs=tinysrgb&w=400',
-                  isDownloaded: true,
-                  dateAdded: new Date(),
-                  createdAt: new Date(),
-                  lastModified: new Date(),
-                  isPublic: true,
-                  author: 'Jean-Paul Martin'
-                }
               ]
             },
             {

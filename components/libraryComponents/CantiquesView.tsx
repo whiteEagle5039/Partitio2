@@ -1,69 +1,115 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Music, User, Play, FileText, File, BookOpen } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
+import { Music } from 'lucide-react-native';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { Content } from '@/stores/appStore';
+import { useCantiqueStorage } from '@/utils/CantiqueStorage';
+import { router } from 'expo-router';
 
-interface CantiquesViewProps {
-  content: Content[];
-  onContentPress: (content: Content) => void;
-  onBack: () => void;
+interface CantiqueMetadata {
+  id: string;
+  number: number;
+  title: string;
+  composer: string;
+  category?: string;
+  tags?: string[];
 }
 
-export const CantiquesView: React.FC<CantiquesViewProps> = ({ 
-  content, 
-  onContentPress, 
-  onBack 
-}) => {
+interface CantiquesViewProps {
+  onContentPress?: (cantiqueId: string) => void;
+}
+
+export const CantiquesView: React.FC<CantiquesViewProps> = ({ onContentPress }) => {
   const colors = useThemeColors();
+  const { getAllMetadata } = useCantiqueStorage();
+  
+  const [cantiques, setCantiques] = useState<CantiqueMetadata[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Charger les cantiques au montage du composant
+  useEffect(() => {
+    loadCantiques();
+  }, []);
+
+  const loadCantiques = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllMetadata();
+      // Trier par numéro de cantique
+      const sorted = data.sort((a, b) => a.number - b.number);
+      setCantiques(sorted);
+      console.log('✅ Cantiques chargés:', sorted.length);
+    } catch (error) {
+      console.error('❌ Erreur lors du chargement des cantiques:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    loadCantiques();
+  };
+
+  const handleCantiquePress = (cantiqueId: string) => {
+    console.log('🎵 Cantique cliqué, ID:', cantiqueId);
+    console.log('📍 onContentPress existe?', !!onContentPress);
+    console.log('📍 router existe?', !!router);
+    
+    if (!cantiqueId) {
+      console.error('❌ ID de cantique invalide');
+      return;
+    }
+    
+    if (onContentPress) {
+      console.log('✅ Appel de onContentPress');
+      onContentPress(cantiqueId);
+    } else {
+      console.log('✅ Navigation par défaut');
+      console.log('📍 Navigation vers /cantiquePreview?id=' + cantiqueId);
+      router.push(`/cantiquePreview?id=${cantiqueId}`);
+    }
+  };
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
     },
     scrollContainer: {
-      paddingHorizontal: 15,
-      paddingBottom: 20,
-    },
-    // Stats Container
-    statsContainer: {
-      flexDirection: 'row',
       paddingHorizontal: 20,
-      paddingVertical: 16,
-      gap: 12,
+      paddingTop: 20,
     },
-    statCard: {
+    loadingContainer: {
       flex: 1,
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 16,
-      alignItems: 'center',
-      borderColor: colors.border,
-      borderWidth: 1,
-    },
-    statIcon: {
-      marginBottom: 8,
-      width: 50,
-      height: 50,
-      borderRadius: 30,
-      alignItems: 'center',
       justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 40,
     },
-    // List Items
+    emptyContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 60,
+    },
+    emptyIcon: {
+      marginBottom: 16,
+      opacity: 0.3,
+    },
     listItem: {
       flexDirection: 'row',
       backgroundColor: colors.card,
-      borderRadius: 12,
-      padding: 12,
+      borderRadius: 16,
+      padding: 16,
       marginBottom: 12,
       alignItems: 'center',
       borderColor: colors.border,
       borderWidth: 1,
     },
     listThumbnail: {
-      width: 50,
-      height: 50,
+      width: 60,
+      height: 60,
       borderRadius: 12,
       marginRight: 16,
       alignItems: 'center',
@@ -75,13 +121,7 @@ export const CantiquesView: React.FC<CantiquesViewProps> = ({
     listTitle: {
       marginBottom: 4,
     },
-    contentStatus: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      marginTop: 8,
-    },
-    packageInfo: {
+    contentInfo: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       alignItems: 'center',
@@ -99,99 +139,96 @@ export const CantiquesView: React.FC<CantiquesViewProps> = ({
       borderRadius: 2,
       backgroundColor: colors.text2,
     },
-    // Empty State
-    emptyStateCard: {
-      marginHorizontal: 20,
-      padding: 32,
-      borderRadius: 16,
-      borderWidth: 1,
-      alignItems: 'center',
-      backgroundColor: colors.card,
-      borderColor: colors.border,
-    },
-    emptyStateIcon: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 20,
-    },
-    emptyStateTitle: {
-      textAlign: 'center',
-      marginBottom: 8,
-    },
-    emptyStateSubtitle: {
-      textAlign: 'center',
-      marginBottom: 20,
-      lineHeight: 20,
-    },
-    emptyStateButton: {
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 24,
-      marginTop: 8,
-      backgroundColor: colors.primary,
+    categoryBadge: {
+      backgroundColor: colors.primary + '20',
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 8,
     },
   });
 
-  // Gestionnaire pour l'ouverture d'un contenu
-  const handleContentPress = (content: Content) => {
-    console.log(`Ouvrir le cantique: ${content.title}`);
-    onContentPress(content);
-  };
-
-  // Composant pour l'état vide
-  const EmptyStateCard = () => (
-    <View style={styles.emptyStateCard}>
-      <View style={[styles.emptyStateIcon, { backgroundColor: `${colors.primary}15` }]}>
-        <Music size={40} color={colors.primary2} />
-      </View>
-      <TextComponent variante="subtitle2" style={styles.emptyStateTitle}>
-        Aucun cantique disponible
-      </TextComponent>
-      <TextComponent variante="body3" color={colors.text2} style={styles.emptyStateSubtitle}>
-        La collection de cantiques ne contient pas encore de contenu. Revenez plus tard pour découvrir de nouveaux cantiques.
-      </TextComponent>
-      <TouchableOpacity 
-        style={styles.emptyStateButton}
-        onPress={onBack}
-      >
-        <TextComponent variante="body3" color="#FFFFFF">
-          Retour aux catégories
+  // État de chargement
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <TextComponent variante="body3" color={colors.text2} style={{ marginTop: 12 }}>
+          Chargement des cantiques...
         </TextComponent>
-      </TouchableOpacity>
-    </View>
-  );
+      </View>
+    );
+  }
 
-  // Rendu de la liste des cantiques
-  const renderCantiques = () => (
+  // Aucun cantique
+  if (cantiques.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Music size={64} color={colors.text2} style={styles.emptyIcon} />
+        <TextComponent variante="subtitle2" color={colors.text}>
+          Aucun cantique disponible
+        </TextComponent>
+        <TextComponent variante="body3" color={colors.text2} style={{ marginTop: 8, textAlign: 'center' }}>
+          La bibliothèque de cantiques{'\n'}ne contient pas encore de contenu
+        </TextComponent>
+      </View>
+    );
+  }
+
+  // Liste des cantiques
+  return (
     <ScrollView 
       style={styles.container}
-      showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.scrollContainer}
+      showsVerticalScrollIndicator={false}
     >
-      {content.map((content: Content) => (
+      {cantiques.map((cantique) => (
         <TouchableOpacity
-          key={content.id}
+          key={cantique.id}
           style={styles.listItem}
-          onPress={() => handleContentPress(content)}
+          onPress={() => handleCantiquePress(cantique.id)}
+          activeOpacity={0.7}
         >
           <View style={[styles.listThumbnail, { backgroundColor: `${colors.primary}15` }]}>
-            {/* <BookOpen size={24} color={colors.primary2} /> */}
-            <TextComponent variante='body1' color={colors.primary2}>{content.id} </TextComponent>
-          </View>
-            <TextComponent variante="subtitle3" style={styles.listTitle}>
-              {content.title}
+            <TextComponent variante="subtitle3" color={colors.primary}>
+              {cantique.number}
             </TextComponent>
+          </View>
+          
+          <View style={styles.listContent}>
+            <TextComponent variante="subtitle3" style={styles.listTitle}>
+              {cantique.title}
+            </TextComponent>
+            
+            <TextComponent variante="body4" color={colors.text2}>
+              {cantique.composer}
+            </TextComponent>
+            
+            <View style={styles.contentInfo}>
+              {cantique.category && (
+                <>
+                  <View style={styles.categoryBadge}>
+                    <TextComponent variante="caption" color={colors.primary}>
+                      {cantique.category}
+                    </TextComponent>
+                  </View>
+                  {cantique.tags && cantique.tags.length > 0 && (
+                    <View style={styles.infoSeparator} />
+                  )}
+                </>
+              )}
+              
+              {cantique.tags && cantique.tags.length > 0 && (
+                <View style={styles.metricItem}>
+                  <TextComponent variante="caption" color={colors.text2}>
+                    {cantique.tags.slice(0, 2).join(', ')}
+                    {cantique.tags.length > 2 ? '...' : ''}
+                  </TextComponent>
+                </View>
+              )}
+            </View>
+          </View>
         </TouchableOpacity>
       ))}
     </ScrollView>
-  );
-
-  return (
-    <View style={styles.container}>
-      {content.length === 0 ? <EmptyStateCard /> : renderCantiques()}
-    </View>
   );
 };

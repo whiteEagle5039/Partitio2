@@ -36,7 +36,7 @@ export default function LibraryScreen() {
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: 10,
-      paddingVertical: 15,
+      paddingVertical: 8,
       backgroundColor: colors.card,
     },
     backButton: {
@@ -310,7 +310,7 @@ export default function LibraryScreen() {
     // Utiliser le bon composant selon la catégorie
     switch (currentCategory.id) {
       case '2': // Cantiques
-        return <CantiquesView content={content} {...commonProps} />;
+        return <CantiquesView/>;
       case '3': // Compositions
         return (
           <CompositionsView 
@@ -333,7 +333,7 @@ export default function LibraryScreen() {
           />
         );
       default:
-        return <CantiquesView content={content} {...commonProps} />;
+        return <CantiquesView />;
     }
   };
 
@@ -363,7 +363,7 @@ export default function LibraryScreen() {
           </TouchableOpacity>
           
           <View style={styles.headerTitle}>
-            <TextComponent variante="subtitle1">
+            <TextComponent variante="subtitle2">
               {getTitle()}
             </TextComponent>
           </View>
