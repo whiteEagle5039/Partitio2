@@ -160,7 +160,7 @@ export const useAppStore = create<AppState>()(
       setAuthenticated: (authenticated) => set({ isAuthenticated: authenticated }),
       
       // Theme Management - Défaut sur dark
-      themeMode: 'dark', // Par défaut sur dark
+      themeMode: 'light', // Par défaut sur light
       setThemeMode: (mode) => set({ 
         themeMode: mode,
         settings: { ...get().settings, darkMode: mode === 'dark' }
@@ -185,7 +185,7 @@ export const useAppStore = create<AppState>()(
       settings: {
         notifications: true,
         autoDownload: false,
-        darkMode: true, // Par défaut sur dark
+        darkMode: false, // Par défaut sur dark
       },
       updateSettings: (newSettings) => set((state) => {
         const updatedSettings = { ...state.settings, ...newSettings };

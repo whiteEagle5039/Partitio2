@@ -10,8 +10,8 @@ export function useThemeColors(){
     const systemTheme = useColorScheme() ?? 'light'
     
     // Si themeMode est défini dans le store, l'utiliser, sinon utiliser le système
-    const currentTheme = systemTheme
-    // const currentTheme = themeMode || systemTheme
+    // const currentTheme = systemTheme
+    const currentTheme = themeMode || systemTheme
     
     return color[currentTheme]
 }

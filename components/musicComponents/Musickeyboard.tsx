@@ -293,47 +293,8 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
         { symbol: ':', display: ':', name: '2 points', priority: 7 },
         { symbol: ';', display: ';', name: 'Point virgule', priority: 5 },
       );
-    }
+    };
 
-    // // Suggestions après un espace
-    // if (hasRecentSpace) {
-    //   suggestions.push(
-    //     //  { symbol: '.', display: '.', nconst handleInsertNote = (note: string) => {
-  const currentSection = composition.sections.find(s => s.id === activeSectionId);
-  if (!currentSection) return;
-
-  const voiceMapping = {
-    'S': 'soprano',
-    'A': 'alto',
-    'T': 'tenor',
-    'B': 'bass'
-  } as const;
-  
-  const voiceKey = voiceMapping[activeVoice] as keyof Omit<Section, 'id' | 'name'>;
-  const currentContent = currentSection[voiceKey] || '';
-  
-  // ✅ Solution élégante : Obtenir la ref du TextInput actif
-  const inputKey = `${activeSectionId}-${activeVoice}`;
-  const inputRef = getActiveInputRef(); // Vous devez passer cette ref depuis MusicEditor
-  
-  if (inputRef) {
-    // ✅ Le TextInput garde sa position de curseur naturellement
-    const insertText = note === ' ' ? ' ' : (note + ' ');
-    
-    // Simuler une insertion comme si l'utilisateur tapait
-    inputRef.focus();
-    
-    // Utiliser une méthode native si disponible, sinon fallback
-    const newContent = currentContent + insertText; // Fallback simple
-    updateSectionContent(activeSectionId, voiceKey, newContent);
-  }
-};ame: 'Point', priority: 8 },
-    //     // { symbol: ',', display: ',', name: 'Virgule', priority: 6 },
-    //     // { symbol: ':', display: ':', name: '2 points', priority: 7 },
-    //     { symbol: ';', display: ';', name: 'Point virgule', priority: 5 },
-    //   );
-    // }
-    
     // Suggestions de base toujours présentes
     suggestions.push(
       { symbol: ' | ', display: '|', name: 'Mesure', priority: 4 },
