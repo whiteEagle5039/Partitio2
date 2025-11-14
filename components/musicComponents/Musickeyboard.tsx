@@ -282,7 +282,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
     // Analyse du contexte actuel
     const lastChars = content.slice(-5).toLowerCase();
     const hasRecentNote = /[a-g]/.test(lastChars);
-    const hasRecentSpace = content.endsWith(' ');
+    const hasRecentSpace = content.endsWith('');
     const measureCount = (content.match(/\|/g) || []).length;
     
     // Suggestions après insertion d'une note
@@ -295,20 +295,49 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
       );
     }
 
-    // Suggestions après un espace
-    if (hasRecentSpace) {
-      suggestions.push(
-         { symbol: '.', display: '.', name: 'Point', priority: 8 },
-        { symbol: ',', display: ',', name: 'Virgule', priority: 6 },
-        { symbol: ':', display: ':', name: '2 points', priority: 7 },
-        { symbol: ';', display: ';', name: 'Point virgule', priority: 5 },
-      );
-    }
+    // // Suggestions après un espace
+    // if (hasRecentSpace) {
+    //   suggestions.push(
+    //     //  { symbol: '.', display: '.', nconst handleInsertNote = (note: string) => {
+  const currentSection = composition.sections.find(s => s.id === activeSectionId);
+  if (!currentSection) return;
+
+  const voiceMapping = {
+    'S': 'soprano',
+    'A': 'alto',
+    'T': 'tenor',
+    'B': 'bass'
+  } as const;
+  
+  const voiceKey = voiceMapping[activeVoice] as keyof Omit<Section, 'id' | 'name'>;
+  const currentContent = currentSection[voiceKey] || '';
+  
+  // ✅ Solution élégante : Obtenir la ref du TextInput actif
+  const inputKey = `${activeSectionId}-${activeVoice}`;
+  const inputRef = getActiveInputRef(); // Vous devez passer cette ref depuis MusicEditor
+  
+  if (inputRef) {
+    // ✅ Le TextInput garde sa position de curseur naturellement
+    const insertText = note === ' ' ? ' ' : (note + ' ');
+    
+    // Simuler une insertion comme si l'utilisateur tapait
+    inputRef.focus();
+    
+    // Utiliser une méthode native si disponible, sinon fallback
+    const newContent = currentContent + insertText; // Fallback simple
+    updateSectionContent(activeSectionId, voiceKey, newContent);
+  }
+};ame: 'Point', priority: 8 },
+    //     // { symbol: ',', display: ',', name: 'Virgule', priority: 6 },
+    //     // { symbol: ':', display: ':', name: '2 points', priority: 7 },
+    //     { symbol: ';', display: ';', name: 'Point virgule', priority: 5 },
+    //   );
+    // }
     
     // Suggestions de base toujours présentes
     suggestions.push(
       { symbol: ' | ', display: '|', name: 'Mesure', priority: 4 },
-      { symbol: ' - ', display: '-', name: 'Tiret', priority: 4 },
+      { symbol: ' - ', display: '-', name: 'Tiret', priority: 7 },
       { symbol: '♭', display: '♭', name: 'Bémol', priority: 1 },
       { symbol: '♯', display: '♯', name: 'Dièse', priority: 1 },
     );
@@ -374,7 +403,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
        { note: 'fa', display: 'fa' },
        { note: 'sol', display: 'sol' },
        { note: 'la', display: 'la' },
-       { note: 'si', display: 'si' },
+       { note: 'ti', display: 'ti' },
      ],
    ];
 
@@ -389,7 +418,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
        { note: 'fa#', display: 'fa#' },
        { note: 'solb', display: 'sol♭' },
        { note: 'lab', display: 'la♭' },
-       { note: 'sib', display: 'si♭' },
+       { note: 'tib', display: 'ti♭' },
      ],
    ];
 

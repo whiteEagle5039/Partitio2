@@ -115,6 +115,10 @@ export class CompositionStorage {
  * Parse une chaîne de texte musical en symboles
  * FIX: Ne pas perdre les notes lors du parsing
  */
+ /**
+ * Parse une chaîne de texte musical en symboles
+ * CONSERVE le format original des notes (notation française simple)
+ */
   private static parseTextToSymbols(text: string): Measure[] {
     if (!text || text.trim() === '') return [];
     
@@ -127,7 +131,7 @@ export class CompositionStorage {
     elements.forEach((element) => {
       // Si c'est une barre de mesure, créer une nouvelle mesure
       if (element === '|') {
-        // ✅ FIX: Ajouter la barre À LA MESURE ACTUELLE avant de créer une nouvelle mesure
+        // ✅ Ajouter la barre À LA MESURE ACTUELLE avant de créer une nouvelle mesure
         currentMeasure.push({ type: 'bar' });
         
         // Créer la mesure avec tout ce qu'elle contient
@@ -153,44 +157,24 @@ export class CompositionStorage {
       else if (element === '||' || element === ':|:' || element === ':||') {
         currentMeasure.push({ type: 'repeat', value: element });
       } 
-      // Si c'est une note (do, re, mi, fa, sol, la, si avec altérations possibles)
-      else if (/^(do|re|mi|fa|sol|la|si)[#b]?\d*$/i.test(element)) {
-        // Mapping des notes françaises vers notes anglaises
-        const noteMap: { [key: string]: string } = {
-          'do': 'do',
-          'ré': 're',
-          're': 're',
-          'mi': 'mi',
-          'fa': 'fa',
-          'sol':'sol',
-          'la': 'la',
-          'si': 'ti'
-        };
-        
-        const match = element.match(/^(do|re|ré|mi|fa|sol|la|si)([#b])?(\d)?$/i);
-        if (match) {
-          const [, noteName, accidental, octave] = match;
-          const englishNote = noteMap[noteName.toLowerCase()] || noteName.toUpperCase();
-          
-          currentMeasure.push({
-            type: 'note',
-            value: englishNote,
-            octave: octave ? parseInt(octave) : 4,
-            accidental: accidental === '#' ? 'sharp' : accidental === 'b' ? 'flat' : undefined,
-            duration: 'quarter',
-          });
-        }
+      // Si c'est une note française (do, re, mi, fa, sol, la, si avec altérations possibles)
+      else if (/^(do|re|ré|mi|fa|sol|la|si)[#b]?$/i.test(element)) {
+        // ✅ CONSERVER LE FORMAT ORIGINAL - ne pas convertir ni ajouter d'octave
+        currentMeasure.push({
+          type: 'note',
+          value: element.toLowerCase(), // Conserver tel quel (do, re#, mib, etc.)
+          duration: 'quarter',
+        });
       }
-      // Si c'est une note anglaise (A-G)
-      else if (/^[A-Ga-g][#b]?\d*$/.test(element)) {
-        const match = element.match(/^([A-Ga-g])([#b])?(\d)?$/);
+      // Si c'est une note anglaise (A-G) - pour compatibilité
+      else if (/^[A-Ga-g][#b]?$/.test(element)) {
+        const match = element.match(/^([A-Ga-g])([#b])?$/);
         if (match) {
-          const [, note, accidental, octave] = match;
+          const [, note, accidental] = match;
+          // ✅ CONSERVER LE FORMAT ORIGINAL
           currentMeasure.push({
             type: 'note',
-            value: note.toUpperCase(),
-            octave: octave ? parseInt(octave) : 4,
-            accidental: accidental === '#' ? 'sharp' : accidental === 'b' ? 'flat' : undefined,
+            value: element.toLowerCase(), // Conserver tel quel (c, d#, eb, etc.)
             duration: 'quarter',
           });
         }
@@ -202,9 +186,8 @@ export class CompositionStorage {
           value: element,
         });
       }
-      // Si c'est de la ponctuation (: ; , .)
+      // Si c'est de la ponctuation (: ; , . - ())
       else if (/^[;:,.\-()]$/.test(element)) {
-        // On peut ignorer la ponctuation ou la stocker comme articulation
         currentMeasure.push({
           type: 'articulation',
           value: element,
@@ -212,7 +195,7 @@ export class CompositionStorage {
       }
     });
 
-    // ✅ FIX: Ne pas oublier la dernière mesure si elle n'est pas terminée par une barre
+    // ✅ Ne pas oublier la dernière mesure si elle n'est pas terminée par une barre
     if (currentMeasure.length > 0) {
       measures.push({
         id: `m${measureId}`,
@@ -222,6 +205,7 @@ export class CompositionStorage {
 
     return measures;
   }
+
 
   /**
    * Convertir une composition simple en format structuré
@@ -329,17 +313,17 @@ export class CompositionStorage {
   /**
    * Convertir des symboles en texte
    */
+  /**
+   * Convertir des symboles en texte
+   * CONSERVE le format original des notes
+   */
   private static symbolsToText(measures: Measure[]): string {
     let text = '';
 
     measures.forEach((measure) => {
       measure.symbols.forEach((symbol) => {
         if (symbol.type === 'note') {
-          let noteText = symbol.value || '';
-          if (symbol.accidental === 'sharp') noteText += '#';
-          if (symbol.accidental === 'flat') noteText += 'b';
-          if (symbol.octave) noteText += symbol.octave;
-          text += noteText + ' ';
+          text += (symbol.value || '') + ' ';
         } else if (symbol.type === 'rest') {
           text += 'r ';
         } else if (symbol.type === 'bar') {
@@ -347,6 +331,8 @@ export class CompositionStorage {
         } else if (symbol.type === 'repeat') {
           text += (symbol.value || '||') + ' ';
         } else if (symbol.type === 'dynamic') {
+          text += (symbol.value || '') + ' ';
+        } else if (symbol.type === 'articulation') {
           text += (symbol.value || '') + ' ';
         }
       });

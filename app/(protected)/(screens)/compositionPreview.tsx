@@ -311,7 +311,6 @@ export default function CompositionPreviewScreen() {
                   </View>
                 ) : (
                   <View>
-                    {/* ✅ Soprano - Afficher seulement si non vide */}
                     {hasVoiceContent(section.soprano) && (
                       <View style={styles.voiceRow}>
                         <TextComponent variante='body6'  style={styles.voiceLabel}>
@@ -323,7 +322,6 @@ export default function CompositionPreviewScreen() {
                       </View>
                     )}
 
-                    {/* ✅ Alto - Afficher seulement si non vide */}
                     {hasVoiceContent(section.alto) && (
                       <View style={styles.voiceRow}>
                         <TextComponent variante='body6'  style={styles.voiceLabel}>
@@ -335,7 +333,6 @@ export default function CompositionPreviewScreen() {
                       </View>
                     )}
 
-                    {/* ✅ Tenor - Afficher seulement si non vide */}
                     {hasVoiceContent(section.tenor) && (
                       <View style={styles.voiceRow}>
                         <TextComponent variante='body6'  style={styles.voiceLabel}>
@@ -347,7 +344,6 @@ export default function CompositionPreviewScreen() {
                       </View>
                     )}
 
-                    {/* ✅ Bass - Afficher seulement si non vide */}
                     {hasVoiceContent(section.bass) && (
                       <View style={styles.voiceRow}>
                         <TextComponent variante='body6'  style={styles.voiceLabel}>

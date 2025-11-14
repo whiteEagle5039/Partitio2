@@ -60,23 +60,6 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
   const [sectionScrollPositions, setSectionScrollPositions] = useState<{ [key: string]: number }>({});
   const sectionScrollRefs = useRef<{ [key: string]: ScrollView | null }>({});
 
-  // Forcer la mise à jour des TextInputs quand la composition change
-  useEffect(() => {
-    const activeSection = composition.sections.find(s => s.id === activeSectionId);
-    if (!activeSection) return;
-
-    const voices = ['S', 'A', 'T', 'B'] as const;
-    voices.forEach((voice) => {
-      const inputKey = `${activeSectionId}-${voice}`;
-      const ref = inputRefs.current[inputKey];
-      if (ref) {
-        const voiceKey = voice.toLowerCase() as 'soprano' | 'alto' | 'tenor' | 'bass';
-        const content = activeSection[voiceKey] || '';
-        ref.setNativeProps({ text: content });
-      }
-    });
-  }, [composition, activeSectionId]);
-
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -334,6 +317,43 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     onCompositionChange(updatedComposition);
     onSectionChange(newSection.id);
   };
+  const [inputStates, setInputStates] = useState<{
+    [key: string]: {
+      content: string;
+      selection: { start: number; end: number } | null;
+    };
+  }>({});
+
+  // ✅ Synchroniser l'état local avec la composition SEULEMENT quand nécessaire
+  useEffect(() => {
+    const newStates: typeof inputStates = {};
+    
+    composition.sections.forEach((section) => {
+      ['S', 'A', 'T', 'B'].forEach((voice) => {
+        const inputKey = `${section.id}-${voice}`;
+        const voiceKey = voice.toLowerCase() as 'soprano' | 'alto' | 'tenor' | 'bass';
+        const content = section[voiceKey] || '';
+        
+        // ✅ PRÉSERVER la sélection existante au lieu de la réinitialiser
+        newStates[inputKey] = {
+          content,
+          selection: inputStates[inputKey]?.selection ?? null,  // Garder l'ancienne sélection
+        };
+      });
+    });
+    
+    setInputStates(newStates);
+  }, [composition.sections]);  // ⚠️ Retirer inputStates des dépendances pour éviter la boucle
+
+  const updateInputState = (inputKey: string, content: string, selection?: { start: number; end: number } | null) => {
+    setInputStates(prev => ({
+      ...prev,
+      [inputKey]: {
+        content,
+        selection: selection || prev[inputKey]?.selection || null,
+      },
+    }));
+  };
 
   // Fonction pour basculer entre SATB et Lyrics
   const toggleSectionContent = (sectionId: string) => {
@@ -565,6 +585,8 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
         {voices.map((voice) => {
           const isActive = activeVoice === voice.key && activeSectionId === section.id;
           const inputKey = `${section.id}-${voice.key}`;
+          // ✅ CETTE LIGNE ÉTAIT MANQUANTE - Récupérer inputState depuis inputStates
+          const inputState = inputStates[inputKey];
 
           return (
             <View key={voice.key} style={styles.staffLine}>
@@ -597,13 +619,12 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                 </View>
 
                 <TextInput
-                  key={inputKey}
                   ref={(ref) => { inputRefs.current[inputKey] = ref; }}
                   style={[
                     styles.staffInput,
                     isActive && styles.activeStaff,
                   ]}
-                  value={voice.content}
+                  value={voice.content}  // ✅ Directement depuis la composition
                   onChangeText={(text) => {
                     updateSection(section.id, voice.key, text);
                   }}
@@ -612,17 +633,16 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                     onSectionChange(section.id);
                     onStaffFocus?.(voice.key as 'S' | 'A' | 'T' | 'B', section.id);
                   }}
-                  onSelectionChange={(e) => {
-                    const sel = e.nativeEvent.selection;
-                    onSelectionChange?.(voice.key as 'S' | 'A' | 'T' | 'B', section.id, { start: sel.start, end: sel.end });
-                  }}
-                   placeholder={`${voice.name}`}
-                   placeholderTextColor={colors.text2 +'50'}
-                   multiline={false}
-                   scrollEnabled={false}
-                   showSoftInputOnFocus={false}
-                   editable={true}
-                 />
+                  placeholder={`${voice.name}`}
+                  placeholderTextColor={colors.text2 + '50'}
+                  multiline={false}
+                  scrollEnabled={false}
+                  showSoftInputOnFocus={false}  // ✅ Garder ça pour empêcher le clavier natif
+                  editable={true}
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                  spellCheck={false}
+                />
               </View>
             </View>
           );

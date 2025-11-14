@@ -91,7 +91,7 @@ export default function ComposeScreen() {
         if (loaded.sections.length > 0) {
           setActiveSectionId(loaded.sections[0].id);
         }
-        console.log('✅ Composition chargée:', compositionId);
+        // console.log('✅ Composition chargée:', compositionId);
       }
     } catch (error) {
       console.error('❌ Erreur lors du chargement:', error);
@@ -229,15 +229,14 @@ export default function ComposeScreen() {
   // Fix pour handleInsertNote dans compose.tsx
 
   const handleInsertNote = (note: string) => {
-    console.log('🎵 handleInsertNote appelé avec:', note);
+    // console.log('🎵 handleInsertNote appelé avec:', note);
     
     const currentSection = composition.sections.find(s => s.id === activeSectionId);
     if (!currentSection) {
-        console.log('❌ Section non trouvée !');
-        return;
+      // console.log('❌ Section non trouvée !');
+      return;
     }
 
-    // ✅ FIX: Mapper correctement les voix S/A/T/B vers soprano/alto/tenor/bass
     const voiceMapping = {
       'S': 'soprano',
       'A': 'alto',
@@ -248,27 +247,37 @@ export default function ComposeScreen() {
     const voiceKey = voiceMapping[activeVoice] as keyof Omit<Section, 'id' | 'name'>;
     const currentContent = currentSection[voiceKey] || '';
     
-    console.log('📝 Voix active:', activeVoice, '-> Clé:', voiceKey);
-    console.log('📝 Contenu actuel:', currentContent);
+    // console.log('📝 Voix active:', activeVoice, '-> Clé:', voiceKey);
+    // console.log('📝 Contenu actuel:', currentContent);
     
     const sel = cursorSelection || { start: currentContent.length, end: currentContent.length };
+    
     const before = currentContent.slice(0, sel.start);
     const after = currentContent.slice(sel.end);
-    const insertText = note + ' ';
+    
+    const insertText = note === ' ' ? ' ' : (note + ' ');
     const newContent = before + insertText + after;
 
-    console.log('📝 Nouveau contenu:', newContent);
+    // console.log('📝 Nouveau contenu:', newContent);
     
-    updateSectionContent(activeSectionId, voiceKey, newContent);
     const newPos = before.length + insertText.length;
-    setCursorSelection({ start: newPos, end: newPos });
+    
+    // ✅ 1. Mettre à jour le contenu
+    updateSectionContent(activeSectionId, voiceKey, newContent);
+    
+    // ✅ 2. Utiliser un double requestAnimationFrame pour garantir que le render est terminé
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        console.log('📍 Mise à jour curseur position:', newPos);
+        setCursorSelection({ start: newPos, end: newPos });
+      });
+    });
   };
 
   const handleDeleteLast = () => {
     const currentSection = composition.sections.find(s => s.id === activeSectionId);
     if (!currentSection) return;
 
-    // ✅ FIX: Même mapping ici
     const voiceMapping = {
       'S': 'soprano',
       'A': 'alto',
@@ -280,26 +289,48 @@ export default function ComposeScreen() {
     const currentContent = currentSection[voiceKey] || '';
     const sel = cursorSelection || { start: currentContent.length, end: currentContent.length };
     
-    if (sel.start === sel.end && sel.start > 0) {
-      const before = currentContent.slice(0, sel.start - 1);
-      const after = currentContent.slice(sel.end);
-      const newContent = before + after;
-      updateSectionContent(activeSectionId, voiceKey, newContent);
-      const newPos = sel.start - 1;
-      setCursorSelection({ start: newPos, end: newPos });
-    } else if (sel.start !== sel.end) {
+    let newContent = currentContent;
+    let newPos = sel.start;
+    
+    if (sel.start !== sel.end) {
       const before = currentContent.slice(0, sel.start);
       const after = currentContent.slice(sel.end);
-      const newContent = before + after;
-      updateSectionContent(activeSectionId, voiceKey, newContent);
-      setCursorSelection({ start: before.length, end: before.length });
+      newContent = before + after;
+      newPos = sel.start;
     }
+    else if (sel.start > 0) {
+      const before = currentContent.slice(0, sel.start - 1);
+      const after = currentContent.slice(sel.end);
+      newContent = before + after;
+      newPos = sel.start - 1;
+    }
+    
+    updateSectionContent(activeSectionId, voiceKey, newContent);
+    
+    // ✅ Double RAF
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setCursorSelection({ start: newPos, end: newPos });
+      });
+    });
   };
 
-  const updateSectionContent = (sectionId: string, voice: keyof Omit<Section, 'id' | 'name'>, content: string) => {
-    console.log('📝 updateSectionContent appelé:', { sectionId, voice, content });
+  // ✅ Améliorer updateSectionContent pour éviter les re-renders inutiles
+  const updateSectionContent = (
+    sectionId: string,
+    voice: keyof Omit<Section, 'id' | 'name'>,
+    content: string
+  ) => {
+    // console.log('📝 updateSectionContent appelé:', { sectionId, voice, content });
     
     setComposition(prev => {
+      // ✅ Vérifier si le contenu a vraiment changé
+      const currentSection = prev.sections.find(s => s.id === sectionId);
+      if (currentSection && currentSection[voice] === content) {
+        // console.log('⏭️ Pas de changement, skip update');
+        return prev; // Pas de changement, éviter le re-render
+      }
+      
       const updated = {
         ...prev,
         sections: prev.sections.map(section =>
@@ -309,7 +340,7 @@ export default function ComposeScreen() {
         )
       };
       
-      console.log('📝 État mis à jour:', updated.sections.find(s => s.id === sectionId)?.[voice]);
+      // console.log('📝 État mis à jour:', updated.sections.find(s => s.id === sectionId)?.[voice]);
       return updated;
     });
   };
@@ -358,8 +389,8 @@ export default function ComposeScreen() {
     setIsSaving(true);
     
     try {
-      console.log('💾 Sauvegarde en cours...');
-      console.log('📝 Composition ID actuel:', compositionId);
+      // console.log('💾 Sauvegarde en cours...');
+      // console.log('📝 Composition ID actuel:', compositionId);
       console.log('📊 Données:', {
         title: composition.title,
         sections: composition.sections.length,
@@ -368,11 +399,11 @@ export default function ComposeScreen() {
 
       const saved = await saveComposition(composition, composerName, compositionId);
       
-      console.log('✅ Composition sauvegardée avec ID:', saved.id);
+      // console.log('✅ Composition sauvegardée avec ID:', saved.id);
       
       if (!compositionId) {
         setCompositionId(saved.id);
-        console.log('🆕 Nouvel ID défini:', saved.id);
+        // console.log('🆕 Nouvel ID défini:', saved.id);
       }
       
       setHasUnsavedChanges(false);
@@ -384,7 +415,7 @@ export default function ComposeScreen() {
           {
             text: 'Voir dans la bibliothèque',
             onPress: () => {
-              console.log('📚 Navigation vers la bibliothèque');
+              // console.log('📚 Navigation vers la bibliothèque');
               router.push('/library');
             }
           },
@@ -428,14 +459,12 @@ export default function ComposeScreen() {
 
   const handleSavePress = () => {
     if (!isDragging && Date.now() - dragStartTime.current > 200) {
-      console.log('💾 Bouton Save cliqué');
       handleSave();
     }
   };
 
   const handleDrawerPress = () => {
     if (!isDragging && Date.now() - dragStartTime.current > 200) {
-      console.log('⚙️ Bouton Drawer cliqué');
       toggleDrawer();
     }
   };
