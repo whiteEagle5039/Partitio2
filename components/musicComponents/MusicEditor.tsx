@@ -324,6 +324,15 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     };
   }>({});
 
+  const voiceFieldMap = {
+    S: 'soprano',
+    A: 'alto',
+    T: 'tenor',
+    B: 'bass',
+  } as const;
+
+  type VoiceField = typeof voiceFieldMap[keyof typeof voiceFieldMap];
+
   // ✅ Synchroniser l'état local avec la composition SEULEMENT quand nécessaire
   useEffect(() => {
     const newStates: typeof inputStates = {};
@@ -331,7 +340,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     composition.sections.forEach((section) => {
       ['S', 'A', 'T', 'B'].forEach((voice) => {
         const inputKey = `${section.id}-${voice}`;
-        const voiceKey = voice.toLowerCase() as 'soprano' | 'alto' | 'tenor' | 'bass';
+        const voiceKey = voiceFieldMap[voice as keyof typeof voiceFieldMap] as VoiceField;
         const content = section[voiceKey] || '';
         
         // ✅ PRÉSERVER la sélection existante au lieu de la réinitialiser
@@ -461,9 +470,10 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
   const updateSection = (sectionId: string, voice: string, content: string) => {
     const updatedSections = composition.sections.map(section => {
       if (section.id === sectionId) {
+        const voiceKey = voiceFieldMap[voice as keyof typeof voiceFieldMap] as VoiceField;
         return {
           ...section,
-          [voice.toLowerCase()]: content,
+          [voiceKey]: content,
         };
       }
       return section;
@@ -637,7 +647,6 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                   placeholderTextColor={colors.text2 + '50'}
                   multiline={false}
                   scrollEnabled={false}
-                  showSoftInputOnFocus={false}  // ✅ Garder ça pour empêcher le clavier natif
                   editable={true}
                   autoCorrect={false}
                   autoCapitalize="none"
@@ -788,6 +797,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                   pagingEnabled={false}
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={{ width: width * 2 }}
+                  keyboardShouldPersistTaps="handled"
                   onScroll={(event) => {
                     const offsetX = event.nativeEvent.contentOffset.x;
                     setSectionScrollPositions(prev => ({
@@ -795,7 +805,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                       [section.id]: offsetX
                     }));
                   }}
-                  scrollEventThrottle={16}
+                  // scrollEventThrottle={16}
                 >
                   <View style={[
                     styles.staffContainer,

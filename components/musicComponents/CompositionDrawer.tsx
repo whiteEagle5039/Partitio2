@@ -2,19 +2,19 @@
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import {
-  ChevronDown,
-  ChevronUp,
-  Copy,
-  Edit3,
-  FileText,
-  Music,
-  Plus,
-  Settings2,
-  Trash2,
-  X
+    ChevronDown,
+    ChevronUp,
+    Copy,
+    Edit3,
+    FileText,
+    Music,
+    Plus,
+    Settings2,
+    Trash2,
+    X
 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Dimensions, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, ScrollView, StyleSheet, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 
 interface Section {
   id: string;
@@ -39,9 +39,6 @@ interface CompositionDrawerProps {
   activeSectionId: string;
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const DRAWER_WIDTH = 360;
-
 export const CompositionDrawer: React.FC<CompositionDrawerProps> = ({
   isOpen,
   onClose,
@@ -52,9 +49,11 @@ export const CompositionDrawer: React.FC<CompositionDrawerProps> = ({
 }) => {
   const colors = useThemeColors();
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+  const { width: screenWidth } = useWindowDimensions();
+  const drawerWidth = screenWidth;
 
   // Animation
-  const slideAnim = useRef(new Animated.Value(DRAWER_WIDTH)).current; // Drawer hors écran à droite
+  const slideAnim = useRef(new Animated.Value(drawerWidth)).current; // Drawer hors écran à droite
   const overlayAnim = useRef(new Animated.Value(0)).current; // Overlay transparent
 
   useEffect(() => {
@@ -74,7 +73,7 @@ export const CompositionDrawer: React.FC<CompositionDrawerProps> = ({
     } else {
       Animated.parallel([
         Animated.timing(slideAnim, {
-          toValue: DRAWER_WIDTH,
+          toValue: drawerWidth,
           duration: 200,
           useNativeDriver: false,
         }),
@@ -102,7 +101,7 @@ export const CompositionDrawer: React.FC<CompositionDrawerProps> = ({
       top: 0,
       right: 0,
       bottom: 0,
-      width: 360,
+      width: drawerWidth,
       backgroundColor: colors.card,
       elevation: 8,
       shadowColor: '#000',

@@ -1,16 +1,14 @@
 // Exemple d'intégration dans compose.tsx
 import { CompositionDrawer } from '@/components/musicComponents/CompositionDrawer';
 import { MusicEditor } from '@/components/musicComponents/MusicEditor';
-import { MusicKeyboard } from '@/components/musicComponents/Musickeyboard';
 import { SaveCompositionModal } from '@/components/musicComponents/SaveCompositionModal';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useCompositionStorage } from '@/utils/CompositionStorage';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Save, RotateCcw } from 'lucide-react-native';
-import React, { useState, useRef, useEffect } from 'react';
-import { Animated, StyleSheet, TouchableOpacity, View, PanResponder, Alert } from 'react-native';
-import { Dimensions } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Save } from 'lucide-react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, Animated, Dimensions, PanResponder, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface Section {
   id: string;
@@ -60,7 +58,6 @@ export default function ComposeScreen() {
   const [activeVoice, setActiveVoice] = useState<'S' | 'A' | 'T' | 'B'>('S');
   const [activeSectionId, setActiveSectionId] = useState('1');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [showKeyboard, setShowKeyboard] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [drawerAnimation] = useState(new Animated.Value(0));
   const [cursorSelection, setCursorSelection] = useState<{ start: number; end: number } | null>(null);
@@ -135,7 +132,7 @@ export default function ComposeScreen() {
         const newY = startPosition.current.y + gestureState.dy;
         
         // Dimensions de l'écran et marges
-        const buttonWidth = 50;
+        const buttonWidth = floatingButtonWidth;
         const margin = 20;
         const minY = -screenHeight + 200; // Éviter le haut de l'écran
         const maxY = 100; // Éviter le bas de l'écran
@@ -173,6 +170,14 @@ export default function ComposeScreen() {
     })
   ).current;
 
+  const floatingButtonWidth = Math.max(64, Math.min(120, Math.round(screenWidth * 0.12)));
+  const floatingButtonHeight = Math.max(96, Math.min(180, Math.round(screenWidth * 0.16)));
+  const floatingButtonPadding = Math.max(14, Math.round(screenWidth * 0.018));
+  const floatingButtonBorderRadius = Math.round(floatingButtonWidth * 0.45);
+  const floatingIconSize = Math.min(28, Math.round(floatingButtonWidth * 0.4));
+  const dotsContainerSize = Math.max(28, Math.round(floatingButtonWidth * 0.55));
+  const dotSize = Math.max(5, Math.round(floatingButtonWidth * 0.08));
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -191,13 +196,13 @@ export default function ComposeScreen() {
       alignItems: 'center',
     },
     floatingMenuButton: {
-      width: 50,
-      height: 90,
-      borderRadius: 28,
+      width: floatingButtonWidth,
+      height: floatingButtonHeight,
+      borderRadius: floatingButtonBorderRadius,
       backgroundColor: colors.card,
       justifyContent: 'space-evenly',
       alignItems: 'center',
-      paddingVertical: 16,
+      paddingVertical: floatingButtonPadding,
       elevation: 6,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 3 },
@@ -211,17 +216,17 @@ export default function ComposeScreen() {
       backgroundColor: colors.primary + '30',
     },
     dotsContainer: {
-      width: 24,
-      height: 24,
+      width: dotsContainerSize,
+      height: dotsContainerSize,
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
       gap: 2,
     },
     dot: {
-      width: 4,
-      height: 4,
-      borderRadius: 2,
+      width: dotSize,
+      height: dotSize,
+      borderRadius: dotSize / 2,
       backgroundColor: colors.primary,
     },
   });
@@ -347,7 +352,6 @@ export default function ComposeScreen() {
   const handleStaffFocus = (voice: 'S' | 'A' | 'T' | 'B', sectionId: string) => {
     setActiveVoice(voice);
     setActiveSectionId(sectionId);
-    setShowKeyboard(true);
     setCursorSelection(null);
   };
 
@@ -494,35 +498,7 @@ export default function ComposeScreen() {
         />
       </View>
 
-      {showKeyboard && (
-        <View style={styles.keyboardContainer}>
-          <MusicKeyboard
-            activeVoice={activeVoice}
-            onVoiceChange={setActiveVoice}
-            onInsertNote={handleInsertNote}
-            onDeleteLast={handleDeleteLast}
-            onClose={() => setShowKeyboard(false)}
-            currentContent={(() => {
-              const currentSection = composition.sections.find(s => s.id === activeSectionId);
-              if (!currentSection) return '';
-              
-              // ✅ FIX: Mapper correctement la voix
-              const voiceMapping = {
-                'S': 'soprano',
-                'A': 'alto',
-                'T': 'tenor',
-                'B': 'bass'
-              } as const;
-              
-              const voiceKey = voiceMapping[activeVoice];
-              return currentSection[voiceKey] || '';
-            })()}
-          />
-        </View>
-      )}
-
-      {!showKeyboard && (
-        <Animated.View 
+      <Animated.View 
           style={[
             styles.draggableContainer,
             {
@@ -543,7 +519,7 @@ export default function ComposeScreen() {
               disabled={isDragging}
             >
               <Save 
-                size={22} 
+                size={floatingIconSize} 
                 color={colors.text} 
               />
             </TouchableOpacity>
@@ -561,7 +537,6 @@ export default function ComposeScreen() {
             </TouchableOpacity>
           </View>
         </Animated.View>
-      )}
 
       <CompositionDrawer
         isOpen={isDrawerOpen}
