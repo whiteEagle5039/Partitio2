@@ -369,8 +369,7 @@ export default function LibraryScreen() {
         </View>
 
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          {/* Breadcrumb */}
-          <Breadcrumb />
+          {/* Breadcrumb removed per request (hide arborescence for users) */}
 
           {/* Contenu */}
           <View style={styles.content}>
