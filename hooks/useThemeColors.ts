@@ -1,6 +1,6 @@
-import { useColorScheme } from "react-native"
 import { color } from "@/constants/color"
 import { useAppStore } from "@/stores/appStore"
+import { useColorScheme } from "react-native"
 
 export function useThemeColors(){
     // Récupérer le thème depuis le store (pour override manuel)
@@ -14,4 +14,12 @@ export function useThemeColors(){
     const currentTheme = themeMode || systemTheme
     
     return color[currentTheme]
+}
+
+export function useStatusBarStyle(){
+    const { themeMode } = useAppStore()
+    const systemTheme = useColorScheme() ?? 'light'
+    const currentTheme = themeMode || systemTheme
+
+    return currentTheme === 'dark' ? 'light' : 'dark'
 }

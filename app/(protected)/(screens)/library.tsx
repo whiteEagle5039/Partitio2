@@ -1,13 +1,12 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Library, Folder } from 'lucide-react-native';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { WrapperComponent } from '@/components/WrapperComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { useAppStore } from '@/stores/appStore';
+import { Category, Content, Folder as FolderType, useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
-import { Category, Folder as FolderType, Content } from '@/stores/appStore';
+import { ArrowLeft, Folder, Library } from 'lucide-react-native';
+import React from 'react';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Imports des composants spécialisés
 import { CantiquesView } from '@/components/libraryComponents/CantiquesView';
@@ -248,7 +247,7 @@ export default function LibraryScreen() {
 
   // Rendu des catégories
   const renderCategories = () => {
-    const filteredCategories = categories.filter(cat => cat.id !== '1');
+    const filteredCategories = categories.filter(cat => cat.id !== '1' && cat.id !== '4');
 
     if (filteredCategories.length === 0) {
       return (

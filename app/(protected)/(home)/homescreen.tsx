@@ -414,6 +414,8 @@ export default function HomeScreen() {
           </View>
 
           {/* Partitions populaires */}
+          {/* Section Tendances masquée temporairement */}
+          {/*
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <TextComponent variante="subtitle1">
@@ -433,6 +435,7 @@ export default function HomeScreen() {
             
             {renderTrendingSection()}
           </View>
+          */}
 
          
         </ScrollView>

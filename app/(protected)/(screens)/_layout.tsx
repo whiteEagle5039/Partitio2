@@ -1,7 +1,10 @@
+import { useStatusBarStyle } from '@/hooks/useThemeColors';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
 export default function ScreensLayout() {
+  const statusBarStyle = useStatusBarStyle();
+
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
@@ -13,7 +16,7 @@ export default function ScreensLayout() {
         <Stack.Screen name="setting" />
         <Stack.Screen name="compositionPreview" />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style={statusBarStyle} translucent backgroundColor="transparent" />
     </>
   );
 }
