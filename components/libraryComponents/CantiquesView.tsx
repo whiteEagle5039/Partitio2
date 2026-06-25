@@ -79,7 +79,7 @@ export const CantiquesView: React.FC<CantiquesViewProps> = ({ onContentPress }) 
     },
     scrollContainer: {
       paddingHorizontal: 20,
-      paddingTop: 20,
+      paddingTop: 8,
     },
     loadingContainer: {
       flex: 1,
