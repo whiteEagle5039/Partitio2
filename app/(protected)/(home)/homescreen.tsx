@@ -1,5 +1,6 @@
 import { SheetMusicCard } from '@/components/musicComponents/SheetMusicCard';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
+import { AlertCard } from '@/components/uxComponents/AlertCard';
 import { WrapperComponent } from '@/components/WrapperComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
@@ -197,29 +198,6 @@ export default function HomeScreen() {
     );
   };
 
-  // Composant pour l'indicateur de connexion
-  const ConnectionStatus = ({ isOnline, colors }: any) => {
-    if (isOnline) return null;
-
-    return (
-      <View 
-        style={[
-          styles.connectionStatus, 
-          { 
-            backgroundColor: `${colors.blueSingle}20`,
-            borderColor: colors.blueSingle
-            ,
-          }
-        ]}
-      >
-        <WifiOff size={16} color={colors.blueSingle} />
-        <TextComponent variante="body4" color={colors.blueSingle}>
-          Hors connexion
-        </TextComponent>
-      </View>
-    );
-  };
-
   const quickActions = [
   {
     icon: BookOpen,
@@ -380,7 +358,11 @@ export default function HomeScreen() {
 
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           {/* Statut de connexion */}
-          <ConnectionStatus isOnline={isOnline} colors={colors} />
+          <AlertCard 
+            visible={!isOnline} 
+            icon={WifiOff} 
+            title="Hors connexion" 
+          />
 
           {/* Actions rapides */}
           <View style={styles.quickActions}>
