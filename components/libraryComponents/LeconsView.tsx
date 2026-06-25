@@ -160,10 +160,10 @@ export const LeconsView: React.FC<LeconsViewProps> = ({
         <Folder size={40} color={colors.primary2} />
       </View>
       <TextComponent variante="subtitle2" style={styles.emptyStateTitle}>
-        Aucun dossier disponible
+        Aucune leçon disponible
       </TextComponent>
       <TextComponent variante="body3" color={colors.text2} style={styles.emptyStateSubtitle}>
-        La catégorie "Leçons" ne contient pas encore de dossiers. Revenez plus tard pour découvrir de nouvelles leçons.
+        La catégorie "Leçons" ne contient pas encore de leçons. Revenez plus tard pour découvrir de nouvelles leçons.
       </TextComponent>
       <TouchableOpacity 
         style={styles.emptyStateButton}
@@ -185,14 +185,14 @@ export const LeconsView: React.FC<LeconsViewProps> = ({
         Aucun cours disponible
       </TextComponent>
       <TextComponent variante="body3" color={colors.text2} style={styles.emptyStateSubtitle}>
-        Ce dossier ne contient pas encore de cours. L'auteur ajoutera prochainement du contenu.
+        Cette leçon ne contient pas encore de cours. L'auteur ajoutera prochainement du contenu.
       </TextComponent>
       <TouchableOpacity 
         style={styles.emptyStateButton}
         onPress={() => onFolderPress(null as any)} // Retour aux dossiers
       >
         <TextComponent variante="body3" color="#FFFFFF">
-          Retour aux dossiers
+          Retour aux leçons
         </TextComponent>
       </TouchableOpacity>
     </View>
@@ -209,7 +209,7 @@ export const LeconsView: React.FC<LeconsViewProps> = ({
               <Folder size={20} color={category.color} />
             </View>
             <TextComponent variante="subtitle1">{category.folderCount}</TextComponent>
-            <TextComponent variante="body4" color={colors.text2}>Dossiers</TextComponent>
+            <TextComponent variante="body4" color={colors.text2}>Leçons</TextComponent>
           </View>
         </View>
       );
