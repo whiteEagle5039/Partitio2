@@ -1,31 +1,25 @@
 /**
  * Exemples d'utilisation du composant AlertCard
  * 
- * Cet exemple montre comment utiliser le composant réutilisable
- * pour afficher des notifications, alertes, messages d'erreur, etc.
+ * Style unique inspiré de la notification "Hors connexion" de homescreen
+ * Utilise la couleur blueSingle pour tous les messages
  */
 
 import React, { useState } from 'react';
 import { View, ScrollView } from 'react-native';
-import { WifiOff, AlertCircle, CheckCircle, Info } from 'lucide-react-native';
-import { 
-  AlertCard, 
-  InfoAlert, 
-  WarningAlert, 
-  ErrorAlert, 
-  SuccessAlert 
-} from '@/components/uxComponents/AlertCard';
+import { WifiOff, AlertCircle, CheckCircle, Info, Trash2 } from 'lucide-react-native';
+import { AlertCard } from '@/components/uxComponents/AlertCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 export default function AlertCardExamples() {
   const colors = useThemeColors();
   const [visibleAlerts, setVisibleAlerts] = useState({
     offline: true,
-    warning: true,
-    error: true,
+    validation: true,
+    deletion: true,
     success: true,
-    custom: true,
-    question: true,
+    info: true,
+    simple: true,
   });
 
   const toggleAlert = (key: keyof typeof visibleAlerts) => {
@@ -38,86 +32,69 @@ export default function AlertCardExamples() {
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.background, paddingVertical: 20 }}>
       
-      {/* 1. Alert Info (Hors connexion - basé sur le style original) */}
-      <InfoAlert
+      {/* 1. Notification Hors connexion (style original) */}
+      <AlertCard
         visible={visibleAlerts.offline}
         icon={WifiOff}
         title="Hors connexion"
-        message="Vous êtes actuellement hors ligne. Certaines fonctionnalités peuvent être limitées."
+        message="Vous êtes actuellement hors ligne. Certaines fonctionnalités seront limitées."
         actionText="Réessayer"
-        onAction={() => console.log('Retry')}
-        onClose={() => toggleAlert('offline')}
+        onAction={() => {
+          console.log('Retry connection');
+          toggleAlert('offline');
+        }}
       />
 
-      {/* 2. Alert Warning */}
-      <WarningAlert
-        visible={visibleAlerts.warning}
+      {/* 2. Alerte de validation */}
+      <AlertCard
+        visible={visibleAlerts.validation}
         icon={AlertCircle}
-        title="Attention"
-        message="Assurez-vous que votre composition contient au moins une section avant de sauvegarder."
-        actionText="Corriger"
-        onAction={() => console.log('Corriger')}
+        title="Composition vide"
+        message="Ajoutez au moins une section avant de sauvegarder."
+        actionText="Ajouter"
+        onAction={() => console.log('Add section')}
       />
 
-      {/* 3. Alert Error */}
-      <ErrorAlert
-        visible={visibleAlerts.error}
-        icon={AlertCircle}
-        title="Erreur de synchronisation"
-        message="Impossible de charger les données. Veuillez réessayer plus tard."
-        actionText="Réessayer"
-        onAction={() => console.log('Réessayer')}
+      {/* 3. Confirmation de suppression */}
+      <AlertCard
+        visible={visibleAlerts.deletion}
+        icon={Trash2}
+        title="Supprimer?"
+        message="Cette action est irréversible et supprimera définitivement la composition."
+        actionText="Supprimer"
+        onAction={() => {
+          console.log('Delete confirmed');
+          toggleAlert('deletion');
+        }}
       />
 
-      {/* 4. Alert Success */}
-      <SuccessAlert
+      {/* 4. Message de succès */}
+      <AlertCard
         visible={visibleAlerts.success}
         icon={CheckCircle}
         title="Succès"
         message="Votre composition a été sauvegardée avec succès."
         actionText="Voir"
-        onAction={() => console.log('Voir')}
+        onAction={() => console.log('View composition')}
       />
 
-      {/* 5. Custom Alert avec couleur personnalisée */}
+      {/* 5. Message informatif */}
       <AlertCard
-        visible={visibleAlerts.custom}
+        visible={visibleAlerts.info}
         icon={Info}
-        title="Information personnalisée"
-        message="Ceci est un message avec une couleur personnalisée."
-        customColor="#8B5CF6" // Purple
+        title="Information"
+        message="Les mises à jour de la bibliothèque sont disponibles. Vérifiez la qualité du contenu."
+        actionText="Fermer"
+        onAction={() => toggleAlert('info')}
+      />
+
+      {/* 6. Alerte sans icon */}
+      <AlertCard
+        visible={visibleAlerts.simple}
+        title="Attention"
+        message="Vous avez des changements non sauvegardés."
         actionText="OK"
-        onAction={() => console.log('Custom action')}
-      />
-
-      {/* 6. Question/Confirmation Alert */}
-      <AlertCard
-        visible={visibleAlerts.question}
-        icon={AlertCircle}
-        title="Confirmation requise"
-        message="Êtes-vous sûr de vouloir supprimer cette composition ? Cette action ne peut pas être annulée."
-        customColor="#F59E0B" // Orange for questions
-        actionText="Supprimer"
-        onAction={() => {
-          console.log('Confirmed deletion');
-          toggleAlert('question');
-        }}
-      />
-
-      {/* 7. Alert sans icon */}
-      <AlertCard
-        visible={true}
-        title="Message simple"
-        message="Ceci est un message sans icône."
-        type="info"
-      />
-
-      {/* 8. Alert sans message (titre uniquement) */}
-      <AlertCard
-        visible={true}
-        icon={CheckCircle}
-        title="Opération complétée"
-        type="success"
+        onAction={() => toggleAlert('simple')}
       />
 
     </ScrollView>
@@ -128,14 +105,14 @@ export default function AlertCardExamples() {
  * Cas d'usage courants:
  * 
  * 1. Notification de connexion:
- * <InfoAlert
+ * <AlertCard
  *   icon={WifiOff}
  *   title="Hors connexion"
  *   message="Les tendances ne sont disponibles qu'en ligne."
  * />
  * 
  * 2. Alerte de suppression:
- * <ErrorAlert
+ * <AlertCard
  *   icon={Trash2}
  *   title="Supprimer?"
  *   message="Cette action est irréversible."
@@ -144,7 +121,7 @@ export default function AlertCardExamples() {
  * />
  * 
  * 3. Message de succès:
- * <SuccessAlert
+ * <AlertCard
  *   icon={CheckCircle}
  *   title="Succès"
  *   message="Votre profil a été mis à jour."
@@ -153,7 +130,7 @@ export default function AlertCardExamples() {
  * />
  * 
  * 4. Validation ou question:
- * <WarningAlert
+ * <AlertCard
  *   icon={AlertCircle}
  *   title="Composition vide"
  *   message="Ajoutez au moins une section avant de sauvegarder."
