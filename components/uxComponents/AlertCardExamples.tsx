@@ -28,7 +28,7 @@ export default function AlertCardExamples() {
     question: true,
   });
 
-  const toggleAlert = (key: string) => {
+  const toggleAlert = (key: keyof typeof visibleAlerts) => {
     setVisibleAlerts(prev => ({
       ...prev,
       [key]: !prev[key]
