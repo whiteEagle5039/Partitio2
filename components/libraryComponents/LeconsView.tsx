@@ -41,7 +41,7 @@ export const LeconsView: React.FC<LeconsViewProps> = ({
       flex: 1,
       backgroundColor: colors.card,
       borderRadius: 16,
-      padding: 16,
+      padding: 40,
       alignItems: 'center',
       borderColor: colors.border,
       borderWidth: 1,
