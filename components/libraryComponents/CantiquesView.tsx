@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
-import { Music } from 'lucide-react-native';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useCantiqueStorage } from '@/utils/CantiqueStorage';
 import { router } from 'expo-router';
+import { Music } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface CantiqueMetadata {
   id: string;
@@ -78,8 +78,8 @@ export const CantiquesView: React.FC<CantiquesViewProps> = ({ onContentPress }) 
       flex: 1,
     },
     scrollContainer: {
-      paddingHorizontal: 20,
-      paddingTop: 8,
+      paddingHorizontal: 12,
+      paddingTop: 3,
     },
     loadingContainer: {
       flex: 1,
@@ -102,14 +102,14 @@ export const CantiquesView: React.FC<CantiquesViewProps> = ({ onContentPress }) 
       backgroundColor: colors.card,
       borderRadius: 16,
       padding: 16,
-      marginBottom: 12,
+      marginBottom: 8,
       alignItems: 'center',
       borderColor: colors.border,
       borderWidth: 1,
     },
     listThumbnail: {
       width: 60,
-      height: 60,
+      height: 70,
       borderRadius: 12,
       marginRight: 16,
       alignItems: 'center',

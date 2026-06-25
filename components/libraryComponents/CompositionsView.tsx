@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { Edit3, Music } from 'lucide-react-native';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useCompositionStorage } from '@/utils/CompositionStorage';
 import { router } from 'expo-router';
+import { Edit3, Music } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface CompositionMetadata {
   id: string;
@@ -72,6 +72,7 @@ export const CompositionsView: React.FC<CompositionsViewProps> = ({ onContentPre
 
   const styles = StyleSheet.create({
     container: {
+      flex: 1,
       paddingHorizontal: 20,
       paddingTop: 20,
     },
@@ -89,7 +90,6 @@ export const CompositionsView: React.FC<CompositionsViewProps> = ({ onContentPre
     },
     emptyIcon: {
       marginBottom: 16,
-      opacity: 0.3,
     },
     listItem: {
       flexDirection: 'row',
@@ -150,8 +150,8 @@ export const CompositionsView: React.FC<CompositionsViewProps> = ({ onContentPre
   // Aucune composition
   if (compositions.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Music size={64} color={colors.text2} style={styles.emptyIcon} />
+      <View style={[styles.container, styles.emptyContainer]}>
+        <Music size={64} color={colors.blueSingle} style={styles.emptyIcon} />
         <TextComponent variante="subtitle2" color={colors.text}>
           Aucune composition
         </TextComponent>

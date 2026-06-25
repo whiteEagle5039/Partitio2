@@ -49,6 +49,9 @@ export default function LibraryScreen() {
       flex: 1,
       backgroundColor: colors.background
     },
+    scrollContent: {
+      flexGrow: 1,
+    },
     breadcrumb: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -368,7 +371,11 @@ export default function LibraryScreen() {
           </View>
         </View>
 
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Breadcrumb removed per request (hide arborescence for users) */}
 
           {/* Contenu */}
