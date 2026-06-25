@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Folder, Music, User, Play } from 'lucide-react-native';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { Content, Folder as FolderType, Category } from '@/stores/appStore';
+import { Category, Content, Folder as FolderType } from '@/stores/appStore';
+import { Folder, Music, Play, User } from 'lucide-react-native';
+import React from 'react';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 interface LeconsViewProps {
   category: Category;
@@ -204,10 +204,7 @@ export const LeconsView: React.FC<LeconsViewProps> = ({
       // Statistiques pour la vue des dossiers
       return (
         <View style={styles.statsContainer}>
-          <View style={[styles.statCard, { flex: 1 }]}>
-            <View style={[styles.statIcon, { backgroundColor: `${category.color}15` }]}>
-              <Folder size={20} color={category.color} />
-            </View>
+          <View style={[styles.statCard, { flex: 1, alignItems: 'center' }]}>
             <TextComponent variante="subtitle1">{category.folderCount}</TextComponent>
             <TextComponent variante="body4" color={colors.text2}>Leçons</TextComponent>
           </View>
