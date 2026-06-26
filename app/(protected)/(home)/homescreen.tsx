@@ -1,6 +1,5 @@
 import { SheetMusicCard } from '@/components/musicComponents/SheetMusicCard';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
-import { AlertCard } from '@/components/uxComponents/AlertCard';
 import { WrapperComponent } from '@/components/WrapperComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
@@ -63,18 +62,6 @@ export default function HomeScreen() {
     scrollView: {
       flex: 1,
       backgroundColor: colors.background
-    },
-    connectionStatus: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      marginHorizontal: 20,
-      marginBottom: 10,
-      borderRadius: 20,
-      borderWidth: 1,
-      gap: 8,
     },
     quickActions: {
       flexDirection: 'column',
@@ -357,13 +344,6 @@ export default function HomeScreen() {
         </View>
 
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-          {/* Statut de connexion */}
-          <AlertCard 
-            visible={!isOnline} 
-            icon={WifiOff} 
-            title="Hors connexion" 
-          />
-
           {/* Actions rapides */}
           <View style={styles.quickActions}>
             {quickActions.map((action, index) => (
