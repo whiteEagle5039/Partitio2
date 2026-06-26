@@ -5,11 +5,11 @@
  * Utilise la couleur blueSingle pour tous les messages
  */
 
-import React, { useState } from 'react';
-import { View, ScrollView } from 'react-native';
-import { WifiOff, AlertCircle, CheckCircle, Info, Trash2 } from 'lucide-react-native';
 import { AlertCard } from '@/components/uxComponents/AlertCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { AlertCircle, CheckCircle, Info, Trash2, WifiOff } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { ScrollView } from 'react-native';
 
 export default function AlertCardExamples() {
   const colors = useThemeColors();

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
+import { leconsLibrary } from '@/lecons';
 
 // Types existants...
 export interface SheetMusic {
@@ -299,60 +300,9 @@ export const useAppStore = create<AppState>()(
           description: 'Cours et tutoriels',
           icon: 'BookOpen',
           color: '#3B82F6',
-          folderCount: 3,
-          totalcontent: 15,
-          folders: [
-            {
-              id: 'f5',
-              name: 'Cours de Piano',
-              description: 'Apprentissage complet du piano',
-              thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
-              courseCount: 8,
-              categoryId: '5',
-              createdAt: new Date(),
-              author: 'Prof. Marie Dubois',
-              content: [
-                {
-                  id: 'c5',
-                  title: 'Introduction au Piano',
-                  content: 'Leçon complète sur l\'introduction au piano. Cette leçon couvre les bases essentielles pour débuter au piano...',
-                  description: 'Premiers pas et posture',
-                  thumbnail: 'https://images.pexels.com/photos/164743/pexels-photo-164743.jpeg?auto=compress&cs=tinysrgb&w=400',
-                  isDownloaded: false,
-                  dateAdded: new Date(),
-                  createdAt: new Date(),
-                  lastModified: new Date(),
-                  isPublic: true,
-                  author: 'Prof. Marie Dubois'
-                },
-              ]
-            },
-            {
-              id: 'f7',
-              name: 'Cours de Trompette',
-              description: 'Techniques de cuivre et respiration',
-              thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
-              courseCount: 3,
-              categoryId: '5',
-              createdAt: new Date(),
-              author: 'Pierre Trumpet',
-              content: [
-                {
-                  id: 'c9',
-                  title: 'Embouchure et Respiration',
-                  content: 'Techniques fondamentales de la trompette. Maîtrisez l\'embouchure et les techniques de respiration...',
-                  description: 'Fondamentaux de la trompette',
-                  thumbnail: 'https://images.pexels.com/photos/1246437/pexels-photo-1246437.jpeg?auto=compress&cs=tinysrgb&w=400',
-                  isDownloaded: false,
-                  dateAdded: new Date(),
-                  createdAt: new Date(),
-                  lastModified: new Date(),
-                  isPublic: true,
-                  author: 'Pierre Trumpet'
-                }
-              ]
-            }
-          ]
+          folderCount: leconsLibrary.length,
+          totalcontent: leconsLibrary.reduce((sum, folder) => sum + folder.content.length, 0),
+          folders: leconsLibrary,
         }
       ],
       

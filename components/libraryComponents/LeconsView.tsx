@@ -210,28 +210,9 @@ export const LeconsView: React.FC<LeconsViewProps> = ({
           </View>
         </View>
       );
-    } else {
-      // Statistiques pour la vue des cours dans un dossier
-      return (
-        <View style={styles.statsContainer}>
-          <View style={[styles.statCard, { flex: 2 }]}>
-            <View style={[styles.statIcon, { backgroundColor: `${colors.primary}15` }]}>
-              <User size={20} color={colors.primary} />
-            </View>
-            <TextComponent variante="body3" color={colors.text2}>Auteur</TextComponent>
-            <TextComponent variante="subtitle3">{currentFolder.author || "Non spécifié"}</TextComponent>
-          </View>
-          
-          <View style={[styles.statCard, { flex: 1 }]}>
-            <View style={[styles.statIcon, { backgroundColor: `${colors.primary}15` }]}>
-              <Music size={20} color={colors.primary} />
-            </View>
-            <TextComponent variante="subtitle1">{currentFolder.courseCount}</TextComponent>
-            <TextComponent variante="body4" color={colors.text2}>Cours</TextComponent>
-          </View>
-        </View>
-      );
     }
+
+    return null;
   };
 
   // Rendu des dossiers

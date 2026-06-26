@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
-import { LucideIcon } from 'lucide-react-native';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { LucideIcon } from 'lucide-react-native';
+import React from 'react';
+import { StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
 
 interface AlertCardProps {
   icon?: LucideIcon;
