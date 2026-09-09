@@ -15,6 +15,8 @@ export default function ScreensLayout() {
         <Stack.Screen name="profile" />
         <Stack.Screen name="setting" />
         <Stack.Screen name="compositionPreview" />
+        <Stack.Screen name="cantiquePreview" />
+        <Stack.Screen name="contentPreview" />
       </Stack>
       <StatusBar style={statusBarStyle} translucent backgroundColor="transparent" />
     </>

@@ -1,6 +1,6 @@
-import { useRouter } from 'expo-router';
-import { BookOpen, Clock, Heart, Library, Menu, PenTool, Search, TrendingUp, WifiOff } from 'lucide-react-native';
-import React, { useMemo } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { BookOpen, Clock, Heart, Library, Menu, Music, PenTool, Search, TrendingUp, WifiOff } from 'lucide-react-native';
+import React, { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { SheetMusicCard } from '@/components/musicComponents/SheetMusicCard';
@@ -8,10 +8,12 @@ import { EmptyState } from '@/components/uxComponents/EmptyState';
 import { Content, Screen } from '@/components/uxComponents/Screen';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
 import { WrapperComponent } from '@/components/WrapperComponent';
-import { MIN_TOUCH_TARGET, touchSlop } from '@/constants/layout';
+import { MIN_TOUCH_TARGET, elevation, touchSlop } from '@/constants/layout';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
+import { Cantique } from '@/types/cantique';
+import { useCantiqueStorage } from '@/utils/CantiqueStorage';
 
 /** La section « Tendances » est masquée en attendant le back-end. */
 const SHOW_TRENDING = false;
@@ -31,6 +33,25 @@ export default function HomeScreen() {
     categories,
     setCurrentCategory,
   } = useAppStore();
+  const { getRecentlyViewedCantiques } = useCantiqueStorage();
+
+  const [recentCantiques, setRecentCantiques] = useState<Cantique[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      getRecentlyViewedCantiques(5).then((data) => {
+        if (isActive) setRecentCantiques(data);
+      });
+
+      return () => {
+        isActive = false;
+      };
+      // getRecentlyViewedCantiques provient d'un hook de stockage recréé à chaque rendu.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []),
+  );
 
   // Les cartes d'action passent d'une colonne (téléphone) à une grille dès que
   // la largeur le permet. La largeur est calculée explicitement (et non en
@@ -109,6 +130,25 @@ export default function HomeScreen() {
           gap: spacing.sm,
           paddingBottom: spacing.xxs,
         },
+        recentCard: {
+          width: 160,
+          backgroundColor: colors.card,
+          borderRadius: radius.lg,
+          borderWidth: 1,
+          borderColor: colors.border,
+          padding: spacing.sm,
+          gap: spacing.xxs,
+          ...elevation(1),
+        },
+        recentIconBadge: {
+          width: 36,
+          height: 36,
+          borderRadius: radius.md,
+          backgroundColor: `${colors.primary}18`,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: spacing.xxs,
+        },
       }),
     [actionCardWidth, actionColumns, colors, gutter, radius, spacing],
   );
@@ -143,9 +183,8 @@ export default function HomeScreen() {
     },
   ];
 
-  const recentSheets = sheetMusic.slice(0, 5);
   const hasTrendingContent = sheetMusic && sheetMusic.length > 0;
-  const hasRecentContent = recentSheets && recentSheets.length > 0;
+  const hasRecentContent = recentCantiques.length > 0;
 
   const renderHorizontalList = (sheets: any[]) => (
     <ScrollView
@@ -162,6 +201,34 @@ export default function HomeScreen() {
           isDownloaded={sheet.isDownloaded}
           onPress={() => console.log(`Ouvrir ${sheet.title}`)}
         />
+      ))}
+    </ScrollView>
+  );
+
+  const renderRecentCantiques = () => (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.horizontalScroll}
+    >
+      {recentCantiques.map((cantique) => (
+        <TouchableOpacity
+          key={cantique.id}
+          style={styles.recentCard}
+          activeOpacity={0.85}
+          accessibilityRole="button"
+          onPress={() => router.push(`/cantiquePreview?id=${cantique.id}`)}
+        >
+          <View style={styles.recentIconBadge}>
+            <Music size={icon.sm} color={colors.primary} />
+          </View>
+          <TextComponent variante="subtitle3" color={colors.text} numberOfLines={1}>
+            {cantique.number} — {cantique.title}
+          </TextComponent>
+          <TextComponent variante="caption" color={colors.text2} numberOfLines={1}>
+            {cantique.composer}
+          </TextComponent>
+        </TouchableOpacity>
       ))}
     </ScrollView>
   );
@@ -227,7 +294,7 @@ export default function HomeScreen() {
       );
     }
 
-    return renderHorizontalList(recentSheets);
+    return renderRecentCantiques();
   };
 
   return (

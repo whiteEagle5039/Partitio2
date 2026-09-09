@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Download, Edit3, Share2 } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { EmptyState } from '@/components/uxComponents/EmptyState';
 import { Content, Screen } from '@/components/uxComponents/Screen';
@@ -46,7 +46,7 @@ export default function CompositionPreviewScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { spacing, radius, icon, isTablet } = useResponsive();
-  const { loadComposition } = useCompositionStorage();
+  const { loadComposition, exportComposition } = useCompositionStorage();
 
   const [composition, setComposition] = useState<Composition | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,6 +73,44 @@ export default function CompositionPreviewScreen() {
   useEffect(() => {
     void loadCompositionData();
   }, [loadCompositionData]);
+
+  const handleShare = async () => {
+    if (!composition) return;
+
+    const lyrics = composition.sections
+      .filter((section) => section.lyrics && section.lyrics.trim() !== '')
+      .map((section) => `${section.name}\n${section.lyrics}`)
+      .join('\n\n');
+
+    const message = [
+      composition.title,
+      composition.composer ? `Compositeur : ${composition.composer}` : '',
+      lyrics,
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+
+    try {
+      await Share.share({ title: composition.title, message });
+    } catch (error) {
+      console.error('❌ Erreur lors du partage:', error);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const json = await exportComposition(compositionId);
+      if (!json) {
+        Alert.alert('Erreur', 'Impossible d\'exporter cette composition');
+        return;
+      }
+
+      await Share.share({ title: `${composition?.title ?? 'Composition'}.json`, message: json });
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'export:', error);
+      Alert.alert('Erreur', 'Impossible d\'exporter la composition');
+    }
+  };
 
   const styles = StyleSheet.create({
     actionButton: {
@@ -184,7 +222,7 @@ export default function CompositionPreviewScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => console.log('📤 Partage de la composition')}
+              onPress={handleShare}
               hitSlop={touchSlop}
               accessibilityRole="button"
               accessibilityLabel="Partager"
@@ -193,7 +231,7 @@ export default function CompositionPreviewScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => console.log('💾 Export en PDF')}
+              onPress={handleExport}
               hitSlop={touchSlop}
               accessibilityRole="button"
               accessibilityLabel="Exporter"

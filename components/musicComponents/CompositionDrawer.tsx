@@ -7,6 +7,7 @@ import {
     ChevronDown,
     ChevronUp,
     Copy,
+    Download,
     Edit3,
     FileText,
     Music,
@@ -40,6 +41,7 @@ interface CompositionDrawerProps {
   onCompositionChange: (composition: any) => void;
   onSectionSelect: (sectionId: string) => void;
   activeSectionId: string;
+  onExport?: () => void;
 }
 
 export const CompositionDrawer: React.FC<CompositionDrawerProps> = ({
@@ -49,6 +51,7 @@ export const CompositionDrawer: React.FC<CompositionDrawerProps> = ({
   onCompositionChange,
   onSectionSelect,
   activeSectionId,
+  onExport,
 }) => {
   const colors = useThemeColors();
   const { spacing, radius } = useResponsive();
@@ -438,9 +441,21 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
             <Settings2 size={20} color={colors.primary} />
             <TextComponent variante="subtitle2" style={{ marginLeft: 8 }}>Configuration</TextComponent>
           </View>
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <X size={20} color={colors.icon} />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {onExport && (
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={onExport}
+                accessibilityRole="button"
+                accessibilityLabel="Exporter la composition"
+              >
+                <Download size={20} color={colors.icon} />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <X size={20} color={colors.icon} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Contenu */}

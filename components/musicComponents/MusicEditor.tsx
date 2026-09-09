@@ -34,6 +34,9 @@ interface MusicEditorProps {
   // Called when a staff TextInput selection changes
   onSelectionChange?: (voice: 'S' | 'A' | 'T' | 'B', sectionId: string, selection: { start: number; end: number }) => void;
   onStaffFocus?: (voice: 'S' | 'A' | 'T' | 'B', sectionId: string) => void;
+  // Quand un clavier musical personnalisé est affiché, on masque le clavier système
+  // pour éviter que les deux ne se disputent l'espace à l'écran.
+  disableSystemKeyboard?: boolean;
 }
 
 export const MusicEditor: React.FC<MusicEditorProps> = ({
@@ -46,6 +49,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
   cursorSelection = null,
   onSelectionChange,
   onStaffFocus,
+  disableSystemKeyboard = false,
 }) => {
   const colors = useThemeColors();
   const { spacing, radius } = useResponsive();
@@ -651,6 +655,7 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
                   multiline={false}
                   scrollEnabled={false}
                   editable={true}
+                  showSoftInputOnFocus={!disableSystemKeyboard}
                   autoCorrect={false}
                   autoCapitalize="none"
                   spellCheck={false}

@@ -1,7 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Download, Heart, Share2 } from 'lucide-react-native';
+import { Check, Download, Heart, Share2 } from 'lucide-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, TouchableOpacity, View } from 'react-native';
 
 import { EmptyState } from '@/components/uxComponents/EmptyState';
 import { Content, Screen } from '@/components/uxComponents/Screen';
@@ -35,11 +35,21 @@ export default function CantiquePreviewScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { spacing, radius, icon, width, isTablet } = useResponsive();
-  const { getCantiqueById, isFavorite, addToFavorites, removeFromFavorites } = useCantiqueStorage();
+  const {
+    getCantiqueById,
+    isFavorite,
+    addToFavorites,
+    removeFromFavorites,
+    isDownloaded,
+    downloadCantique,
+    removeDownloadedCantique,
+    addToRecentlyViewed,
+  } = useCantiqueStorage();
 
   const [cantique, setCantique] = useState<Cantique | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFav, setIsFav] = useState(false);
+  const [isDownloadedState, setIsDownloadedState] = useState(false);
   const cantiqueId = params.id as string;
 
   // Nombre de mesures par système : dépend de la largeur réelle disponible.
@@ -53,6 +63,8 @@ export default function CantiquePreviewScreen() {
       if (data) {
         setCantique(data);
         setIsFav(await isFavorite(cantiqueId));
+        setIsDownloadedState(await isDownloaded(cantiqueId));
+        void addToRecentlyViewed(cantiqueId);
       } else {
         console.warn("⚠️ Aucun cantique trouvé pour l'ID:", cantiqueId);
       }
@@ -79,6 +91,45 @@ export default function CantiquePreviewScreen() {
       }
     } catch (error) {
       console.error('❌ Erreur toggle favori:', error);
+    }
+  };
+
+  const handleToggleDownload = async () => {
+    try {
+      if (isDownloadedState) {
+        await removeDownloadedCantique(cantiqueId);
+        setIsDownloadedState(false);
+      } else {
+        await downloadCantique(cantiqueId);
+        setIsDownloadedState(true);
+        Alert.alert('Téléchargé', 'Ce cantique est maintenant disponible hors-ligne.');
+      }
+    } catch (error) {
+      console.error('❌ Erreur toggle téléchargement:', error);
+      Alert.alert('Erreur', 'Impossible de mettre à jour le téléchargement.');
+    }
+  };
+
+  const handleShare = async () => {
+    if (!cantique) return;
+
+    const lyrics = cantique.sections
+      .filter((section) => section.lyrics && section.lyrics.trim() !== '')
+      .map((section) => `${section.name}\n${section.lyrics}`)
+      .join('\n\n');
+
+    const message = [
+      `${cantique.number} — ${cantique.title}`,
+      `Compositeur : ${cantique.composer}`,
+      lyrics,
+    ]
+      .filter(Boolean)
+      .join('\n\n');
+
+    try {
+      await Share.share({ title: cantique.title, message });
+    } catch (error) {
+      console.error('❌ Erreur lors du partage:', error);
     }
   };
 
@@ -299,7 +350,7 @@ export default function CantiquePreviewScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => {}}
+              onPress={handleShare}
               hitSlop={touchSlop}
               accessibilityRole="button"
               accessibilityLabel="Partager"
@@ -308,12 +359,16 @@ export default function CantiquePreviewScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => {}}
+              onPress={handleToggleDownload}
               hitSlop={touchSlop}
               accessibilityRole="button"
-              accessibilityLabel="Télécharger"
+              accessibilityLabel={isDownloadedState ? 'Retirer du hors-ligne' : 'Télécharger'}
             >
-              <Download size={icon.md} color={colors.icon} />
+              {isDownloadedState ? (
+                <Check size={icon.md} color={colors.primary} />
+              ) : (
+                <Download size={icon.md} color={colors.icon} />
+              )}
             </TouchableOpacity>
           </>
         }

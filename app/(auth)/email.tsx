@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  Alert,
   Animated,
   Easing,
   KeyboardAvoidingView,
@@ -58,7 +59,10 @@ export default function EmailAuthScreen() {
   }, [fadeAnim]);
 
   const handleContinueWithGoogle = () => {
-    console.log('Continue with Google');
+    Alert.alert(
+      'Bientôt disponible',
+      'La connexion avec Google arrive prochainement. Utilisez votre email pour continuer.',
+    );
   };
 
   const handleEmailSubmit = () => {

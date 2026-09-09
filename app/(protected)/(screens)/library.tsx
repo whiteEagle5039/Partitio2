@@ -36,6 +36,7 @@ export default function LibraryScreen() {
     navigationLevel,
     setCurrentCategory,
     setCurrentFolder,
+    setCurrentContent,
   } = useAppStore();
 
   const getIconComponent = (iconName: string) => iconMap[iconName] || Folder;
@@ -43,7 +44,11 @@ export default function LibraryScreen() {
   const handleContentPress = (contentOrId: Content | string) => {
     if (typeof contentOrId === 'string') {
       router.push(`/compositionPreview?id=${contentOrId}`);
+      return;
     }
+
+    setCurrentContent(contentOrId);
+    router.push(`/contentPreview?id=${contentOrId.id}`);
   };
 
   const handleFolderPress = (folder: FolderType) => {

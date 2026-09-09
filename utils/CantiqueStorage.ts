@@ -7,7 +7,11 @@ const STORAGE_KEYS = {
   CANTIQUES_PREFIX: '@harmonia/cantiques',      // Cantiques de la bibliothèque
   USER_CANTIQUES: '@harmonia/user_cantiques',   // Cantiques créés par l'utilisateur
   FAVORITES: '@harmonia/favorite_cantiques',    // Cantiques favoris
+  DOWNLOADS: '@harmonia/downloaded_cantiques',  // Cantiques marqués disponibles hors-ligne
+  RECENTS: '@harmonia/recent_cantiques',        // Historique de consultation
 };
+
+const RECENTS_LIMIT = 20;
 
 export const useCantiqueStorage = () => {
   
@@ -234,6 +238,106 @@ export const useCantiqueStorage = () => {
   };
 
   // ==========================================
+  // TÉLÉCHARGEMENTS (disponibilité hors-ligne)
+  // ==========================================
+
+  /**
+   * Récupérer la liste des IDs de cantiques téléchargés
+   */
+  const getDownloadedIds = async (): Promise<string[]> => {
+    try {
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.DOWNLOADS);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error('❌ Erreur lors de la récupération des téléchargements:', error);
+      return [];
+    }
+  };
+
+  /**
+   * Marquer un cantique comme téléchargé (disponible hors-ligne)
+   */
+  const downloadCantique = async (cantiqueId: string): Promise<void> => {
+    try {
+      const downloaded = await getDownloadedIds();
+
+      if (!downloaded.includes(cantiqueId)) {
+        downloaded.push(cantiqueId);
+        await AsyncStorage.setItem(STORAGE_KEYS.DOWNLOADS, JSON.stringify(downloaded));
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors du téléchargement:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Retirer un cantique des téléchargements
+   */
+  const removeDownloadedCantique = async (cantiqueId: string): Promise<void> => {
+    try {
+      const downloaded = await getDownloadedIds();
+      const updated = downloaded.filter((id) => id !== cantiqueId);
+      await AsyncStorage.setItem(STORAGE_KEYS.DOWNLOADS, JSON.stringify(updated));
+    } catch (error) {
+      console.error('❌ Erreur lors de la suppression du téléchargement:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Vérifier si un cantique est téléchargé
+   */
+  const isDownloaded = async (cantiqueId: string): Promise<boolean> => {
+    const downloaded = await getDownloadedIds();
+    return downloaded.includes(cantiqueId);
+  };
+
+  /**
+   * Récupérer les cantiques téléchargés complets
+   */
+  const getDownloadedCantiques = async (): Promise<Cantique[]> => {
+    const downloadedIds = await getDownloadedIds();
+    return cantiquesLibrary.filter((c) => downloadedIds.includes(c.id));
+  };
+
+  // ==========================================
+  // HISTORIQUE DE CONSULTATION
+  // ==========================================
+
+  /**
+   * Enregistrer la consultation d'un cantique (le place en tête de l'historique)
+   */
+  const addToRecentlyViewed = async (cantiqueId: string): Promise<void> => {
+    try {
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.RECENTS);
+      const recents: string[] = data ? JSON.parse(data) : [];
+      const updated = [cantiqueId, ...recents.filter((id) => id !== cantiqueId)].slice(0, RECENTS_LIMIT);
+      await AsyncStorage.setItem(STORAGE_KEYS.RECENTS, JSON.stringify(updated));
+    } catch (error) {
+      console.error("❌ Erreur lors de l'enregistrement de la consultation:", error);
+    }
+  };
+
+  /**
+   * Récupérer les cantiques récemment consultés
+   */
+  const getRecentlyViewedCantiques = async (limit = 10): Promise<Cantique[]> => {
+    try {
+      const data = await AsyncStorage.getItem(STORAGE_KEYS.RECENTS);
+      const recentIds: string[] = data ? JSON.parse(data) : [];
+
+      return recentIds
+        .map((id) => cantiquesLibrary.find((c) => c.id === id))
+        .filter((c): c is Cantique => !!c)
+        .slice(0, limit);
+    } catch (error) {
+      console.error('❌ Erreur lors de la récupération de l’historique:', error);
+      return [];
+    }
+  };
+
+  // ==========================================
   // MÉTADONNÉES
   // ==========================================
 
@@ -293,5 +397,15 @@ export const useCantiqueStorage = () => {
     getFavorites,
     getFavoriteCantiques,
     isFavorite,
+
+    // Téléchargements
+    downloadCantique,
+    removeDownloadedCantique,
+    isDownloaded,
+    getDownloadedCantiques,
+
+    // Historique
+    addToRecentlyViewed,
+    getRecentlyViewedCantiques,
   };
 };

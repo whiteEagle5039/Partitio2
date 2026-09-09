@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import { leconsLibrary } from '@/lecons';
@@ -106,8 +107,10 @@ interface AppState {
   categories: Category[];
   currentCategory: Category | null;
   currentFolder: Folder | null;
+  currentContent: Content | null;
   setCurrentCategory: (category: Category | null) => void;
   setCurrentFolder: (folder: Folder | null) => void;
+  setCurrentContent: (content: Content | null) => void;
   
   // Navigation state
   navigationLevel: 'categories' | 'folders' | 'content';
@@ -308,19 +311,22 @@ export const useAppStore = create<AppState>()(
       
       currentCategory: null,
       currentFolder: null,
+      currentContent: null,
       navigationLevel: 'categories',
-      
-      setCurrentCategory: (category) => set({ 
+
+      setCurrentCategory: (category) => set({
         currentCategory: category,
         currentFolder: null,
         navigationLevel: category ? (category.hasDirectcontent ? 'content' : 'folders') : 'categories'
       }),
-      
-      setCurrentFolder: (folder) => set({ 
+
+      setCurrentFolder: (folder) => set({
         currentFolder: folder,
         navigationLevel: folder ? 'content' : 'folders'
       }),
-      
+
+      setCurrentContent: (content) => set({ currentContent: content }),
+
       setNavigationLevel: (level) => set({ navigationLevel: level }),
       
       // Course actions (inchangées)
@@ -432,19 +438,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'harmonia-store', // nom unique pour le stockage
-      storage: createJSONStorage(() => ({
-        // Vous pouvez utiliser AsyncStorage pour React Native
-        getItem: async (name: string) => {
-          // Pour l'instant, on utilise null - vous devrez implémenter AsyncStorage
-          return null;
-        },
-        setItem: async (name: string, value: string) => {
-          // Implémentation AsyncStorage à ajouter
-        },
-        removeItem: async (name: string) => {
-          // Implémentation AsyncStorage à ajouter
-        },
-      })),
+      storage: createJSONStorage(() => AsyncStorage),
       // Persister seulement les paramètres importants
       partialize: (state) => ({
         themeMode: state.themeMode,

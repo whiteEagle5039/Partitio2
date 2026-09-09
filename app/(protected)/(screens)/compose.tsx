@@ -1,6 +1,7 @@
 // Exemple d'intégration dans compose.tsx
 import { CompositionDrawer } from '@/components/musicComponents/CompositionDrawer';
 import { MusicEditor } from '@/components/musicComponents/MusicEditor';
+import { MusicKeyboard } from '@/components/musicComponents/Musickeyboard';
 import { SaveCompositionModal } from '@/components/musicComponents/SaveCompositionModal';
 import { elevation } from '@/constants/layout';
 import { useResponsive } from '@/hooks/useResponsive';
@@ -10,7 +11,7 @@ import { useCompositionStorage } from '@/utils/CompositionStorage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Save } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, PanResponder, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { Alert, Animated, PanResponder, Share, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Section {
@@ -65,6 +66,7 @@ export default function ComposeScreen() {
   const [activeSectionId, setActiveSectionId] = useState('1');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [isMusicKeyboardVisible, setIsMusicKeyboardVisible] = useState(true);
   const [drawerAnimation] = useState(new Animated.Value(0));
   const [cursorSelection, setCursorSelection] = useState<{ start: number; end: number } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -357,6 +359,7 @@ export default function ComposeScreen() {
     setActiveVoice(voice);
     setActiveSectionId(sectionId);
     setCursorSelection(null);
+    setIsMusicKeyboardVisible(true);
   };
 
   const handleSelectionChange = (voice: 'S' | 'A' | 'T' | 'B', sectionId: string, selection: { start: number; end: number }) => {
@@ -455,9 +458,7 @@ export default function ComposeScreen() {
     try {
       const json = await exportComposition(compositionId);
       if (json) {
-        // TODO: Utiliser le module de partage pour envoyer le JSON
-        console.log('Export JSON:', json);
-        Alert.alert('Succès', 'Composition exportée !');
+        await Share.share({ title: `${composition.title}.json`, message: json });
       }
     } catch (error) {
       console.error('❌ Erreur lors de l\'export:', error);
@@ -486,6 +487,11 @@ export default function ComposeScreen() {
     }
   };
 
+  const activeSection = composition.sections.find((s) => s.id === activeSectionId);
+  const activeVoiceKey = ({ S: 'soprano', A: 'alto', T: 'tenor', B: 'bass' } as const)[activeVoice];
+  const activeVoiceContent = activeSection?.[activeVoiceKey] || '';
+  const showMusicKeyboard = isMusicKeyboardVisible && composition.sections.length > 0;
+
   return (
     <View style={styles.container}>
       <View style={styles.editorContainer}>
@@ -499,12 +505,27 @@ export default function ComposeScreen() {
           onStaffFocus={handleStaffFocus}
           cursorSelection={cursorSelection}
           onSelectionChange={handleSelectionChange}
+          disableSystemKeyboard={showMusicKeyboard}
         />
       </View>
 
-      <Animated.View 
+      {showMusicKeyboard && (
+        <View style={styles.keyboardContainer}>
+          <MusicKeyboard
+            activeVoice={activeVoice}
+            onVoiceChange={setActiveVoice}
+            onInsertNote={handleInsertNote}
+            onDeleteLast={handleDeleteLast}
+            onClose={() => setIsMusicKeyboardVisible(false)}
+            currentContent={activeVoiceContent}
+          />
+        </View>
+      )}
+
+      <Animated.View
           style={[
             styles.draggableContainer,
+            showMusicKeyboard && { bottom: insets.bottom + spacing.lg + 260 },
             {
               transform: [
                 { translateX: pan.x },
@@ -556,6 +577,7 @@ export default function ComposeScreen() {
           setIsDrawerOpen(false);
         }}
         activeSectionId={activeSectionId}
+        onExport={handleExport}
       />
 
       <SaveCompositionModal

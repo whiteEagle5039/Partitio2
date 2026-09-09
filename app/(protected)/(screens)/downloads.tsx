@@ -1,10 +1,11 @@
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Download, HardDrive, Trash2 } from 'lucide-react-native';
-import React from 'react';
-import { Alert, FlatList, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, TouchableOpacity, View } from 'react-native';
 
 import { CardComponent } from '@/components/uxComponents/CardComponent';
 import { EmptyState } from '@/components/uxComponents/EmptyState';
-import { Badge, ListItemCard } from '@/components/uxComponents/ListItemCard';
+import { ListItemCard } from '@/components/uxComponents/ListItemCard';
 import { Screen } from '@/components/uxComponents/Screen';
 import { ScreenHeader } from '@/components/uxComponents/ScreenHeader';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
@@ -12,32 +13,52 @@ import { MIN_TOUCH_TARGET, touchSlop } from '@/constants/layout';
 import { useListLayout } from '@/hooks/useListLayout';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { SheetMusic, useAppStore } from '@/stores/appStore';
+import { Cantique } from '@/types/cantique';
+import { useCantiqueStorage } from '@/utils/CantiqueStorage';
 
 export default function DownloadsScreen() {
   const colors = useThemeColors();
+  const router = useRouter();
   const { spacing, radius, icon } = useResponsive();
   const listLayout = useListLayout();
-  const { sheetMusic, user, removeDownload } = useAppStore();
+  const { getDownloadedCantiques, removeDownloadedCantique } = useCantiqueStorage();
 
-  const downloadedSheets: SheetMusic[] = sheetMusic.filter((sheet: SheetMusic) => sheet.isDownloaded);
+  const [downloadedCantiques, setDownloadedCantiques] = useState<Cantique[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const totalSize = downloadedSheets.reduce(
-    (sum: number, sheet: SheetMusic) => sum + (sheet.fileSize || 0),
-    0,
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+
+      getDownloadedCantiques().then((data) => {
+        if (isActive) {
+          setDownloadedCantiques(data);
+          setLoading(false);
+        }
+      });
+
+      return () => {
+        isActive = false;
+      };
+      // getDownloadedCantiques provient d'un hook de stockage recréé à chaque rendu.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []),
   );
 
-  const storagePercentage = user
-    ? Math.min(100, Math.max(0, (user.storageUsed / user.storageLimit) * 100))
-    : 0;
-
-  const handleDeleteDownload = (sheetId: string, title: string) => {
+  const handleDeleteDownload = (cantiqueId: string, title: string) => {
     Alert.alert(
       'Supprimer le téléchargement',
-      `Êtes-vous sûr de vouloir supprimer "${title}" de vos téléchargements ?`,
+      `Êtes-vous sûr de vouloir retirer "${title}" de vos téléchargements ?`,
       [
         { text: 'Annuler', style: 'cancel' },
-        { text: 'Supprimer', style: 'destructive', onPress: () => removeDownload(sheetId) },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            await removeDownloadedCantique(cantiqueId);
+            setDownloadedCantiques((current) => current.filter((c) => c.id !== cantiqueId));
+          },
+        },
       ],
     );
   };
@@ -61,47 +82,32 @@ export default function DownloadsScreen() {
 
           <View style={{ flex: 1, minWidth: 0 }}>
             <TextComponent variante="subtitle2" color={colors.text}>
-              Stockage local
+              Disponible hors-ligne
             </TextComponent>
             <TextComponent variante="body5" color={colors.text2}>
-              {totalSize.toFixed(1)} MB utilisés
+              {downloadedCantiques.length} cantique{downloadedCantiques.length > 1 ? 's' : ''} enregistré
+              {downloadedCantiques.length > 1 ? 's' : ''}
             </TextComponent>
           </View>
-        </View>
-
-        <View
-          style={{
-            height: 8,
-            borderRadius: radius.pill,
-            backgroundColor: colors.muted,
-            overflow: 'hidden',
-          }}
-        >
-          <View
-            style={{
-              width: `${storagePercentage}%`,
-              height: '100%',
-              borderRadius: radius.pill,
-              backgroundColor: colors.primary,
-            }}
-          />
-        </View>
-
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <TextComponent variante="body5" color={colors.text2}>
-            {user?.storageUsed || 0} MB
-          </TextComponent>
-          <TextComponent variante="body5" color={colors.text2}>
-            {user?.storageLimit || 100} MB
-          </TextComponent>
         </View>
       </CardComponent>
 
       <TextComponent variante="subtitle2" color={colors.text}>
-        Fichiers téléchargés ({downloadedSheets.length})
+        Fichiers téléchargés ({downloadedCantiques.length})
       </TextComponent>
     </View>
   );
+
+  if (loading) {
+    return (
+      <Screen background={colors.card}>
+        <ScreenHeader title="Téléchargements" />
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen background={colors.card}>
@@ -109,11 +115,11 @@ export default function DownloadsScreen() {
 
       <View style={{ flex: 1, backgroundColor: colors.background }}>
         <FlatList
-          data={downloadedSheets}
+          data={downloadedCantiques}
           keyExtractor={(item) => item.id}
           contentContainerStyle={[
             listLayout.contentContainerStyle,
-            downloadedSheets.length === 0 && { flexGrow: 1 },
+            downloadedCantiques.length === 0 && { flexGrow: 1 },
           ]}
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={StorageCard}
@@ -122,16 +128,15 @@ export default function DownloadsScreen() {
               variant="plain"
               icon={Download}
               title="Aucun téléchargement"
-              subtitle="Les partitions que vous téléchargez apparaîtront ici."
+              subtitle="Les cantiques que vous téléchargez apparaîtront ici."
             />
           }
           renderItem={({ item }) => (
             <ListItemCard
-              title={item.title}
+              title={`${item.number} — ${item.title}`}
               subtitle={item.composer}
               leading={<Download size={icon.md} color={colors.primary} />}
-              onPress={() => console.log(`Ouvrir ${item.title}`)}
-              meta={item.fileSize ? <Badge label={`${item.fileSize.toFixed(1)} MB`} /> : undefined}
+              onPress={() => router.push(`/cantiquePreview?id=${item.id}`)}
               trailing={
                 <TouchableOpacity
                   onPress={() => handleDeleteDownload(item.id, item.title)}

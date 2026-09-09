@@ -11,7 +11,7 @@ import {
   Trash2,
 } from 'lucide-react-native';
 import React from 'react';
-import { ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
 
 import { Content, Screen } from '@/components/uxComponents/Screen';
 import { ScreenHeader } from '@/components/uxComponents/ScreenHeader';
@@ -45,7 +45,36 @@ type DangerAction = { icon: LucideIcon; title: string; description: string; onPr
 export default function SettingsScreen() {
   const colors = useThemeColors();
   const { spacing, radius, icon } = useResponsive();
-  const { settings, updateSettings } = useAppStore();
+  const { settings, updateSettings, logout } = useAppStore();
+
+  const showPrivacyInfo = () =>
+    Alert.alert(
+      'Confidentialité',
+      'Toutes vos données (compositions, favoris, téléchargements, paramètres) sont stockées uniquement sur cet appareil. Rien n\'est envoyé à un serveur externe. Vous pouvez exporter ou supprimer ces données à tout moment depuis votre profil ou cette page.',
+    );
+
+  const showHelpInfo = () =>
+    Alert.alert(
+      "Centre d'aide",
+      "• Composer : créez une partition à 4 voix depuis l'écran « Composer ».\n• Bibliothèque : retrouvez cantiques, chansons, leçons et vos compositions.\n• Téléchargements : rendez un cantique disponible hors-ligne depuis sa page de lecture.\n\nBesoin d'aide supplémentaire ? Contactez le développeur via la page « À propos ».",
+    );
+
+  const showAboutInfo = () =>
+    Alert.alert(
+      'À propos',
+      'Harmonia v1.0.0\nApplication de partitions, cantiques et composition musicale.\n\n© 2025 Harmonia\nDéveloppée par Jemuel G. ANIFA',
+    );
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Supprimer le compte',
+      'Cette action déconnectera votre compte de cet appareil. Vos compositions et téléchargements resteront stockés localement mais vous devrez vous reconnecter.',
+      [
+        { text: 'Annuler', style: 'cancel' },
+        { text: 'Supprimer', style: 'destructive', onPress: () => logout() },
+      ],
+    );
+  };
 
   const settingSections: SettingSection[] = [
     {
@@ -95,7 +124,7 @@ export default function SettingsScreen() {
           title: 'Confidentialité',
           description: 'Gérer vos données personnelles',
           type: 'navigation',
-          onPress: () => console.log('Confidentialité'),
+          onPress: showPrivacyInfo,
         },
       ],
     },
@@ -107,14 +136,14 @@ export default function SettingsScreen() {
           title: "Centre d'aide",
           description: "FAQ et guides d'utilisation",
           type: 'navigation',
-          onPress: () => console.log('Aide'),
+          onPress: showHelpInfo,
         },
         {
           icon: Info,
           title: 'À propos',
           description: "Informations sur l'application",
           type: 'navigation',
-          onPress: () => console.log('À propos'),
+          onPress: showAboutInfo,
         },
       ],
     },
@@ -133,7 +162,7 @@ export default function SettingsScreen() {
       icon: Trash2,
       title: 'Supprimer le compte',
       description: 'Supprimer définitivement votre compte',
-      onPress: () => console.log('Supprimer compte'),
+      onPress: handleDeleteAccount,
     },
   ];
 
