@@ -30,7 +30,10 @@ export default function AlertCardExamples() {
   };
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background, paddingVertical: 20 }}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      contentContainerStyle={{ padding: 20, gap: 10 }}
+    >
       
       {/* 1. Notification Hors connexion (style original) */}
       <AlertCard

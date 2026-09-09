@@ -1,8 +1,11 @@
-import { TextComponent } from '@/components/uxComponents/TextComponent';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { LucideIcon } from 'lucide-react-native';
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { TouchableOpacity, View, ViewStyle } from 'react-native';
+
+import { TextComponent } from '@/components/uxComponents/TextComponent';
+import { MIN_TOUCH_TARGET, touchSlop } from '@/constants/layout';
+import { useResponsive } from '@/hooks/useResponsive';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface AlertCardProps {
   icon?: LucideIcon;
@@ -11,9 +14,12 @@ interface AlertCardProps {
   actionText?: string;
   onAction?: () => void;
   visible?: boolean;
+  /** Couleur de l'accent (texte, icône, bordure). */
+  tone?: string;
   containerStyle?: ViewStyle;
 }
 
+/** Bandeau d'information compact, aligné sur l'échelle d'espacement de l'app. */
 export const AlertCard: React.FC<AlertCardProps> = ({
   icon: IconComponent,
   title,
@@ -21,73 +27,67 @@ export const AlertCard: React.FC<AlertCardProps> = ({
   actionText,
   onAction,
   visible = true,
+  tone,
   containerStyle,
 }) => {
   const colors = useThemeColors();
+  const { spacing, radius, icon } = useResponsive();
 
   if (!visible) return null;
 
-  const styles = StyleSheet.create({
-    container: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      marginHorizontal: 20,
-      marginBottom: 10,
-      borderRadius: 20,
-      borderWidth: 1,
-      backgroundColor: `${colors.blueSingle}20`,
-      borderColor: colors.blueSingle,
-    },
-    contentContainer: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    textContainer: {
-      flex: 1,
-    },
-    actionButton: {
-      marginLeft: 8,
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-    },
-  });
+  const accent = tone ?? colors.blueSingle;
 
   return (
-    <View style={[styles.container, containerStyle]}>
-      <View style={styles.contentContainer}>
-        {IconComponent && (
-          <IconComponent size={16} color={colors.blueSingle} strokeWidth={2} />
-        )}
-        <View style={styles.textContainer}>
+    <View
+      style={[
+        {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: spacing.xs,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xs,
+          borderRadius: radius.pill,
+          borderWidth: 1,
+          backgroundColor: `${accent}20`,
+          borderColor: accent,
+        },
+        containerStyle,
+      ]}
+    >
+      <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+        {IconComponent && <IconComponent size={icon.xs} color={accent} strokeWidth={2} />}
+
+        <View style={{ flex: 1, minWidth: 0 }}>
           {title && message ? (
             <>
-              <TextComponent variante="subtitle3" color={colors.blueSingle}>
+              <TextComponent variante="subtitle4" color={accent} numberOfLines={1}>
                 {title}
               </TextComponent>
-              <TextComponent variante="body4" color={colors.blueSingle}>
+              <TextComponent variante="body5" color={accent} numberOfLines={2}>
                 {message}
               </TextComponent>
             </>
-          ) : title ? (
-            <TextComponent variante="body4" color={colors.blueSingle}>
-              {title}
-            </TextComponent>
           ) : (
-            <TextComponent variante="body4" color={colors.blueSingle}>
-              {message}
+            <TextComponent variante="body5" color={accent} numberOfLines={2}>
+              {title || message}
             </TextComponent>
           )}
         </View>
       </View>
 
-      {actionText && onAction && (
-        <TouchableOpacity style={styles.actionButton} onPress={onAction}>
-          <TextComponent variante="caption" color={colors.blueSingle}>
+      {!!actionText && !!onAction && (
+        <TouchableOpacity
+          onPress={onAction}
+          hitSlop={touchSlop}
+          accessibilityRole="button"
+          style={{
+            paddingHorizontal: spacing.xs,
+            minHeight: MIN_TOUCH_TARGET / 1.5,
+            justifyContent: 'center',
+          }}
+        >
+          <TextComponent variante="caption" color={accent}>
             {actionText}
           </TextComponent>
         </TouchableOpacity>
@@ -96,8 +96,7 @@ export const AlertCard: React.FC<AlertCardProps> = ({
   );
 };
 
-/**
- * Alias pour utilisation simple
- */
+/** Alias pour utilisation simple */
 export const Alert = AlertCard;
 
+export default AlertCard;

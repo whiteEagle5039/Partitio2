@@ -1,7 +1,11 @@
+import { Music, Play, User } from 'lucide-react-native';
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Music, User, Play } from 'lucide-react-native';
-import { TextComponent } from '@/components/uxComponents/TextComponent';
+import { FlatList } from 'react-native';
+
+import { EmptyState } from '@/components/uxComponents/EmptyState';
+import { Badge, ListItemCard } from '@/components/uxComponents/ListItemCard';
+import { useListLayout } from '@/hooks/useListLayout';
+import { useResponsive } from '@/hooks/useResponsive';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { Content } from '@/stores/appStore';
 
@@ -11,227 +15,48 @@ interface ChansonsViewProps {
   onBack: () => void;
 }
 
-export const ChansonsView: React.FC<ChansonsViewProps> = ({ 
-  content, 
-  onContentPress, 
-  onBack 
-}) => {
+export const ChansonsView: React.FC<ChansonsViewProps> = ({ content, onContentPress, onBack }) => {
   const colors = useThemeColors();
+  const { icon } = useResponsive();
+  const listLayout = useListLayout();
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-    scrollContainer: {
-      paddingHorizontal: 20,
-      paddingBottom: 20,
-    },
-    // Stats Container
-    statsContainer: {
-      flexDirection: 'row',
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      gap: 12,
-    },
-    statCard: {
-      flex: 1,
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 16,
-      alignItems: 'center',
-      borderColor: colors.border,
-      borderWidth: 1,
-    },
-    statIcon: {
-      marginBottom: 8,
-      width: 50,
-      height: 50,
-      borderRadius: 30,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    // List Items
-    listItem: {
-      flexDirection: 'row',
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 16,
-      marginBottom: 12,
-      alignItems: 'center',
-      borderColor: colors.border,
-      borderWidth: 1,
-    },
-    listThumbnail: {
-      width: 60,
-      height: 60,
-      borderRadius: 12,
-      marginRight: 16,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    listContent: {
-      flex: 1,
-    },
-    listTitle: {
-      marginBottom: 4,
-    },
-    contentStatus: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      marginTop: 8,
-    },
-    packageInfo: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      alignItems: 'center',
-      gap: 8,
-      marginTop: 8,
-    },
-    metricItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    infoSeparator: {
-      width: 4,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: colors.text2,
-    },
-    // Empty State
-    emptyStateCard: {
-      marginHorizontal: 20,
-      padding: 32,
-      borderRadius: 16,
-      borderWidth: 1,
-      alignItems: 'center',
-      backgroundColor: colors.card,
-      borderColor: colors.border,
-    },
-    emptyStateIcon: {
-      width: 80,
-      height: 80,
-      borderRadius: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 20,
-    },
-    emptyStateTitle: {
-      textAlign: 'center',
-      marginBottom: 8,
-    },
-    emptyStateSubtitle: {
-      textAlign: 'center',
-      marginBottom: 20,
-      lineHeight: 20,
-    },
-    emptyStateButton: {
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 24,
-      marginTop: 8,
-      backgroundColor: colors.primary,
-    },
-  });
-
-  // Gestionnaire pour l'ouverture d'une chanson
-  const handleContentPress = (content: Content) => {
-    console.log(`Ouvrir la chanson: ${content.title}`);
-    onContentPress(content);
-  };
-
-  // Composant pour l'état vide
-  const EmptyStateCard = () => (
-    <View style={styles.emptyStateCard}>
-      <View style={[styles.emptyStateIcon, { backgroundColor: `${colors.primary}15` }]}>
-        <Music size={40} color={colors.primary2} />
-      </View>
-      <TextComponent variante="subtitle2" style={styles.emptyStateTitle}>
-        Aucune chanson disponible
-      </TextComponent>
-      <TextComponent variante="body3" color={colors.text2} style={styles.emptyStateSubtitle}>
-        La collection de chansons ne contient pas encore de contenu. Explorez d'autres catégories ou revenez plus tard.
-      </TextComponent>
-      <TouchableOpacity 
-        style={styles.emptyStateButton}
-        onPress={onBack}
-      >
-        <TextComponent variante="body3" color="#FFFFFF">
-          Retour aux catégories
-        </TextComponent>
-      </TouchableOpacity>
-    </View>
-  );
-
-  // Rendu de la liste des chansons
-  const renderChansons = () => (
-    <ScrollView 
-      style={styles.container}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.scrollContainer}
-    >
-      {content.map((content: Content) => (
-        <TouchableOpacity
-          key={content.id}
-          style={styles.listItem}
-          onPress={() => handleContentPress(content)}
-        >
-          <View style={[styles.listThumbnail, { backgroundColor: `${colors.primary}15` }]}>
-            <Play size={24} color={colors.primary2} />
-          </View>
-          <View style={styles.listContent}>
-            <TextComponent variante="subtitle3" style={styles.listTitle}>
-              {content.title}
-            </TextComponent>
-            <TextComponent variante="body4" color={colors.text2}>
-              {content.description}
-            </TextComponent>
-            
-            <View style={styles.contentStatus}>
-              <View style={styles.packageInfo}>
-                {content.author && (
-                  <>
-                    <View style={styles.metricItem}>
-                      <User size={12} color={colors.text2} />
-                      <TextComponent variante="caption" color={colors.text2}>
-                        {content.author}
-                      </TextComponent>
-                    </View>
-                    <View style={styles.infoSeparator} />
-                  </>
-                )}
-
-                {content.composer && (
-                  <>
-                    <View style={styles.metricItem}>
-                      <Music size={12} color={colors.text2} />
-                      <TextComponent variante="caption" color={colors.text2}>
-                        {content.composer}
-                      </TextComponent>
-                    </View>
-                    {/* {content.duration && <View style={styles.infoSeparator} />} */}
-                  </>
-                )}
-
-                {/* {content.duration && (
-                  <View style={styles.metricItem}>
-                    <TextComponent variante="caption" color={colors.text2}>
-                      {content.duration}
-                    </TextComponent>
-                  </View>
-                )} */}
-              </View>
-            </View>
-          </View>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  );
+  if (content.length === 0) {
+    return (
+      <EmptyState
+        variant="plain"
+        icon={Music}
+        title="Aucune chanson disponible"
+        subtitle="La collection de chansons ne contient pas encore de contenu. Explorez d'autres catégories ou revenez plus tard."
+        actionText="Retour aux catégories"
+        onActionPress={onBack}
+      />
+    );
+  }
 
   return (
-    <View style={styles.container}>
-      {content.length === 0 ? <EmptyStateCard /> : renderChansons()}
-    </View>
+    <FlatList
+      data={content}
+      keyExtractor={(item) => item.id}
+      contentContainerStyle={listLayout.contentContainerStyle}
+      showsVerticalScrollIndicator={false}
+      renderItem={({ item }) => (
+        <ListItemCard
+          title={item.title}
+          description={item.description}
+          leading={<Play size={icon.md} color={colors.primary2} />}
+          onPress={() => onContentPress(item)}
+          meta={
+            <>
+              {!!item.author && (
+                <Badge label={item.author} icon={<User size={12} color={colors.text2} />} />
+              )}
+              {!!item.composer && (
+                <Badge label={item.composer} icon={<Music size={12} color={colors.text2} />} />
+              )}
+            </>
+          }
+        />
+      )}
+    />
   );
 };

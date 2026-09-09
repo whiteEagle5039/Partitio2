@@ -81,7 +81,6 @@ import { Heart } from 'lucide-react-native';
 | centered | boolean | false | Utiliser le mode centré (true) ou inline (false) |
 | containerStyle | ViewStyle | undefined | Styles personnalisés supplémentaires |
 | iconColor | string | blueSingle | Couleur de l'icône |
-| iconBackgroundAlpha | number | 0.1 | Opacité du fond d'icône (0-1) |
 
 ## Exemples de couleurs d'icône
 

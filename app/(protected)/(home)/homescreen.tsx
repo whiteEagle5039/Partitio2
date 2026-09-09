@@ -1,407 +1,327 @@
-import { SheetMusicCard } from '@/components/musicComponents/SheetMusicCard';
-import { TextComponent } from '@/components/uxComponents/TextComponent';
-import { WrapperComponent } from '@/components/WrapperComponent';
-import { useThemeColors } from '@/hooks/useThemeColors';
-import { useAppStore } from '@/stores/appStore';
 import { useRouter } from 'expo-router';
 import { BookOpen, Clock, Heart, Library, Menu, PenTool, Search, TrendingUp, WifiOff } from 'lucide-react-native';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { SheetMusicCard } from '@/components/musicComponents/SheetMusicCard';
+import { EmptyState } from '@/components/uxComponents/EmptyState';
+import { Content, Screen } from '@/components/uxComponents/Screen';
+import { TextComponent } from '@/components/uxComponents/TextComponent';
+import { WrapperComponent } from '@/components/WrapperComponent';
+import { MIN_TOUCH_TARGET, touchSlop } from '@/constants/layout';
+import { useResponsive } from '@/hooks/useResponsive';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { useAppStore } from '@/stores/appStore';
+
+/** La section « Tendances » est masquée en attendant le back-end. */
+const SHOW_TRENDING = false;
 
 export default function HomeScreen() {
   const colors = useThemeColors();
   const router = useRouter();
-  
-  // ✅ CORRECTION: Utiliser les états du store
-  const { 
-    sheetMusic, 
-    setDrawerOpen, 
-    downloadedSheets, 
-    isDrawerOpen, 
-    user,
-    isOnline,           // ✅ Du store
-    setOnline,          // ✅ Du store
-    isAuthenticated,    // ✅ Du store
-    setAuthenticated,
-    categories, setCurrentCategory  // ✅ Du store
+  const { spacing, radius, icon, gutter, isTablet, width, maxWideWidth } = useResponsive();
+
+  const {
+    sheetMusic,
+    setDrawerOpen,
+    isDrawerOpen,
+    isOnline,
+    setOnline,
+    isAuthenticated,
+    categories,
+    setCurrentCategory,
   } = useAppStore();
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.card,
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 10,
-      paddingVertical: 10,
-      backgroundColor: colors.card,
-    },
-    headerRight: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    iconButton: {
-      padding: 8,
-      borderRadius: 8,
-    },
-    logo: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    logoText: {
-      marginLeft: 12,
-    },
-    menuButton: {
-      padding: 8,
-    },
-    scrollView: {
-      flex: 1,
-      backgroundColor: colors.background
-    },
-    quickActions: {
-      flexDirection: 'column',
-      paddingHorizontal: 20,
-      paddingVertical: 24,
-      gap: 12,
-    },
-    quickActionCard: {
-      flex: 1,
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 15,
-      // paddingTop: 10,
-      // paddingBotto: 10,
-      gap: 12,
-      flexDirection: 'row',
-      alignItems: 'center',
-      textAlign: 'center',
-      borderColor: colors.border,
-      borderWidth: 1,
-    },
-    quickActionIcon: {
-      marginBottom: 8,
-    },
-    section: {
-      paddingVertical: 16,
-    },
-    sectionHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 20,
-      marginBottom: 16,
-    },
-    seeAllButton: {
-      padding: 8,
-    },
-    horizontalScroll: {
-      paddingLeft: 20,
-    },
-    emptyWrapper: {
-      width: '100%',         
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingVertical: 20,
-      flexDirection: 'row', 
-      gap: 20
-    },
-    emptyStateCard: {
-      marginHorizontal: 20,
-      padding: 24,
-      borderRadius: 16,
-      borderWidth: 1,
-      alignItems: 'center',
-      marginBottom: 8,
-    },
-    emptyStateIcon: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 16,
-    },
-    emptyStateTitle: {
-      textAlign: 'center',
-      marginBottom: 8,
-    },
-    emptyStateSubtitle: {
-      textAlign: 'center',
-      marginBottom: 16,
-      lineHeight: 20,
-    },
-    emptyStateButton: {
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-      borderRadius: 20,
-      marginTop: 8,
-    },
-  });
+  // Les cartes d'action passent d'une colonne (téléphone) à une grille dès que
+  // la largeur le permet. La largeur est calculée explicitement (et non en
+  // pourcentages) pour que les gouttières n'entraînent pas de retour à la ligne.
+  const MIN_ACTION_WIDTH = 220;
+  const availableWidth = Math.min(width, maxWideWidth) - gutter * 2;
+  const actionColumns = Math.max(
+    1,
+    Math.min(3, Math.floor((availableWidth + spacing.sm) / (MIN_ACTION_WIDTH + spacing.sm))),
+  );
+  const actionCardWidth =
+    (availableWidth - spacing.sm * (actionColumns - 1)) / actionColumns;
 
-  // Composant pour l'état vide
-  const EmptyStateCard = ({ 
-    icon: IconComponent, 
-    title, 
-    subtitle, 
-    actionText, 
-    onActionPress, 
-    colors 
-  }: any) => {
-    return (
-      <View 
-        style={[
-          styles.emptyStateCard, 
-          { 
-            backgroundColor: colors.card,
-            borderColor: colors.border,
-          }
-        ]}
-      >
-        <View style={[styles.emptyStateIcon, { backgroundColor: `${colors.primary}15` }]}>
-          <IconComponent size={32} color={colors.primary} />
-        </View>
-        <TextComponent variante="subtitle2" style={styles.emptyStateTitle}>
-          {title}
-        </TextComponent>
-        <TextComponent variante="body3" color={colors.textSecondary} style={styles.emptyStateSubtitle}>
-          {subtitle}
-        </TextComponent>
-        {actionText && onActionPress && (
-          <TouchableOpacity 
-            style={[styles.emptyStateButton, { backgroundColor: colors.cardForeground }]}
-            onPress={onActionPress}
-          >
-            <TextComponent variante="body3" color={colors.primaryForeground}>
-              {actionText}
-            </TextComponent>
-          </TouchableOpacity>
-        )}
-      </View>
-    );
-  };
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        header: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingHorizontal: gutter - spacing.xs,
+          paddingVertical: spacing.xs,
+          backgroundColor: colors.card,
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: colors.border,
+        },
+        headerRight: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: spacing.xxs,
+        },
+        iconButton: {
+          minWidth: MIN_TOUCH_TARGET,
+          minHeight: MIN_TOUCH_TARGET,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: radius.md,
+        },
+        scrollView: {
+          flex: 1,
+          backgroundColor: colors.background,
+        },
+        scrollContent: {
+          paddingBottom: spacing.xxl,
+        },
+        quickActions: {
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          paddingVertical: spacing.lg,
+          gap: spacing.sm,
+        },
+        quickActionCard: {
+          width: actionCardWidth,
+          backgroundColor: colors.card,
+          borderRadius: radius.lg,
+          padding: spacing.md,
+          gap: spacing.sm,
+          flexDirection: actionColumns === 1 ? 'row' : 'column',
+          alignItems: 'center',
+          justifyContent: actionColumns === 1 ? 'flex-start' : 'center',
+          borderColor: colors.border,
+          borderWidth: 1,
+          minHeight: actionColumns === 1 ? MIN_TOUCH_TARGET + spacing.md : 112,
+        },
+        section: {
+          paddingBottom: spacing.lg,
+        },
+        sectionHeader: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: spacing.sm,
+        },
+        horizontalScroll: {
+          paddingHorizontal: gutter,
+          gap: spacing.sm,
+          paddingBottom: spacing.xxs,
+        },
+      }),
+    [actionCardWidth, actionColumns, colors, gutter, radius, spacing],
+  );
 
   const quickActions = [
-  {
-    icon: BookOpen,
-    label: 'Cantiques',
-    color: colors.primary2,
-    onPress: () => {
-      // Trouve et sélectionne directement la catégorie Cantiques
-      const cantiquesCategory = categories.find(cat => cat.id === '2');
-      if (cantiquesCategory) {
-        setCurrentCategory(cantiquesCategory);
-      }
-      router.push('/library');
+    {
+      icon: BookOpen,
+      label: 'Cantiques',
+      color: colors.primary2,
+      onPress: () => {
+        const cantiquesCategory = categories.find((cat) => cat.id === '2');
+        if (cantiquesCategory) {
+          setCurrentCategory(cantiquesCategory);
+        }
+        router.push('/library');
+      },
     },
-  },
-  {
-    icon: PenTool,
-    label: 'Composer',
-    color: colors.primary2,
-    onPress: () => router.push('/compose'),
-  },
-  {
-    icon: Library,
-    label: 'Bibliothèque',
-    color: colors.primary2,
-    onPress: () => {
-      // Reset pour afficher la liste des catégories
-      setCurrentCategory(null);
-      router.push('/library');
+    {
+      icon: PenTool,
+      label: 'Composer',
+      color: colors.primary2,
+      onPress: () => router.push('/compose'),
     },
-  },
-];
+    {
+      icon: Library,
+      label: 'Bibliothèque',
+      color: colors.primary2,
+      onPress: () => {
+        setCurrentCategory(null);
+        router.push('/library');
+      },
+    },
+  ];
 
   const recentSheets = sheetMusic.slice(0, 5);
   const hasTrendingContent = sheetMusic && sheetMusic.length > 0;
   const hasRecentContent = recentSheets && recentSheets.length > 0;
 
+  const renderHorizontalList = (sheets: any[]) => (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.horizontalScroll}
+    >
+      {sheets.map((sheet: any) => (
+        <SheetMusicCard
+          key={sheet.id}
+          title={sheet.title}
+          composer={sheet.composer}
+          thumbnail={sheet.thumbnail}
+          isDownloaded={sheet.isDownloaded}
+          onPress={() => console.log(`Ouvrir ${sheet.title}`)}
+        />
+      ))}
+    </ScrollView>
+  );
+
   const renderTrendingSection = () => {
     if (!isOnline) {
       return (
-        <EmptyStateCard
-          icon={WifiOff}
-          title="Connexion requise"
-          subtitle="Les tendances ne sont disponibles qu'en ligne. Vérifiez votre connexion internet."
-          actionText="Réessayer"
-          onActionPress={() => setOnline(true)} // ✅ CORRECTION: Utilise setOnline du store
-          colors={colors}
-        />
+        <Content>
+          <EmptyState
+            icon={WifiOff}
+            title="Connexion requise"
+            subtitle="Les tendances ne sont disponibles qu'en ligne. Vérifiez votre connexion internet."
+            actionText="Réessayer"
+            onActionPress={() => setOnline(true)}
+          />
+        </Content>
       );
     }
 
     if (!isAuthenticated) {
       return (
-        <EmptyStateCard
-          icon={TrendingUp}
-          title="Découvrez les tendances"
-          subtitle="Connectez-vous pour voir les notes les plus populaires de la communauté."
-          actionText="Se connecter"
-          onActionPress={() => router.push('/homescreen')} // ✅ CORRECTION: Route vers login
-          colors={colors}
-        />
+        <Content>
+          <EmptyState
+            icon={TrendingUp}
+            title="Découvrez les tendances"
+            subtitle="Connectez-vous pour voir les notes les plus populaires de la communauté."
+            actionText="Se connecter"
+            onActionPress={() => router.push('/homescreen')}
+          />
+        </Content>
       );
     }
 
     if (!hasTrendingContent) {
       return (
-        <EmptyStateCard
-          icon={Heart}
-          title="Aucune tendance pour le moment"
-          subtitle="Soyez le premier à découvrir de nouvelles partitions populaires."
-          actionText="Explorer"
-          onActionPress={() => router.push('/search')}
-          colors={colors}
-        />
+        <Content>
+          <EmptyState
+            icon={Heart}
+            title="Aucune tendance pour le moment"
+            subtitle="Soyez le premier à découvrir de nouvelles partitions populaires."
+            actionText="Explorer"
+            onActionPress={() => router.push('/search')}
+          />
+        </Content>
       );
     }
 
-    return (
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        style={styles.horizontalScroll}
-      >
-        {sheetMusic.map((sheet: any) => (
-          <SheetMusicCard
-            key={sheet.id}
-            title={sheet.title}
-            composer={sheet.composer}
-            thumbnail={sheet.thumbnail}
-            isDownloaded={sheet.isDownloaded}
-            onPress={() => console.log(`Ouvrir ${sheet.title}`)}
-          />
-        ))}
-      </ScrollView>
-    );
+    return renderHorizontalList(sheetMusic);
   };
 
   const renderRecentSection = () => {
     if (!hasRecentContent) {
       return (
-        <EmptyStateCard
-          icon={Clock}
-          title="Aucune partition récente"
-          subtitle="Commencez à explorer notre bibliothèque pour voir vos dernières découvertes ici."
-          actionText="Découvrir"
-          onActionPress={() => router.push('/search')}
-          colors={colors}
-        />
+        <Content>
+          <EmptyState
+            icon={Clock}
+            title="Aucune partition récente"
+            subtitle="Commencez à explorer notre bibliothèque pour voir vos dernières découvertes ici."
+            actionText="Découvrir"
+            onActionPress={() => router.push('/search')}
+          />
+        </Content>
       );
     }
 
-    return (
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        style={styles.horizontalScroll}
-      >
-        {recentSheets.map((sheet: any) => (
-          <SheetMusicCard
-            key={sheet.id}
-            title={sheet.title}
-            composer={sheet.composer}
-            thumbnail={sheet.thumbnail}
-            isDownloaded={sheet.isDownloaded}
-            onPress={() => console.log(`Ouvrir ${sheet.title}`)}
-          />
-        ))}
-      </ScrollView>
-    );
+    return renderHorizontalList(recentSheets);
   };
 
   return (
     <WrapperComponent>
-      <SafeAreaView style={styles.container}>
-        {/* Header */}
+      <Screen background={colors.card}>
         <View style={styles.header}>
-          <View style={styles.logo}>
-            <TextComponent variante='body1' style={styles.logoText}>
-              Harmonia
-            </TextComponent>
-          </View>
-          
+          <TextComponent variante={isTablet ? 'subtitle0' : 'subtitle1'} color={colors.text}>
+            Harmonia
+          </TextComponent>
+
           <View style={styles.headerRight}>
             <TouchableOpacity
               style={styles.iconButton}
               onPress={() => router.push('/search')}
+              hitSlop={touchSlop}
+              accessibilityRole="button"
+              accessibilityLabel="Rechercher"
             >
-              <Search size={28} color={colors.icon} />
+              <Search size={icon.lg} color={colors.icon} />
             </TouchableOpacity>
 
-            <TouchableOpacity 
-              style={styles.menuButton}
+            <TouchableOpacity
+              style={styles.iconButton}
               onPress={() => setDrawerOpen(!isDrawerOpen)}
+              hitSlop={touchSlop}
+              accessibilityRole="button"
+              accessibilityLabel="Ouvrir le menu"
             >
-              <Menu size={32} color={colors.icon} />
+              <Menu size={icon.xl} color={colors.icon} />
             </TouchableOpacity>
           </View>
         </View>
 
-        <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Actions rapides */}
-          <View style={styles.quickActions}>
-            {quickActions.map((action, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.quickActionCard}
-                onPress={action.onPress}
-              >
-                <action.icon 
-                  size={24} 
-                  color={action.color} 
-                  style={styles.quickActionIcon} 
-                />
-                <TextComponent variante="subtitle2" style={{ textAlign: 'center' }}>
-                  {action.label}
-                </TextComponent>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-           {/* Partitions récentes */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <TextComponent variante="subtitle1">
-                Récents
-              </TextComponent>
+          <Content width="wide">
+            <View style={styles.quickActions}>
+              {quickActions.map((action) => (
+                <TouchableOpacity
+                  key={action.label}
+                  style={styles.quickActionCard}
+                  onPress={action.onPress}
+                  activeOpacity={0.85}
+                  accessibilityRole="button"
+                >
+                  <action.icon size={icon.lg} color={action.color} />
+                  <TextComponent variante="subtitle2" color={colors.text} style={{ textAlign: 'center' }}>
+                    {action.label}
+                  </TextComponent>
+                </TouchableOpacity>
+              ))}
             </View>
-            
+          </Content>
+
+          {/* Partitions récentes */}
+          <View style={styles.section}>
+            <Content>
+              <View style={styles.sectionHeader}>
+                <TextComponent variante="subtitle1" color={colors.text}>
+                  Récents
+                </TextComponent>
+              </View>
+            </Content>
+
             {renderRecentSection()}
           </View>
 
-          {/* Partitions populaires */}
-          {/* Section Tendances masquée temporairement */}
-          {/*
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <TextComponent variante="subtitle1">
-                Tendances
-              </TextComponent>
-              {(isOnline && isAuthenticated && hasTrendingContent) && (
-                <TouchableOpacity 
-                  style={styles.seeAllButton}
-                  onPress={() => router.push('/search')}
-                >
-                  <TextComponent variante="body3" color={colors.primary}>
-                    Explorer
+          {/* Tendances */}
+          {SHOW_TRENDING && (
+            <View style={styles.section}>
+              <Content>
+                <View style={styles.sectionHeader}>
+                  <TextComponent variante="subtitle1" color={colors.text}>
+                    Tendances
                   </TextComponent>
-                </TouchableOpacity>
-              )}
-            </View>
-            
-            {renderTrendingSection()}
-          </View>
-          */}
+                  {isOnline && isAuthenticated && hasTrendingContent && (
+                    <TouchableOpacity onPress={() => router.push('/search')} hitSlop={touchSlop}>
+                      <TextComponent variante="body4" color={colors.primary}>
+                        Explorer
+                      </TextComponent>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </Content>
 
-         
+              {renderTrendingSection()}
+            </View>
+          )}
         </ScrollView>
-      </SafeAreaView>
+      </Screen>
     </WrapperComponent>
   );
 }

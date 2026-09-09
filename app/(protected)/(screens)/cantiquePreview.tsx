@@ -1,46 +1,72 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Download, Share2, Heart } from 'lucide-react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Download, Heart, Share2 } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+
+import { EmptyState } from '@/components/uxComponents/EmptyState';
+import { Content, Screen } from '@/components/uxComponents/Screen';
+import { ScreenHeader } from '@/components/uxComponents/ScreenHeader';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
+import { MIN_TOUCH_TARGET, elevation, touchSlop } from '@/constants/layout';
+import { useResponsive } from '@/hooks/useResponsive';
+import { useSheetTheme } from '@/hooks/useSheetTheme';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { useCantiqueStorage } from '@/utils/CantiqueStorage';
 import { Cantique } from '@/types/cantique';
+import { useCantiqueStorage } from '@/utils/CantiqueStorage';
+
+type Voice = { label: string; measures: string[] };
+
+const parseMeasures = (voiceContent: string): string[] => {
+  if (!voiceContent || voiceContent.trim() === '') return [];
+  return voiceContent.split('|').map((m) => m.trim()).filter((m) => m !== '');
+};
+
+const getMeasureMinWidth = (voices: Voice[], measureIndex: number): number => {
+  const maxLength = voices.reduce(
+    (max, voice) => Math.max(max, voice.measures[measureIndex]?.length ?? 0),
+    0,
+  );
+  return Math.max(60, 40 + maxLength * 4);
+};
 
 export default function CantiquePreviewScreen() {
   const colors = useThemeColors();
+  const sheet = useSheetTheme();
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { spacing, radius, icon, width, isTablet } = useResponsive();
   const { getCantiqueById, isFavorite, addToFavorites, removeFromFavorites } = useCantiqueStorage();
-  
+
   const [cantique, setCantique] = useState<Cantique | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFav, setIsFav] = useState(false);
   const cantiqueId = params.id as string;
 
-  useEffect(() => {
-    loadCantiqueData();
-  }, [cantiqueId]);
+  // Nombre de mesures par système : dépend de la largeur réelle disponible.
+  const measuresPerLine = width >= 900 ? 6 : width >= 700 ? 5 : width >= 480 ? 4 : width >= 380 ? 3 : 2;
 
-  const loadCantiqueData = async () => {
+  const loadCantiqueData = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getCantiqueById(cantiqueId);
+
       if (data) {
-        console.log('📄 Cantique chargé:', data);
         setCantique(data);
-        
-        const favStatus = await isFavorite(cantiqueId);
-        setIsFav(favStatus);
+        setIsFav(await isFavorite(cantiqueId));
       } else {
-        console.warn('⚠️ Aucun cantique trouvé pour l\'ID:', cantiqueId);
+        console.warn("⚠️ Aucun cantique trouvé pour l'ID:", cantiqueId);
       }
     } catch (error) {
       console.error('❌ Erreur chargement:', error);
     } finally {
       setLoading(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cantiqueId]);
+
+  useEffect(() => {
+    void loadCantiqueData();
+  }, [loadCantiqueData]);
 
   const handleToggleFavorite = async () => {
     try {
@@ -56,59 +82,120 @@ export default function CantiquePreviewScreen() {
     }
   };
 
-  // ✅ Parser les mesures d'une voix
-  const parseMeasures = (voiceContent: string): string[] => {
-    if (!voiceContent || voiceContent.trim() === '') return [];
-    return voiceContent.split('|').map(m => m.trim()).filter(m => m !== '');
-  };
+  const styles = StyleSheet.create({
+    actionButton: {
+      minWidth: MIN_TOUCH_TARGET,
+      minHeight: MIN_TOUCH_TARGET,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    page: {
+      backgroundColor: sheet.paper,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: sheet.ruleStrong,
+      padding: isTablet ? spacing.xl : spacing.md,
+      ...elevation(1),
+    },
+    pageHeader: {
+      marginBottom: spacing.lg,
+      borderBottomWidth: 2,
+      borderBottomColor: sheet.ruleStrong,
+      paddingBottom: spacing.sm,
+      gap: spacing.xs,
+    },
+    metaRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+    },
+    section: {
+      marginBottom: spacing.xl,
+      gap: spacing.sm,
+    },
+    system: {
+      flexDirection: 'row',
+      borderBottomWidth: 2,
+      borderColor: sheet.ruleStrong,
+      paddingVertical: spacing.xs,
+      marginBottom: spacing.md,
+    },
+    voiceLabels: {
+      width: 28,
+      justifyContent: 'space-around',
+      borderRightWidth: 2,
+      borderRightColor: sheet.ruleStrong,
+      paddingRight: spacing.xxs,
+    },
+    voiceLabelCell: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    measureColumn: {
+      borderRightWidth: 1,
+      borderRightColor: sheet.rule,
+      paddingHorizontal: spacing.xxs,
+    },
+    voiceInMeasure: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingVertical: spacing.xxs,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: sheet.rule,
+    },
+    emptySection: {
+      padding: spacing.md,
+      backgroundColor: sheet.highlight,
+      borderRadius: radius.sm,
+      alignItems: 'center',
+    },
+    lyricsBlock: {
+      marginTop: spacing.xl,
+      borderTopWidth: 2,
+      borderTopColor: sheet.ruleStrong,
+      paddingTop: spacing.lg,
+      gap: spacing.md,
+    },
+    lyricsSection: {
+      padding: spacing.sm,
+      borderLeftWidth: 3,
+      borderLeftColor: colors.primary,
+      backgroundColor: sheet.highlight,
+      borderRadius: radius.xs,
+      gap: spacing.xxs,
+    },
+    footer: {
+      marginTop: spacing.xl,
+      paddingTop: spacing.md,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: sheet.rule,
+      alignItems: 'center',
+      gap: spacing.xxs,
+    },
+  });
 
-  // ✅ Calculer la largeur minimale d'une mesure basée sur le contenu le plus long
-  const getMeasureMinWidth = (voices: Array<{ label: string; measures: string[] }>, measureIndex: number): number => {
-    let maxLength = 0;
-    voices.forEach(voice => {
-      const measure = voice.measures[measureIndex];
-      if (measure) {
-        maxLength = Math.max(maxLength, measure.length);
-      }
-    });
-    // Largeur de base + largeur proportionnelle au contenu
-    return Math.max(60, 40 + maxLength * 4);
-  };
-
-  // ✅ Fonction pour rendre une section avec les voix alignées
   const renderSection = (section: any) => {
-    // Récupérer toutes les voix présentes
-    const voices: Array<{ label: string; measures: string[] }> = [];
-    
-    if (section.soprano && section.soprano.trim() !== '') {
-      voices.push({ label: 'S', measures: parseMeasures(section.soprano) });
-    }
-    if (section.alto && section.alto.trim() !== '') {
-      voices.push({ label: 'A', measures: parseMeasures(section.alto) });
-    }
-    if (section.tenor && section.tenor.trim() !== '') {
-      voices.push({ label: 'T', measures: parseMeasures(section.tenor) });
-    }
-    if (section.bass && section.bass.trim() !== '') {
-      voices.push({ label: 'B', measures: parseMeasures(section.bass) });
-    }
+    const voices: Voice[] = (
+      [
+        ['S', section.soprano],
+        ['A', section.alto],
+        ['T', section.tenor],
+        ['B', section.bass],
+      ] as const
+    )
+      .filter(([, value]) => value && value.trim() !== '')
+      .map(([label, value]) => ({ label, measures: parseMeasures(value) }));
 
-    // Si aucune voix, afficher message vide
     if (voices.length === 0) {
       return (
-        <View style={styles.emptySectionMessage}>
-          <TextComponent style={styles.emptySectionText}>
+        <View style={styles.emptySection}>
+          <TextComponent variante="body5" color={sheet.inkMuted} style={{ fontStyle: 'italic' }}>
             Cette partie ne contient pas de notes.
           </TextComponent>
         </View>
       );
     }
 
-    // Trouver le nombre maximum de mesures
-    const maxMeasures = Math.max(...voices.map(v => v.measures.length));
-
-    // Grouper par lignes de 4 mesures
-    const measuresPerLine = 4;
+    const maxMeasures = Math.max(...voices.map((v) => v.measures.length));
     const numberOfLines = Math.ceil(maxMeasures / measuresPerLine);
 
     return (
@@ -116,31 +203,37 @@ export default function CantiquePreviewScreen() {
         {Array.from({ length: numberOfLines }).map((_, lineIndex) => {
           const startMeasure = lineIndex * measuresPerLine;
           const endMeasure = Math.min(startMeasure + measuresPerLine, maxMeasures);
-          
+
           return (
-            <View key={lineIndex} style={styles.systemContainer}>
-              {/* Labels des voix au début de la ligne */}
-              <View style={styles.voiceLabelsColumn}>
+            <View key={lineIndex} style={styles.system}>
+              <View style={styles.voiceLabels}>
                 {voices.map((voice) => (
                   <View key={voice.label} style={styles.voiceLabelCell}>
-                    <TextComponent variante='body6' style={styles.voiceLabel}>
-                      {voice.label}:
+                    <TextComponent variante="body6" color={sheet.ink} style={{ textAlign: 'center' }}>
+                      {voice.label}
                     </TextComponent>
                   </View>
                 ))}
               </View>
 
-              {/* Pour chaque mesure de cette ligne */}
               {Array.from({ length: endMeasure - startMeasure }).map((_, measureOffset) => {
                 const measureIndex = startMeasure + measureOffset;
-                const minWidth = getMeasureMinWidth(voices, measureIndex);
-                
+
                 return (
-                  <View key={measureIndex} style={[styles.measureColumn, { minWidth }]}>
-                    {/* Afficher toutes les voix pour cette mesure */}
+                  <View
+                    key={measureIndex}
+                    style={[
+                      styles.measureColumn,
+                      { flex: 1, minWidth: getMeasureMinWidth(voices, measureIndex) },
+                    ]}
+                  >
                     {voices.map((voice) => (
                       <View key={`${voice.label}-${measureIndex}`} style={styles.voiceInMeasure}>
-                        <TextComponent variante='subtitle4' style={styles.measureContent}>
+                        <TextComponent
+                          variante="subtitle4"
+                          color={sheet.ink}
+                          style={{ letterSpacing: 0.5 }}
+                        >
                           {voice.measures[measureIndex] || ''}
                         </TextComponent>
                       </View>
@@ -155,314 +248,142 @@ export default function CantiquePreviewScreen() {
     );
   };
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-      paddingTop: 10,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      backgroundColor: colors.card,
-    },
-    headerLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      flex: 1,
-    },
-    headerTitle: {
-      marginLeft: 12,
-      marginTop: 8,
-    },
-    headerActions: {
-      flexDirection: 'row',
-      gap: 12,
-    },
-    actionButton: {
-      padding: 8,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    scrollContent: {
-      padding: 8,
-    },
-    pageContainer: {
-      backgroundColor: 'white',
-      borderRadius: 8,
-      padding: 15,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 4,
-    },
-    pageHeader: {
-      marginBottom: 24,
-      borderBottomWidth: 2,
-      borderBottomColor: '#333',
-      paddingBottom: 16,
-    },
-    cantiqueNumber: {
-      textAlign: 'center',
-      marginBottom: 8,
-    },
-    cantiqueMeta: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginTop: 8,
-      marginBottom: 12,
-    },
-    metaItem: {
-      color: '#666',
-      fontSize: 14,
-    },
-    sectionContainer: {
-      marginBottom: 32,
-    },
-    sectionHeader: {
-      marginBottom: 15,
-    },
-    // ✅ Styles pour l'affichage en système (4 mesures par ligne)
-    systemContainer: {
-      flexDirection: 'row',
-      marginBottom: 20,
-    //   borderTopWidth: 0.5,
-      borderBottomWidth: 2,
-      borderColor: '#333',
-      paddingVertical: 8,
-    },
-    voiceLabelsColumn: {
-      width: 30,
-      justifyContent: 'space-around',
-      borderRightWidth: 2,
-      borderRightColor: '#333',
-      paddingRight: 8,
-    },
-    voiceLabelCell: {
-      flex: 1,
-      justifyContent: 'center',
-    },
-    measureColumn: {
-      borderRightWidth: 1,
-      borderRightColor: '#999',
-      paddingHorizontal: 4,
-    },
-    voiceInMeasure: {
-      flex: 1,
-      justifyContent: 'center',
-      paddingVertical: 4,
-      borderBottomWidth: 1,
-      borderBottomColor: '#eee',
-    },
-    voiceLabel: {
-      color: '#000',
-      fontWeight: 'bold',
-      textAlign: 'center',
-    },
-    measureContent: {
-      color: '#333',
-      letterSpacing: 0.5,
-    },
-    emptySectionMessage: {
-      padding: 16,
-      backgroundColor: '#f5f5f5',
-      borderRadius: 8,
-      alignItems: 'center',
-    },
-    emptySectionText: {
-      color: '#999',
-      fontSize: 14,
-      fontStyle: 'italic',
-    },
-    // Styles pour les paroles regroupées en bas
-    allLyricsContainer: {
-      marginTop: 32,
-      borderTopWidth: 2,
-      borderTopColor: '#333',
-      paddingTop: 24,
-    },
-    lyricsHeaderContainer: {
-      marginBottom: 16,
-      alignItems: 'center',
-    },
-    lyricsHeader: {
-      color: colors.primary,
-      fontWeight: 'bold',
-    },
-    lyricsSection: {
-      marginBottom: 20,
-      padding: 12,
-      borderLeftWidth: 3,
-      borderLeftColor: colors.primary,
-      backgroundColor: '#f9f9f9',
-    },
-    lyricsSectionTitle: {
-      fontWeight: 'bold',
-      color: '#666',
-      marginBottom: 8,
-    },
-    lyricsText: {
-      fontSize: 14,
-      color: '#333',
-      lineHeight: 20,
-    },
-    footer: {
-      marginTop: 32,
-      paddingTop: 16,
-      borderTopWidth: 1,
-      borderTopColor: '#e0e0e0',
-      alignItems: 'center',
-    },
-    footerText: {
-      fontSize: 12,
-    },
-  });
-
   if (loading) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <ArrowLeft size={24} color={colors.text} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.loadingContainer}>
+      <Screen background={colors.card}>
+        <ScreenHeader title="Cantique" />
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm }}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <TextComponent variante="body3" color={colors.text2} style={{ marginTop: 12 }}>
+          <TextComponent variante="body4" color={colors.text2}>
             Chargement...
           </TextComponent>
         </View>
-      </View>
+      </Screen>
     );
   }
 
   if (!cantique) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <ArrowLeft size={24} color={colors.text} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.loadingContainer}>
-          <TextComponent variante="subtitle2">
-            Cantique introuvable
-          </TextComponent>
-        </View>
-      </View>
+      <Screen background={colors.card}>
+        <ScreenHeader title="Cantique" />
+        <EmptyState
+          variant="plain"
+          title="Cantique introuvable"
+          subtitle="Ce cantique n'existe plus ou n'a pas pu être chargé."
+          actionText="Retour"
+          onActionPress={() => router.back()}
+        />
+      </Screen>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <ArrowLeft size={24} color={colors.text} />
-          </TouchableOpacity>
-          <View style={{ flexShrink: 1, overflow: 'hidden' }}>
-            <TextComponent variante="subtitle2" style={styles.headerTitle} numberOfLines={1}>
-              Cantique {cantique.number}
-            </TextComponent>
-          </View>
-        </View>
-        
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.actionButton} onPress={handleToggleFavorite}>
-            <Heart 
-              size={20} 
-              color={isFav ? colors.primary : colors.text} 
-              fill={isFav ? colors.primary : 'transparent'}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={() => {}}>
-            <Share2 size={20} color={colors.text} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={() => {}}>
-            <Download size={20} color={colors.text} />
-          </TouchableOpacity>
-        </View>
-      </View>
+    <Screen background={colors.card}>
+      <ScreenHeader
+        title={`Cantique ${cantique.number}`}
+        subtitle={cantique.title}
+        right={
+          <>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={handleToggleFavorite}
+              hitSlop={touchSlop}
+              accessibilityRole="button"
+              accessibilityLabel={isFav ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+            >
+              <Heart
+                size={icon.md}
+                color={isFav ? colors.primary : colors.icon}
+                fill={isFav ? colors.primary : 'transparent'}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {}}
+              hitSlop={touchSlop}
+              accessibilityRole="button"
+              accessibilityLabel="Partager"
+            >
+              <Share2 size={icon.md} color={colors.icon} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => {}}
+              hitSlop={touchSlop}
+              accessibilityRole="button"
+              accessibilityLabel="Télécharger"
+            >
+              <Download size={icon.md} color={colors.icon} />
+            </TouchableOpacity>
+          </>
+        }
+      />
 
-      {/* Content */}
-      <ScrollView style={styles.container}>
-        <View style={styles.scrollContent}>
-          <View style={styles.pageContainer}>
-            {/* Page Header */}
+      <ScrollView
+        style={{ flex: 1, backgroundColor: colors.background }}
+        contentContainerStyle={{ paddingVertical: spacing.md }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Content width="wide">
+          <View style={styles.page}>
             <View style={styles.pageHeader}>
-              <View style={styles.cantiqueMeta}>
-                <TextComponent style={styles.metaItem}>
+              <View style={styles.metaRow}>
+                <TextComponent variante="body5" color={sheet.inkMuted}>
                   {cantique.key}
                 </TextComponent>
-                <TextComponent style={styles.metaItem}>
+                <TextComponent variante="body5" color={sheet.inkMuted}>
                   {cantique.tempo}
                 </TextComponent>
               </View>
 
-              <TextComponent variante="subtitle3" style={styles.cantiqueNumber}>
-                {cantique.number} - {cantique.title}
+              <TextComponent variante="subtitle2" color={sheet.ink} style={{ textAlign: 'center' }}>
+                {cantique.number} — {cantique.title}
               </TextComponent>
             </View>
 
-            {/* Sections */}
             {cantique.sections.map((section) => (
-              <View key={section.id} style={styles.sectionContainer}>
-                <View style={styles.sectionHeader}>
-                  <TextComponent variante='subtitle3'>
-                    {section.name} 
-                  </TextComponent>
-                </View>
-
+              <View key={section.id} style={styles.section}>
+                <TextComponent variante="subtitle3" color={sheet.ink}>
+                  {section.name}
+                </TextComponent>
                 {renderSection(section)}
               </View>
             ))}
 
-            {/* Lyrics regroupées en bas */}
-            {cantique.sections.some(s => s.lyrics && s.lyrics.trim() !== '') && (
-              <View style={styles.allLyricsContainer}>
-                <View style={styles.lyricsHeaderContainer}>
-                  <TextComponent variante='subtitle3' style={styles.lyricsHeader}>
-                    Paroles
-                  </TextComponent>
-                </View>
-                
-                {cantique.sections.map((section) => (
-                  section.lyrics && section.lyrics.trim() !== '' && (
-                    <View key={`lyrics-${section.id}`} style={styles.lyricsSection}>
-                      <TextComponent variante='body6' style={styles.lyricsSectionTitle}>
-                        {section.name}
-                      </TextComponent>
-                      <TextComponent style={styles.lyricsText}>
-                        {section.lyrics}
-                      </TextComponent>
-                    </View>
-                  )
-                ))}
+            {cantique.sections.some((s) => s.lyrics && s.lyrics.trim() !== '') && (
+              <View style={styles.lyricsBlock}>
+                <TextComponent variante="subtitle3" color={colors.primary} style={{ textAlign: 'center' }}>
+                  Paroles
+                </TextComponent>
+
+                {cantique.sections.map(
+                  (section) =>
+                    section.lyrics &&
+                    section.lyrics.trim() !== '' && (
+                      <View key={`lyrics-${section.id}`} style={styles.lyricsSection}>
+                        <TextComponent variante="body6" color={sheet.inkMuted}>
+                          {section.name}
+                        </TextComponent>
+                        <TextComponent variante="body4" color={sheet.ink}>
+                          {section.lyrics}
+                        </TextComponent>
+                      </View>
+                    ),
+                )}
               </View>
             )}
 
-            {/* Footer */}
             <View style={styles.footer}>
-              <TextComponent style={styles.metaItem}>
-                Compositeur: {cantique.composer}
+              <TextComponent variante="body5" color={sheet.inkMuted}>
+                Compositeur : {cantique.composer}
               </TextComponent>
-              <TextComponent color={colors.primary} style={styles.footerText}>
+              <TextComponent variante="caption" color={colors.primary}>
                 Le {new Date().toLocaleDateString('fr-FR')}
               </TextComponent>
             </View>
           </View>
-        </View>
+        </Content>
       </ScrollView>
-    </View>
+    </Screen>
   );
 }

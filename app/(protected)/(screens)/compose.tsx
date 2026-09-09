@@ -2,13 +2,16 @@
 import { CompositionDrawer } from '@/components/musicComponents/CompositionDrawer';
 import { MusicEditor } from '@/components/musicComponents/MusicEditor';
 import { SaveCompositionModal } from '@/components/musicComponents/SaveCompositionModal';
+import { elevation } from '@/constants/layout';
+import { useResponsive } from '@/hooks/useResponsive';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
 import { useCompositionStorage } from '@/utils/CompositionStorage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Save } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Animated, Dimensions, PanResponder, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Alert, Animated, PanResponder, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Section {
   id: string;
@@ -31,7 +34,10 @@ export default function ComposeScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { addComposition } = useAppStore();
-  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+  // Dimensions vivantes : le bouton flottant reste dans l'écran après rotation.
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const { spacing, radius } = useResponsive();
+  const insets = useSafeAreaInsets();
   
   // Hook de stockage
   const {
@@ -188,11 +194,13 @@ export default function ComposeScreen() {
     },
     keyboardContainer: {
       backgroundColor: colors.card,
+      borderTopLeftRadius: radius.lg,
+      borderTopRightRadius: radius.lg,
     },
     draggableContainer: {
       position: 'absolute',
-      bottom: 30,
-      right: 20,
+      bottom: insets.bottom + spacing.lg,
+      right: spacing.lg,
       alignItems: 'center',
     },
     floatingMenuButton: {
@@ -203,14 +211,10 @@ export default function ComposeScreen() {
       justifyContent: 'space-evenly',
       alignItems: 'center',
       paddingVertical: floatingButtonPadding,
-      elevation: 6,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.3,
-      shadowRadius: 6,
       borderWidth: 1,
       borderColor: colors.border,
-      gap: 12,
+      gap: spacing.sm,
+      ...elevation(3),
     },
     saveButtonActive: {
       backgroundColor: colors.primary + '30',
@@ -517,6 +521,8 @@ export default function ComposeScreen() {
               onPress={handleSavePress}
               activeOpacity={0.7}
               disabled={isDragging}
+              accessibilityRole="button"
+              accessibilityLabel="Sauvegarder la composition"
             >
               <Save 
                 size={floatingIconSize} 
@@ -528,6 +534,8 @@ export default function ComposeScreen() {
               onPress={handleDrawerPress}
               activeOpacity={0.7}
               disabled={isDragging}
+              accessibilityRole="button"
+              accessibilityLabel="Ouvrir la configuration"
             >
               <View style={styles.dotsContainer}>
                 <View style={styles.dot} />

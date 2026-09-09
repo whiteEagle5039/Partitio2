@@ -1,14 +1,20 @@
+import { router } from 'expo-router';
+import { ArrowLeft, BookOpen, ChevronRight, Edit3, FileText, Folder as FolderIcon, Music, Search, X } from 'lucide-react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+
+import { EmptyState } from '@/components/uxComponents/EmptyState';
+import { Badge, ListItemCard } from '@/components/uxComponents/ListItemCard';
+import { Content, Screen } from '@/components/uxComponents/Screen';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
+import { MAX_FONT_SCALE, MIN_TOUCH_TARGET, touchSlop } from '@/constants/layout';
+import { useListLayout } from '@/hooks/useListLayout';
+import { useResponsive } from '@/hooks/useResponsive';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { leconsLibrary } from '@/lecons';
 import { useAppStore, type Folder } from '@/stores/appStore';
 import { useCantiqueStorage } from '@/utils/CantiqueStorage';
 import { useCompositionStorage } from '@/utils/CompositionStorage';
-import { leconsLibrary } from '@/lecons';
-import { router } from 'expo-router';
-import { BookOpen, ChevronRight, FileText, Folder as FolderIcon, Music, Search, Edit3 } from 'lucide-react-native';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 type ResultKind = 'cantique' | 'lecon-folder' | 'lecon-content' | 'composition';
 
@@ -29,8 +35,18 @@ interface SearchResult {
   sourceLabel: string;
 }
 
+const sourceFilters = ['Tous', 'Cantiques', 'Leçons', 'Compositions'] as const;
+
+const normalize = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
 export default function SearchScreen() {
   const colors = useThemeColors();
+  const { spacing, radius, icon, gutter, fontSize } = useResponsive();
+  const listLayout = useListLayout();
   const { setCurrentCategory, setCurrentFolder } = useAppStore();
   const { getAllMetadata } = useCantiqueStorage();
   const { getAllCompositions } = useCompositionStorage();
@@ -39,158 +55,14 @@ export default function SearchScreen() {
   const [showFilters, setShowFilters] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedSource, setSelectedSource] = useState<'Tous' | 'Cantiques' | 'Leçons' | 'Compositions'>('Tous');
-
-  useEffect(() => {
-    void loadSearchIndex();
-  }, [loadSearchIndex]);
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 10,
-      paddingVertical: 10,
-      backgroundColor: colors.card,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    searchContainer: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: colors.input,
-      borderRadius: 14,
-      paddingHorizontal: 14,
-      marginHorizontal: 2,
-    },
-    searchInput: {
-      flex: 1,
-      paddingVertical: 10,
-      fontSize: 18,
-      color: colors.text,
-    },
-    filterButton: {
-      padding: 8,
-    },
-    filtersContainer: {
-      backgroundColor: colors.card,
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    filterRow: {
-      flexDirection: 'row',
-      gap: 10,
-      marginBottom: 12,
-    },
-    filterChip: {
-      backgroundColor: colors.muted,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      borderRadius: 18,
-    },
-    filterChipActive: {
-      backgroundColor: colors.primary,
-    },
-    content: {
-      flex: 1,
-    },
-    resultsHeader: {
-      paddingHorizontal: 20,
-      paddingTop: 16,
-      paddingBottom: 10,
-    },
-    resultsList: {
-      paddingHorizontal: 20,
-      paddingBottom: 20,
-    },
-    resultItem: {
-      flexDirection: 'row',
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 16,
-      marginBottom: 12,
-      alignItems: 'center',
-      borderColor: colors.border,
-      borderWidth: 1,
-    },
-    resultThumbnail: {
-      width: 56,
-      height: 56,
-      borderRadius: 14,
-      marginRight: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    resultContent: {
-      flex: 1,
-    },
-    resultTitle: {
-      marginBottom: 4,
-    },
-    resultMeta: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      alignItems: 'center',
-      gap: 8,
-      marginTop: 8,
-    },
-    metaBadge: {
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 999,
-      backgroundColor: colors.muted,
-    },
-    emptyState: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: 32,
-      paddingBottom: 48,
-    },
-    emptyIcon: {
-      width: 84,
-      height: 84,
-      borderRadius: 42,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: 18,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    sourceSummary: {
-      flexDirection: 'row',
-      gap: 10,
-      paddingHorizontal: 20,
-      paddingBottom: 12,
-    },
-    sourcePill: {
-      paddingHorizontal: 10,
-      paddingVertical: 6,
-      borderRadius: 999,
-      backgroundColor: colors.muted,
-    },
-  });
-
-  const sourceFilters = ['Tous', 'Cantiques', 'Leçons', 'Compositions'] as const;
+  const [selectedSource, setSelectedSource] =
+    useState<(typeof sourceFilters)[number]>('Tous');
 
   const loadSearchIndex = useCallback(async () => {
     try {
       setLoading(true);
 
-      const [cantiques, compositions] = await Promise.all([
-        getAllMetadata(),
-        getAllCompositions(),
-      ]);
+      const [cantiques, compositions] = await Promise.all([getAllMetadata(), getAllCompositions()]);
 
       const cantiqueResults: SearchResult[] = cantiques.map((cantique) => ({
         id: cantique.id,
@@ -257,13 +129,13 @@ export default function SearchScreen() {
     } finally {
       setLoading(false);
     }
-  }, [getAllCompositions, getAllMetadata]);
+    // Les getters viennent de hooks de stockage recréés à chaque rendu.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const normalize = (value: string) =>
-    value
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
+  useEffect(() => {
+    void loadSearchIndex();
+  }, [loadSearchIndex]);
 
   const filteredResults = useMemo(() => {
     const query = normalize(searchQuery.trim());
@@ -272,7 +144,6 @@ export default function SearchScreen() {
       const matchesSource = selectedSource === 'Tous' || result.categoryName === selectedSource;
 
       if (!matchesSource) return false;
-
       if (!query) return true;
 
       const haystack = [
@@ -291,6 +162,15 @@ export default function SearchScreen() {
     });
   }, [results, searchQuery, selectedSource]);
 
+  const counts = useMemo(
+    () => ({
+      Cantiques: results.filter((item) => item.categoryName === 'Cantiques').length,
+      Leçons: results.filter((item) => item.categoryName === 'Leçons').length,
+      Compositions: results.filter((item) => item.categoryName === 'Compositions').length,
+    }),
+    [results],
+  );
+
   const openResult = (result: SearchResult) => {
     if (result.kind === 'cantique') {
       router.push(`/cantiquePreview?id=${result.id}`);
@@ -305,177 +185,237 @@ export default function SearchScreen() {
     const targetFolder = leconsLibrary.find((folder) => folder.id === result.folderId);
     const targetCategory = useAppStore.getState().categories.find((category) => category.id === '5') || null;
 
-    if (targetCategory) {
-      setCurrentCategory(targetCategory);
-    }
-
-    if (targetFolder) {
-      setCurrentFolder(targetFolder as Folder);
-    }
+    if (targetCategory) setCurrentCategory(targetCategory);
+    if (targetFolder) setCurrentFolder(targetFolder as Folder);
 
     router.push('/library');
   };
 
+  const resultIcon = (result: SearchResult) => {
+    const size = icon.md;
+
+    switch (result.kind) {
+      case 'cantique':
+        return <Music size={size} color={result.categoryColor} />;
+      case 'composition':
+        return <Edit3 size={size} color={result.categoryColor} />;
+      case 'lecon-folder':
+        return <FolderIcon size={size} color={result.categoryColor} />;
+      default:
+        return <FileText size={size} color={result.categoryColor} />;
+    }
+  };
+
+  const styles = StyleSheet.create({
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      paddingHorizontal: gutter - spacing.xs,
+      paddingVertical: spacing.xs,
+      backgroundColor: colors.card,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+    },
+    searchContainer: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.xs,
+      backgroundColor: colors.input,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: colors.border,
+      paddingHorizontal: spacing.sm,
+      minHeight: MIN_TOUCH_TARGET,
+    },
+    searchInput: {
+      flex: 1,
+      minWidth: 0,
+      paddingVertical: spacing.xs,
+      fontSize: fontSize(16),
+      color: colors.text,
+    },
+    iconButton: {
+      minWidth: MIN_TOUCH_TARGET,
+      minHeight: MIN_TOUCH_TARGET,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: radius.md,
+    },
+    filtersBar: {
+      backgroundColor: colors.card,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+    },
+    filterRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.xs,
+      paddingVertical: spacing.sm,
+    },
+    filterChip: {
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.pill,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.muted,
+    },
+    filterChipActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    summary: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.xs,
+      paddingVertical: spacing.xs,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: spacing.sm,
+    },
+  });
+
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.searchContainer}>
-            <Search size={24} color={colors.icon} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Rechercher un cantique, une leçon ou une composition"
-              placeholderTextColor={colors.text2}
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              autoCorrect={false}
-              autoCapitalize="none"
-              returnKeyType="search"
-            />
-          </View>
+    <Screen>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => router.back()}
+          hitSlop={touchSlop}
+          accessibilityRole="button"
+          accessibilityLabel="Retour"
+        >
+          <ArrowLeft size={icon.lg} color={colors.icon} />
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.filterButton}
-            onPress={() => setShowFilters((value) => !value)}
-          >
-            <BookOpen size={28} color={showFilters ? colors.primary : colors.icon} />
-          </TouchableOpacity>
+        <View style={styles.searchContainer}>
+          <Search size={icon.md} color={colors.icon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Rechercher…"
+            placeholderTextColor={colors.text2}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            autoCorrect={false}
+            autoCapitalize="none"
+            returnKeyType="search"
+            maxFontSizeMultiplier={MAX_FONT_SCALE}
+            accessibilityLabel="Champ de recherche"
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setSearchQuery('')}
+              hitSlop={touchSlop}
+              accessibilityRole="button"
+              accessibilityLabel="Effacer la recherche"
+            >
+              <X size={icon.sm} color={colors.icon} />
+            </TouchableOpacity>
+          )}
         </View>
 
-        {showFilters && (
-          <View style={styles.filtersContainer}>
-            <TextComponent variante="subtitle3" style={{ marginBottom: 12 }}>
-              Filtrer par source
-            </TextComponent>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <View style={styles.filterRow}>
-                {sourceFilters.map((source) => (
-                  <TouchableOpacity
-                    key={source}
-                    style={[
-                      styles.filterChip,
-                      selectedSource === source && styles.filterChipActive,
-                    ]}
-                    onPress={() => setSelectedSource(source)}
+        <TouchableOpacity
+          style={styles.iconButton}
+          onPress={() => setShowFilters((value) => !value)}
+          hitSlop={touchSlop}
+          accessibilityRole="button"
+          accessibilityLabel="Filtrer les résultats"
+          accessibilityState={{ expanded: showFilters }}
+        >
+          <BookOpen size={icon.lg} color={showFilters ? colors.primary : colors.icon} />
+        </TouchableOpacity>
+      </View>
+
+      {showFilters && (
+        <View style={styles.filtersBar}>
+          <Content>
+            <View style={styles.filterRow}>
+              {sourceFilters.map((source) => (
+                <TouchableOpacity
+                  key={source}
+                  style={[styles.filterChip, selectedSource === source && styles.filterChipActive]}
+                  onPress={() => setSelectedSource(source)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: selectedSource === source }}
+                >
+                  <TextComponent
+                    variante="body5"
+                    color={selectedSource === source ? colors.primaryForeground : colors.text}
                   >
-                    <TextComponent variante="body2" color={selectedSource === source ? '#FFFFFF' : colors.text}>
-                      {source}
-                    </TextComponent>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </ScrollView>
-          </View>
-        )}
-
-        <View style={styles.sourceSummary}>
-          <View style={styles.sourcePill}>
-            <TextComponent variante="caption" color={colors.text2}>
-              {results.filter((item) => item.categoryName === 'Cantiques').length} cantiques
-            </TextComponent>
-          </View>
-          <View style={styles.sourcePill}>
-            <TextComponent variante="caption" color={colors.text2}>
-              {results.filter((item) => item.categoryName === 'Leçons').length} leçons
-            </TextComponent>
-          </View>
-          <View style={styles.sourcePill}>
-            <TextComponent variante="caption" color={colors.text2}>
-              {results.filter((item) => item.categoryName === 'Compositions').length} compositions
-            </TextComponent>
-          </View>
-        </View>
-
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <TextComponent variante="body3" color={colors.text2} style={{ marginTop: 12 }}>
-              Préparation de la recherche locale...
-            </TextComponent>
-          </View>
-        ) : (
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-            <View style={styles.resultsHeader}>
-              <TextComponent variante="body2" color={colors.text2}>
-                {filteredResults.length} résultat{filteredResults.length > 1 ? 's' : ''} trouvé{filteredResults.length > 1 ? 's' : ''}
-              </TextComponent>
+                    {source}
+                  </TextComponent>
+                </TouchableOpacity>
+              ))}
             </View>
+          </Content>
+        </View>
+      )}
 
-            {filteredResults.length > 0 ? (
-              <View style={styles.resultsList}>
-                {filteredResults.map((result) => (
-                  <TouchableOpacity
-                    key={`${result.kind}-${result.id}`}
-                    style={styles.resultItem}
-                    onPress={() => openResult(result)}
-                    activeOpacity={0.75}
-                  >
-                    <View style={[styles.resultThumbnail, { backgroundColor: `${result.categoryColor}18` }]}>
-                      {result.kind === 'cantique' ? (
-                        <Music size={24} color={result.categoryColor} />
-                      ) : result.kind === 'composition' ? (
-                        <Edit3 size={24} color={result.categoryColor} />
-                      ) : result.kind === 'lecon-folder' ? (
-                        <FolderIcon size={24} color={result.categoryColor} />
-                      ) : (
-                        <FileText size={24} color={result.categoryColor} />
-                      )}
-                    </View>
+      <Content>
+        <View style={styles.summary}>
+          <Badge label={`${counts.Cantiques} cantiques`} />
+          <Badge label={`${counts.Leçons} leçons`} />
+          <Badge label={`${counts.Compositions} compositions`} />
+        </View>
+      </Content>
 
-                    <View style={styles.resultContent}>
-                      <TextComponent variante="subtitle3" style={styles.resultTitle}>
-                        {result.title}
-                      </TextComponent>
-
-                      {result.subtitle && (
-                        <TextComponent variante="body4" color={colors.text2}>
-                          {result.subtitle}
-                        </TextComponent>
-                      )}
-
-                      {result.description && (
-                        <TextComponent variante="body4" color={colors.text2} style={{ marginTop: 4 }}>
-                          {result.description}
-                        </TextComponent>
-                      )}
-
-                      <View style={styles.resultMeta}>
-                        <View style={styles.metaBadge}>
-                          <TextComponent variante="caption" color={result.categoryColor}>
-                            {result.categoryName}
-                          </TextComponent>
-                        </View>
-
-                        <View style={styles.metaBadge}>
-                          <TextComponent variante="caption" color={colors.text2}>
-                            {result.sourceLabel}
-                          </TextComponent>
-                        </View>
-
-                        {result.kind === 'lecon-folder' || result.kind === 'lecon-content' ? (
-                          <ChevronRight size={14} color={colors.text2} />
-                        ) : null}
-                      </View>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            ) : (
-              <View style={styles.emptyState}>
-                <View style={[styles.emptyIcon, { backgroundColor: `${colors.primary}15` }]}>
-                  <Search size={40} color={colors.primary} />
-                </View>
-                <TextComponent variante="subtitle1" style={{ textAlign: 'center' }}>
-                  Aucun résultat trouvé
-                </TextComponent>
-                <TextComponent variante="body2" color={colors.text2} style={{ textAlign: 'center', marginTop: 8 }}>
-                  Essayez un autre mot-clé ou changez la source recherchée.
-                </TextComponent>
-              </View>
-            )}
-          </ScrollView>
-        )}
-      </SafeAreaView>
-    </View>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <TextComponent variante="body4" color={colors.text2}>
+            Préparation de la recherche locale...
+          </TextComponent>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredResults}
+          keyExtractor={(item) => `${item.kind}-${item.id}`}
+          contentContainerStyle={[
+            listLayout.contentContainerStyle,
+            filteredResults.length === 0 && { flexGrow: 1 },
+          ]}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
+          ListHeaderComponent={
+            filteredResults.length > 0 ? (
+              <TextComponent variante="body5" color={colors.text2}>
+                {filteredResults.length} résultat{filteredResults.length > 1 ? 's' : ''}
+              </TextComponent>
+            ) : null
+          }
+          ListEmptyComponent={
+            <EmptyState
+              variant="plain"
+              icon={Search}
+              title="Aucun résultat trouvé"
+              subtitle="Essayez un autre mot-clé ou changez la source recherchée."
+            />
+          }
+          renderItem={({ item }) => (
+            <ListItemCard
+              title={item.title}
+              subtitle={item.subtitle}
+              description={item.description}
+              leading={resultIcon(item)}
+              leadingTint={item.categoryColor}
+              onPress={() => openResult(item)}
+              trailing={<ChevronRight size={icon.sm} color={colors.text2} />}
+              meta={
+                <>
+                  <Badge label={item.categoryName} tone={item.categoryColor} />
+                  <Badge label={item.sourceLabel} />
+                </>
+              }
+            />
+          )}
+        />
+      )}
+    </Screen>
   );
 }

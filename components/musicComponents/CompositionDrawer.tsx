@@ -1,5 +1,7 @@
 // components/CompositionDrawer.tsx
 import { TextComponent } from '@/components/uxComponents/TextComponent';
+import { breakpoints } from '@/constants/layout';
+import { useResponsive } from '@/hooks/useResponsive';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import {
     ChevronDown,
@@ -15,6 +17,7 @@ import {
 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Animated, ScrollView, StyleSheet, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Section {
   id: string;
@@ -48,43 +51,32 @@ export const CompositionDrawer: React.FC<CompositionDrawerProps> = ({
   activeSectionId,
 }) => {
   const colors = useThemeColors();
+  const { spacing, radius } = useResponsive();
+  const insets = useSafeAreaInsets();
   const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
   const { width: screenWidth } = useWindowDimensions();
-  const drawerWidth = screenWidth;
 
-  // Animation
-  const slideAnim = useRef(new Animated.Value(drawerWidth)).current; // Drawer hors écran à droite
-  const overlayAnim = useRef(new Animated.Value(0)).current; // Overlay transparent
+  // Pleine largeur sur téléphone ; panneau latéral borné sur tablette / web.
+  const drawerWidth =
+    screenWidth >= breakpoints.lg ? Math.min(520, Math.round(screenWidth * 0.55)) : screenWidth;
+
+  // Une seule valeur 0→1 : la position fermée reste juste même si la largeur
+  // change (rotation, multi-fenêtre).
+  const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (isOpen) {
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: false,
-        }),
-        Animated.timing(overlayAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: false,
-        }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: drawerWidth,
-          duration: 200,
-          useNativeDriver: false,
-        }),
-        Animated.timing(overlayAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: false,
-        }),
-      ]).start();
-    }
-  }, [isOpen]);
+    Animated.timing(progress, {
+      toValue: isOpen ? 1 : 0,
+      duration: 220,
+      useNativeDriver: true,
+    }).start();
+  }, [isOpen, progress]);
+
+  const slideAnim = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [drawerWidth, 0],
+  });
+  const overlayAnim = progress;
 
   const styles = StyleSheet.create({
     overlay: {
@@ -113,8 +105,9 @@ export const CompositionDrawer: React.FC<CompositionDrawerProps> = ({
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingTop:40,
-      padding: 10,
+      // Respecte la barre d'état / l'encoche plutôt qu'un décalage fixe.
+      paddingTop: insets.top + spacing.xs,
+      padding: spacing.sm,
       backgroundColor: colors.primary + '10',
       borderBottomWidth: 1,
       borderBottomColor: colors.border,
@@ -171,13 +164,13 @@ export const CompositionDrawer: React.FC<CompositionDrawerProps> = ({
     },
     sectionsContainer: {
       flex: 1,
-      paddingBottom: 80,
+      paddingBottom: 80 + insets.bottom,
     },
     sectionItem: {
       backgroundColor: colors.background2,
-      borderRadius: 12,
-      margin: 8,
-      padding: 10,
+      borderRadius: radius.md,
+      margin: spacing.xs,
+      padding: spacing.xs,
       minHeight: 64,
       borderColor: colors.card2,
       borderWidth: 2,
@@ -435,7 +428,10 @@ const baseName = sectionNames[sectionType as keyof typeof sectionNames] || 'Sect
       </Animated.View>
 
       {/* Drawer animé */}
-      <Animated.View style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}>
+      <Animated.View
+        style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}
+        pointerEvents={isOpen ? 'auto' : 'none'}
+      >
         {/* Header */}
         <View style={styles.header}>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>

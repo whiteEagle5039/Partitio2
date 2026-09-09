@@ -1,6 +1,4 @@
-import { useThemeColors } from '@/hooks/useThemeColors';
-import { useAppStore } from '@/stores/appStore';
-import { useRouter } from 'expo-router';
+import { usePathname, useRouter } from 'expo-router';
 import {
     HardDrive,
     Library,
@@ -11,168 +9,201 @@ import {
     X
 } from 'lucide-react-native';
 import React, { useEffect, useRef } from 'react';
-import { Animated, Dimensions, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Animated, ScrollView, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { MIN_TOUCH_TARGET, elevation, getDrawerWidth, touchSlop } from '@/constants/layout';
+import { useResponsive } from '@/hooks/useResponsive';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { useAppStore } from '@/stores/appStore';
 import { TextComponent } from '../uxComponents/TextComponent';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const DRAWER_WIDTH = 300;
+const menuItems = [
+  { icon: Search, label: 'Recherche', route: '/search' },
+  { icon: Library, label: 'Bibliothèque', route: '/library' },
+  { icon: PenTool, label: 'Composition', route: '/compose' },
+  { icon: HardDrive, label: 'Téléchargements', route: '/downloads' },
+  { icon: User, label: 'Profil', route: '/profile' },
+  { icon: Settings, label: 'Paramètres', route: '/setting' },
+];
 
 export function DrawerMenu() {
   const colors = useThemeColors();
+  const { spacing, radius, icon } = useResponsive();
   const { user, isDrawerOpen, setDrawerOpen } = useAppStore();
   const router = useRouter();
-  const slideAnim = useRef(new Animated.Value(DRAWER_WIDTH)).current; // Commence à droite (hors écran)
+  const pathname = usePathname();
+
+  const { width } = useWindowDimensions();
+  const drawerWidth = getDrawerWidth(width);
+
+  // Commence hors écran, à droite.
+  const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(slideAnim, {
-      toValue: isDrawerOpen ? 0 : DRAWER_WIDTH, // 0 = visible, DRAWER_WIDTH = caché à droite
-      duration: 200,
-      useNativeDriver: false,
+    Animated.timing(progress, {
+      toValue: isDrawerOpen ? 1 : 0,
+      duration: 220,
+      useNativeDriver: true,
     }).start();
-  }, [isDrawerOpen]);
+  }, [isDrawerOpen, progress]);
+
+  const translateX = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [drawerWidth, 0],
+  });
 
   const styles = StyleSheet.create({
     drawer: {
       position: 'absolute',
       top: 0,
-      right: 0, // Position à droite
+      right: 0,
       bottom: 0,
-      width: DRAWER_WIDTH,
+      width: drawerWidth,
       backgroundColor: colors.card,
       zIndex: 1001,
-      elevation: 16,
-      shadowColor: '#000',
-      shadowOffset: { width: -2, height: 0 }, // Ombre vers la gauche
-      shadowOpacity: 0.25,
-      shadowRadius: 8,
-
-      // Ajout de bord en haut à gauche
-      borderTopLeftRadius: 30, 
+      borderTopLeftRadius: radius.xl,
+      borderBottomLeftRadius: radius.xl,
+      overflow: 'hidden',
+      ...elevation(3),
     },
     header: {
-      padding: 15,
-      borderBottomWidth: 1,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: colors.border,
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
-      gap:14
+      gap: spacing.sm,
+    },
+    closeButton: {
+      minWidth: MIN_TOUCH_TARGET,
+      minHeight: MIN_TOUCH_TARGET,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     userInfo: {
       flex: 1,
-      flexDirection:'row'
-    },
-    closeButton: {
-      padding: 5,
-      paddingRight:0,
-    },
-    avatar: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      backgroundColor: colors.primary,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginBottom: 12,
+      minWidth: 0,
     },
     menuItems: {
       flex: 1,
-      paddingTop: 8,
+    },
+    menuContent: {
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.xs,
+      gap: spacing.xxs,
     },
     menuItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingVertical: 16,
+      gap: spacing.sm,
+      minHeight: MIN_TOUCH_TARGET,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.sm,
+      borderRadius: radius.md,
     },
-    menuIcon: {
-      marginRight: 16,
+    menuItemActive: {
+      backgroundColor: `${colors.primary}18`,
     },
     storageSection: {
-      padding: 20,
-      borderTopWidth: 1,
+      paddingHorizontal: spacing.md,
+      paddingTop: spacing.sm,
+      paddingBottom: spacing.md,
+      borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: colors.border,
+      gap: spacing.xxs,
     },
     storageBar: {
       height: 6,
       backgroundColor: colors.muted,
-      borderRadius: 2,
-      marginTop: 8,
+      borderRadius: radius.pill,
+      marginTop: spacing.xs,
+      overflow: 'hidden',
     },
     storageProgress: {
       height: '100%',
-      backgroundColor: colors.cardForeground,
-      borderRadius: 2,
+      backgroundColor: colors.primary,
+      borderRadius: radius.pill,
     },
   });
-
-  const menuItems = [
-    { icon: Search, label: 'Recherche', route: '/search' },
-    { icon: Library, label: 'Bibliothèque', route: '/library' },
-    { icon: PenTool, label: 'Composition', route: '/compose' },
-    { icon: HardDrive, label: 'Téléchargements', route: '/downloads' },
-    { icon: User, label: 'Profil', route: '/profile' },
-    { icon: Settings, label: 'Paramètres', route: '/setting' },
-  ];
 
   const handleMenuItemPress = (route: string) => {
     setDrawerOpen(false);
     router.push(route as any);
   };
 
-  const storagePercentage = user ? (user.storageUsed / user.storageLimit) * 100 : 0;
+  const storagePercentage = user
+    ? Math.min(100, Math.max(0, (user.storageUsed / user.storageLimit) * 100))
+    : 0;
 
   return (
-    <Animated.View style={[styles.drawer, { transform: [{ translateX: slideAnim }] }]}>
-      <SafeAreaView style={{ flex: 1 }}>
+    <Animated.View
+      style={[styles.drawer, { transform: [{ translateX }] }]}
+      pointerEvents={isDrawerOpen ? 'auto' : 'none'}
+      accessibilityViewIsModal={isDrawerOpen}
+    >
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'right', 'bottom']}>
         <View style={styles.header}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.closeButton}
             onPress={() => setDrawerOpen(false)}
+            hitSlop={touchSlop}
+            accessibilityRole="button"
+            accessibilityLabel="Fermer le menu"
           >
-            <X size={32} color={colors.icon} />
+            <X size={icon.lg} color={colors.icon} />
           </TouchableOpacity>
-          <View style={styles.userInfo} >
-            <TextComponent variante="body1" color={colors.blueSingle}>
+
+          <View style={styles.userInfo}>
+            <TextComponent variante="subtitle2" color={colors.text} numberOfLines={1}>
               {user?.name || 'Utilisateur'}
             </TextComponent>
-            <TextComponent variante="body1">'s Work</TextComponent>
-            {/* <TextComponent variante="caption" color={colors.text2}>
-              {user?.email || 'user@harmonia.com'}
-            </TextComponent> */}
+            <TextComponent variante="body5" color={colors.text2} numberOfLines={1}>
+              {user?.email || 'Espace de travail'}
+            </TextComponent>
           </View>
         </View>
 
-        <ScrollView style={styles.menuItems}>
-          {menuItems.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.menuItem}
-              onPress={() => handleMenuItemPress(item.route)}
-            >
-              <item.icon size={32} color={colors.primary} style={styles.menuIcon} />
-              <TextComponent variante="subtitle2">
-                {item.label}
-              </TextComponent>
-            </TouchableOpacity>
-          ))}
+        <ScrollView
+          style={styles.menuItems}
+          contentContainerStyle={styles.menuContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {menuItems.map((item) => {
+            const isActive = pathname === item.route;
+
+            return (
+              <TouchableOpacity
+                key={item.route}
+                style={[styles.menuItem, isActive && styles.menuItemActive]}
+                onPress={() => handleMenuItemPress(item.route)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: isActive }}
+              >
+                <item.icon size={icon.md} color={isActive ? colors.primary : colors.icon} />
+                <TextComponent
+                  variante="subtitle3"
+                  color={isActive ? colors.primary : colors.text}
+                  numberOfLines={1}
+                  style={{ flex: 1 }}
+                >
+                  {item.label}
+                </TextComponent>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         <View style={styles.storageSection}>
-          <TextComponent variante="body2" color={colors.text2} style={{ marginBottom: 4 }}>
+          <TextComponent variante="subtitle4" color={colors.text}>
             Stockage utilisé
           </TextComponent>
-          <TextComponent variante="body4" color={colors.blueSingle}>
+          <TextComponent variante="body5" color={colors.text2}>
             {user?.storageUsed || 0} MB / {user?.storageLimit || 100} MB
           </TextComponent>
           <View style={styles.storageBar}>
-            <View 
-              style={[
-                styles.storageProgress, 
-                { width: `${storagePercentage}%` }
-              ]} 
-            />
+            <View style={[styles.storageProgress, { width: `${storagePercentage}%` }]} />
           </View>
         </View>
       </SafeAreaView>

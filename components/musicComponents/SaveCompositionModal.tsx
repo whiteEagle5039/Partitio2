@@ -1,19 +1,21 @@
+import { Library, Save, X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
   TextInput,
   TouchableOpacity,
-  Modal,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
+  View,
 } from 'react-native';
-import { useThemeColors } from '@/hooks/useThemeColors';
-import { X, Save, Library } from 'lucide-react-native';
-import { TextComponent } from '@/components/uxComponents/TextComponent';
 
+import { ButtonComponent } from '@/components/uxComponents/ButtonComponent';
+import { TextComponent } from '@/components/uxComponents/TextComponent';
+import { MAX_FONT_SCALE, MIN_TOUCH_TARGET, elevation, touchSlop } from '@/constants/layout';
+import { useResponsive } from '@/hooks/useResponsive';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface SaveCompositionModalProps {
   visible: boolean;
@@ -29,12 +31,13 @@ export const SaveCompositionModal: React.FC<SaveCompositionModalProps> = ({
   isNewComposition,
 }) => {
   const colors = useThemeColors();
+  const { spacing, radius, icon, fontSize } = useResponsive();
   const [composerName, setComposerName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
     const name = composerName.trim() || 'Anonyme';
-    
+
     setIsSaving(true);
     try {
       await onSave(name);
@@ -57,192 +60,141 @@ export const SaveCompositionModal: React.FC<SaveCompositionModalProps> = ({
   const styles = StyleSheet.create({
     overlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.13)',
+      backgroundColor: 'rgba(0, 0, 0, 0.35)',
       justifyContent: 'center',
       alignItems: 'center',
+      padding: spacing.lg,
     },
     container: {
-      width: '95%',
-      maxWidth: 400,
+      width: '100%',
+      // Reste lisible du petit téléphone à la tablette.
+      maxWidth: 440,
+      maxHeight: '90%',
       backgroundColor: colors.card,
-      borderRadius: 20,
-      padding: 24,
-      elevation: 5,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.65,
-      shadowRadius: 8,
+      borderRadius: radius.xl,
+      borderWidth: 1,
+      borderColor: colors.border,
+      padding: spacing.lg,
+      gap: spacing.lg,
+      ...elevation(3),
     },
     header: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 20,
+      gap: spacing.sm,
     },
-
     closeButton: {
-      padding: 4,
-    },
-    content: {
-      gap: 20,
-    },
-    label: {
-      fontSize: 15,
-      fontWeight: '600',
-      color: colors.text,
-      marginBottom: 8,
+      minWidth: MIN_TOUCH_TARGET,
+      minHeight: MIN_TOUCH_TARGET,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     input: {
       backgroundColor: colors.background,
-      borderRadius: 12,
-      padding: 14,
-      fontSize: 16,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.sm,
+      paddingVertical: spacing.sm,
+      minHeight: MIN_TOUCH_TARGET,
+      fontSize: fontSize(16),
       color: colors.text,
       borderWidth: 1,
       borderColor: colors.border,
-      fontFamily: 'Tiempos-Regular',
-      lineHeight: 20,
     },
     infoContainer: {
       flexDirection: 'row',
       alignItems: 'flex-start',
-      backgroundColor: colors.primary + '15',
-      padding: 14,
-      borderRadius: 12,
-      gap: 12,
-    },
-    infoText: {
-      flex: 1,
-      color: colors.text,
-    },
-    buttonContainer: {
-      flexDirection: 'row',
-      gap: 12,
-      marginTop: 8,
-    },
-    button: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 14,
-      borderRadius: 12,
-      gap: 4,
-    },
-    cancelButton: {
-      backgroundColor: colors.border,
-    },
-    saveButton: {
-      backgroundColor: colors.primary,
-    },
-    buttonDisabled: {
-      opacity: 0.5,
-    },
-    buttonText: {
-      fontSize: 16,
-      fontWeight: '600',
-    },
-    cancelButtonText: {
-      color: colors.text,
-    },
-    saveButtonText: {
-      color: '#FFFFFF',
+      backgroundColor: `${colors.primary}15`,
+      padding: spacing.sm,
+      borderRadius: radius.md,
+      gap: spacing.sm,
     },
   });
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={handleClose}
-    >
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.overlay}
       >
         <TouchableOpacity
           style={StyleSheet.absoluteFill}
           activeOpacity={1}
           onPress={handleClose}
+          accessibilityRole="button"
+          accessibilityLabel="Fermer"
         />
-        
+
         <View style={styles.container}>
           <View style={styles.header}>
-            <TextComponent variante='subtitle2' color={colors.text}>
+            <TextComponent variante="subtitle2" color={colors.text} style={{ flex: 1 }}>
               {isNewComposition ? 'Sauvegarder la composition' : 'Enregistrer les modifications'}
             </TextComponent>
+
             <TouchableOpacity
               onPress={handleClose}
               style={styles.closeButton}
               disabled={isSaving}
+              hitSlop={touchSlop}
+              accessibilityRole="button"
+              accessibilityLabel="Fermer"
             >
-              <X size={24} color={colors.text} />
+              <X size={icon.md} color={colors.icon} />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.content}>
+          <ScrollView
+            contentContainerStyle={{ gap: spacing.md }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             {isNewComposition && (
-              <>
-                <View>
-                  <TextComponent variante="subtitle3" style={styles.label}>Nom de l'auteur</TextComponent>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Entrez votre nom"
-                    placeholderTextColor={colors.text + '60'}
-                    value={composerName}
-                    onChangeText={setComposerName}
-                    autoFocus
-                    editable={!isSaving}
-                  />
-                </View>
-
-                <View style={styles.infoContainer}>
-                  <Library size={20} color={colors.primary} style={{ marginTop: 2 }} />
-                  <TextComponent variante='body4' style={styles.infoText}>
-                    Vous pourrez retrouver et consulter votre composition à tout moment dans la bibliothèque.
-                  </TextComponent>
-                </View>
-              </>
-            )}
-
-            {!isNewComposition && (
-              <View style={styles.infoContainer}>
-                <Library size={20} color={colors.primary} style={{ marginTop: 2 }} />
-                <TextComponent variante='body4' style={styles.infoText}>
-                  Les modifications seront enregistrées. Retrouvez votre composition dans la bibliothèque.
+              <View style={{ gap: spacing.xs }}>
+                <TextComponent variante="subtitle3" color={colors.text}>
+                  Nom de l&apos;auteur
                 </TextComponent>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Entrez votre nom"
+                  placeholderTextColor={colors.text2}
+                  value={composerName}
+                  onChangeText={setComposerName}
+                  editable={!isSaving}
+                  returnKeyType="done"
+                  onSubmitEditing={handleSave}
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  accessibilityLabel="Nom de l'auteur"
+                  autoFocus
+                />
               </View>
             )}
 
-            <View style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={[styles.button, styles.cancelButton, isSaving && styles.buttonDisabled]}
-                onPress={handleClose}
-                disabled={isSaving}
-              >
-                <TextComponent variante='subtitle3' style={[styles.buttonText, styles.cancelButtonText]}>
-                  Annuler
-                </TextComponent>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.button, styles.saveButton, isSaving && styles.buttonDisabled]}
-                onPress={handleSave}
-                disabled={isSaving}
-              >
-                {isSaving ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
-                ) : (
-                  <>
-                    <Save size={18} color="#FFFFFF" />
-                    <TextComponent variante='subtitle3' style={[styles.buttonText, styles.saveButtonText]}>
-                      Sauvegarder
-                    </TextComponent>
-                  </>
-                )}
-              </TouchableOpacity>
+            <View style={styles.infoContainer}>
+              <Library size={icon.sm} color={colors.primary} />
+              <TextComponent variante="body5" color={colors.text} style={{ flex: 1 }}>
+                {isNewComposition
+                  ? 'Vous pourrez retrouver et consulter votre composition à tout moment dans la bibliothèque.'
+                  : 'Les modifications seront enregistrées. Retrouvez votre composition dans la bibliothèque.'}
+              </TextComponent>
             </View>
+          </ScrollView>
+
+          <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+            <ButtonComponent
+              title="Annuler"
+              onPress={handleClose}
+              variant="secondary"
+              disabled={isSaving}
+              style={{ flex: 1 }}
+            />
+            <ButtonComponent
+              title="Sauvegarder"
+              onPress={handleSave}
+              icon={Save}
+              loading={isSaving}
+              disabled={isSaving}
+              style={{ flex: 1 }}
+            />
           </View>
         </View>
       </KeyboardAvoidingView>

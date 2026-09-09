@@ -1,25 +1,26 @@
-import { TextComponent } from '@/components/uxComponents/TextComponent';
-import { useThemeColors } from '@/hooks/useThemeColors';
-import { useAppStore } from '@/stores/appStore';
-import { useRouter } from 'expo-router';
 import {
-    ArrowLeft,
-    Bell,
-    ChevronRight,
-    Download,
-    HelpCircle,
-    Info,
-    LucideIcon,
-    Moon,
-    RefreshCw,
-    Shield,
-    Trash2
+  Bell,
+  ChevronRight,
+  Download,
+  HelpCircle,
+  Info,
+  LucideIcon,
+  Moon,
+  RefreshCw,
+  Shield,
+  Trash2,
 } from 'lucide-react-native';
 import React from 'react';
 import { ScrollView, StyleSheet, Switch, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-/** Types discriminés pour les paramètres */
+import { Content, Screen } from '@/components/uxComponents/Screen';
+import { ScreenHeader } from '@/components/uxComponents/ScreenHeader';
+import { TextComponent } from '@/components/uxComponents/TextComponent';
+import { MIN_TOUCH_TARGET } from '@/constants/layout';
+import { useResponsive } from '@/hooks/useResponsive';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { useAppStore } from '@/stores/appStore';
+
 type SwitchItem = {
   icon: LucideIcon;
   title: string;
@@ -38,101 +39,13 @@ type NavigationItem = {
 };
 
 type SettingItem = SwitchItem | NavigationItem;
-
-type SettingSection = {
-  title: string;
-  items: SettingItem[];
-};
-
-/** Type pour les actions dangereuses */
-type DangerAction = {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-  onPress: () => void;
-};
+type SettingSection = { title: string; items: SettingItem[] };
+type DangerAction = { icon: LucideIcon; title: string; description: string; onPress: () => void };
 
 export default function SettingsScreen() {
   const colors = useThemeColors();
-  const router = useRouter();
-  
-  // Utiliser le store pour les paramètres
-  const { settings, updateSettings, setThemeMode, themeMode } = useAppStore();
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.card,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      backgroundColor: colors.card,
-      elevation: 2,
-    },
-    backButton: {
-      marginRight: 16,
-      padding: 8,
-    },
-    headerTitle: {
-      flex: 1,
-    },
-    content: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    section: {
-      backgroundColor: colors.card,
-      margin: 20,
-      borderRadius: 16,
-      overflow: 'hidden',
-    },
-    sectionHeader: {
-      padding: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    settingItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    settingItemLast: {
-      borderBottomWidth: 0,
-    },
-    settingIcon: {
-      marginRight: 16,
-    },
-    settingContent: {
-      flex: 1,
-    },
-    settingTitle: {
-      marginBottom: 4,
-    },
-    settingDescription: {
-      opacity: 0.7,
-    },
-    settingAction: {
-      marginLeft: 12,
-    },
-    dangerSection: {
-      backgroundColor: colors.destructive + '10',
-      borderColor: colors.destructive + '30',
-      borderWidth: 1,
-    },
-    dangerItem: {
-      borderBottomColor: colors.destructive + '20',
-    },
-    versionInfo: {
-      alignItems: 'center',
-      padding: 20,
-    },
-  });
+  const { spacing, radius, icon } = useResponsive();
+  const { settings, updateSettings } = useAppStore();
 
   const settingSections: SettingSection[] = [
     {
@@ -144,9 +57,7 @@ export default function SettingsScreen() {
           description: 'Activer le thème sombre',
           type: 'switch',
           value: settings.darkMode,
-          onValueChange: (value) => {
-            updateSettings({ darkMode: value });
-          },
+          onValueChange: (value) => updateSettings({ darkMode: value }),
         },
       ],
     },
@@ -159,9 +70,7 @@ export default function SettingsScreen() {
           description: 'Recevoir des notifications',
           type: 'switch',
           value: settings.notifications,
-          onValueChange: (value) => {
-            updateSettings({ notifications: value });
-          },
+          onValueChange: (value) => updateSettings({ notifications: value }),
         },
       ],
     },
@@ -174,9 +83,7 @@ export default function SettingsScreen() {
           description: 'Télécharger automatiquement les nouvelles partitions proposées par Partitio',
           type: 'switch',
           value: settings.autoDownload,
-          onValueChange: (value) => {
-            updateSettings({ autoDownload: value });
-          },
+          onValueChange: (value) => updateSettings({ autoDownload: value }),
         },
       ],
     },
@@ -197,15 +104,15 @@ export default function SettingsScreen() {
       items: [
         {
           icon: HelpCircle,
-          title: 'Centre d\'aide',
-          description: 'FAQ et guides d\'utilisation',
+          title: "Centre d'aide",
+          description: "FAQ et guides d'utilisation",
           type: 'navigation',
           onPress: () => console.log('Aide'),
         },
         {
           icon: Info,
           title: 'À propos',
-          description: 'Informations sur l\'application',
+          description: "Informations sur l'application",
           type: 'navigation',
           onPress: () => console.log('À propos'),
         },
@@ -219,12 +126,7 @@ export default function SettingsScreen() {
       title: 'Réinitialiser les paramètres',
       description: 'Remettre tous les paramètres par défaut',
       onPress: () => {
-        updateSettings({
-          notifications: true,
-          autoDownload: false,
-          darkMode: true, // Par défaut sur dark
-        });
-        console.log('Paramètres réinitialisés');
+        updateSettings({ notifications: true, autoDownload: false, darkMode: false });
       },
     },
     {
@@ -235,121 +137,143 @@ export default function SettingsScreen() {
     },
   ];
 
-  return (
-    <View style={styles.container}>
-      <SafeAreaView style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <ArrowLeft size={24} color={colors.icon} />
-          </TouchableOpacity>
-          
-          <View style={styles.headerTitle}>
-            <TextComponent variante="subtitle1">
-              Paramètres
-            </TextComponent>
-          </View>
-        </View>
+  const styles = StyleSheet.create({
+    section: {
+      backgroundColor: colors.card,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
+      overflow: 'hidden',
+    },
+    sectionHeader: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+      backgroundColor: colors.card2,
+    },
+    item: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing.sm,
+      minHeight: MIN_TOUCH_TARGET + spacing.xs,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border,
+    },
+    itemLast: { borderBottomWidth: 0 },
+    itemBody: { flex: 1, minWidth: 0, gap: 2 },
+    dangerSection: {
+      backgroundColor: `${colors.destructive}10`,
+      borderColor: `${colors.destructive}30`,
+    },
+  });
 
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-          {/* Sections de paramètres */}
-          {settingSections.map((section, sectionIndex) => (
-            <View key={sectionIndex} style={styles.section}>
+  return (
+    <Screen background={colors.card}>
+      <ScreenHeader title="Paramètres" />
+
+      <ScrollView
+        style={{ flex: 1, backgroundColor: colors.background }}
+        contentContainerStyle={{ paddingVertical: spacing.md, gap: spacing.md }}
+        showsVerticalScrollIndicator={false}
+      >
+        {settingSections.map((section) => (
+          <Content key={section.title}>
+            <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <TextComponent variante="subtitle2">
+                <TextComponent variante="subtitle3" color={colors.text}>
                   {section.title}
                 </TextComponent>
               </View>
-              
+
               {section.items.map((item, itemIndex) => (
                 <TouchableOpacity
-                  key={itemIndex}
-                  style={[
-                    styles.settingItem,
-                    itemIndex === section.items.length - 1 && styles.settingItemLast
-                  ]}
+                  key={item.title}
+                  style={[styles.item, itemIndex === section.items.length - 1 && styles.itemLast]}
                   onPress={item.type === 'navigation' ? item.onPress : undefined}
                   disabled={item.type === 'switch'}
+                  accessibilityRole={item.type === 'navigation' ? 'button' : undefined}
                 >
-                  <item.icon size={24} color={colors.icon} style={styles.settingIcon} />
-                  
-                  <View style={styles.settingContent}>
-                    <TextComponent variante="subtitle2" style={styles.settingTitle}>
+                  <item.icon size={icon.md} color={colors.icon} />
+
+                  <View style={styles.itemBody}>
+                    <TextComponent variante="subtitle3" color={colors.text}>
                       {item.title}
                     </TextComponent>
-                    <TextComponent variante="body4" style={styles.settingDescription}>
+                    <TextComponent variante="body5" color={colors.text2}>
                       {item.description}
                     </TextComponent>
                   </View>
-                  
-                  <View style={styles.settingAction}>
-                    {item.type === 'switch' ? (
-                      <Switch
-                        value={item.value}
-                        onValueChange={item.onValueChange}
-                        trackColor={{ false: colors.muted, true: colors.primary + '40' }}
-                        thumbColor={item.value ? colors.primary : colors.text2}
-                      />
-                    ) : (
-                      <ChevronRight size={20} color={colors.text2} />
-                    )}
-                  </View>
+
+                  {item.type === 'switch' ? (
+                    <Switch
+                      value={item.value}
+                      onValueChange={item.onValueChange}
+                      trackColor={{ false: colors.muted, true: `${colors.primary}66` }}
+                      thumbColor={item.value ? colors.primary : colors.text2}
+                      accessibilityLabel={item.title}
+                    />
+                  ) : (
+                    <ChevronRight size={icon.sm} color={colors.text2} />
+                  )}
                 </TouchableOpacity>
               ))}
             </View>
-          ))}
+          </Content>
+        ))}
 
-          {/* Actions dangereuses */}
+        {/* Zone de danger */}
+        <Content>
           <View style={[styles.section, styles.dangerSection]}>
-            <View style={styles.sectionHeader}>
-              <TextComponent variante="subtitle2" color={colors.destructive}>
+            <View style={[styles.sectionHeader, { backgroundColor: 'transparent' }]}>
+              <TextComponent variante="subtitle3" color={colors.destructive}>
                 Zone de danger
               </TextComponent>
             </View>
-            
+
             {dangerActions.map((action, index) => (
               <TouchableOpacity
-                key={index}
+                key={action.title}
                 style={[
-                  styles.settingItem,
-                  styles.dangerItem,
-                  index === dangerActions.length - 1 && styles.settingItemLast
+                  styles.item,
+                  { borderBottomColor: `${colors.destructive}20` },
+                  index === dangerActions.length - 1 && styles.itemLast,
                 ]}
                 onPress={action.onPress}
+                accessibilityRole="button"
               >
-                <action.icon size={24} color={colors.destructive} style={styles.settingIcon} />
-                
-                <View style={styles.settingContent}>
-                  <TextComponent variante="subtitle2" style={styles.settingTitle} color={colors.destructive}>
+                <action.icon size={icon.md} color={colors.destructive} />
+
+                <View style={styles.itemBody}>
+                  <TextComponent variante="subtitle3" color={colors.destructive}>
                     {action.title}
                   </TextComponent>
-                  <TextComponent variante="body4" style={styles.settingDescription}>
+                  <TextComponent variante="body5" color={colors.text2}>
                     {action.description}
                   </TextComponent>
                 </View>
-                
-                <ChevronRight size={20} color={colors.destructive} style={styles.settingAction} />
+
+                <ChevronRight size={icon.sm} color={colors.destructive} />
               </TouchableOpacity>
             ))}
           </View>
+        </Content>
 
-          {/* Informations de version */}
-          <View style={styles.versionInfo}>
-            <TextComponent variante="body4" color={colors.text2}>
-              Harmonia v1.0.0
-            </TextComponent>
-            <TextComponent variante="body4" color={colors.text2} style={{ marginTop: 4 }}>
-              © 2025 Harmonia. Tous droits réservés.
-            </TextComponent>
-            <TextComponent variante="body4" color={colors.text2} style={{ marginTop: 4 }}>
-              By Jemuel G. ANIFA
-            </TextComponent>
-          </View>
-        </ScrollView>
-      </SafeAreaView>
-    </View>
+        {/* Informations de version */}
+        <View style={{ alignItems: 'center', gap: spacing.xxs, paddingVertical: spacing.lg }}>
+          <TextComponent variante="body5" color={colors.text2}>
+            Harmonia v1.0.0
+          </TextComponent>
+          <TextComponent variante="caption" color={colors.text2}>
+            © 2025 Harmonia. Tous droits réservés.
+          </TextComponent>
+          <TextComponent variante="caption" color={colors.text2}>
+            By Jemuel G. ANIFA
+          </TextComponent>
+        </View>
+      </ScrollView>
+    </Screen>
   );
 }

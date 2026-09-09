@@ -1,50 +1,62 @@
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Mail } from 'lucide-react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  Animated,
+  Easing,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Vibration,
+  View,
+} from 'react-native';
+
+import { Content, Screen } from '@/components/uxComponents/Screen';
+import { ScreenHeader } from '@/components/uxComponents/ScreenHeader';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
+import { MAX_FONT_SCALE, touchSlop } from '@/constants/layout';
+import { useResponsive } from '@/hooks/useResponsive';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppStore } from '@/stores/appStore';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Mail } from 'lucide-react-native';
-import React, { useEffect, useRef, useState } from 'react';
-import {
-    Animated,
-    Easing,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    Vibration,
-    View
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Composant pour l'icône harmonia
-const harmoniaIcon = ({ size = 32, color }: { size?: number; color: string }) => (
-  <View style={{
-    width: size,
-    height: size,
-    backgroundColor: color,
-    borderRadius: size / 2,
-    justifyContent: 'center',
-    alignItems: 'center',
-  }}>
-    <TextComponent variante="body0" color="#FFFFFF" style={{ fontWeight: 'bold' }}>
+/** Pastille de marque (composant, donc en PascalCase). */
+const HarmoniaIcon = ({ size = 32, color }: { size?: number; color: string }) => (
+  <View
+    style={{
+      width: size,
+      height: size,
+      backgroundColor: color,
+      borderRadius: size / 2,
+      justifyContent: 'center',
+      alignItems: 'center',
+    }}
+  >
+    <TextComponent variante="subtitle1" color="#FFFFFF">
       P
     </TextComponent>
   </View>
 );
 
+const CODE_LENGTH = 6;
+
 export default function VerificationCodeScreen() {
   const colors = useThemeColors();
   const router = useRouter();
   const { email } = useLocalSearchParams<{ email: string }>();
+  const { spacing, radius, scale, fontSize } = useResponsive();
   const inputRef = useRef<TextInput>(null);
-  
-  // Récupérer les fonctions d'authentification depuis le store
+
   const { setAuthenticated, setUser } = useAppStore();
-  
+
   const [code, setCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [fadeAnim] = useState(new Animated.Value(0));
-  const [shakeAnim] = useState(new Animated.Value(0));
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const shakeAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -54,13 +66,11 @@ export default function VerificationCodeScreen() {
       useNativeDriver: true,
     }).start();
 
-    // Focus automatique sur l'input
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 500);
-  }, []);
+    const timer = setTimeout(() => inputRef.current?.focus(), 500);
+    return () => clearTimeout(timer);
+  }, [fadeAnim]);
 
-  const shakeAnimation = () => {
+  const shakeAnimation = useCallback(() => {
     Vibration.vibrate(100);
     Animated.sequence([
       Animated.timing(shakeAnim, { toValue: 10, duration: 100, useNativeDriver: true }),
@@ -68,264 +78,206 @@ export default function VerificationCodeScreen() {
       Animated.timing(shakeAnim, { toValue: 10, duration: 100, useNativeDriver: true }),
       Animated.timing(shakeAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
     ]).start();
-  };
+  }, [shakeAnim]);
+
+  const handleVerifyCode = useCallback(
+    (codeToVerify: string) => {
+      if (codeToVerify.length !== CODE_LENGTH) return;
+
+      setIsLoading(true);
+      setError('');
+
+      setTimeout(() => {
+        setIsLoading(false);
+
+        // Code de démonstration.
+        if (codeToVerify === '123456') {
+          setUser({
+            id: '1',
+            name: 'Owen',
+            email: email || 'user@harmonia.com',
+            storageUsed: 25.2,
+            storageLimit: 100,
+          });
+          setAuthenticated(true);
+          router.replace('/homescreen');
+        } else {
+          setError('Code incorrect. Réessayez.');
+          setCode('');
+          shakeAnimation();
+          setTimeout(() => inputRef.current?.focus(), 100);
+        }
+      }, 1500);
+    },
+    [email, router, setAuthenticated, setUser, shakeAnimation],
+  );
 
   const handleCodeChange = (text: string) => {
-    // Ne permettre que les chiffres et limiter à 6 caractères
-    const numericCode = text.replace(/[^0-9]/g, '').slice(0, 6);
+    const numericCode = text.replace(/[^0-9]/g, '').slice(0, CODE_LENGTH);
     setCode(numericCode);
     setError('');
-    
-    // Vérification automatique quand 6 chiffres sont saisis
-    if (numericCode.length === 6) {
+
+    if (numericCode.length === CODE_LENGTH) {
       handleVerifyCode(numericCode);
     }
   };
 
-  const handleVerifyCode = async (codeToVerify = code) => {
-    if (codeToVerify.length !== 6) return;
-    
-    setIsLoading(true);
-    setError('');
-    
-    // Simulation de vérification
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      // Code correct pour la démo : 123456
-      if (codeToVerify === '123456') {
-        // Succès - définir l'utilisateur comme authentifié
-        const user = {
-          id: '1',
-          name: 'Owen',
-          email: email || 'user@harmonia.com',
-          storageUsed: 25.2,
-          storageLimit: 100,
-        };
-        
-        // Mettre à jour le store
-        setUser(user);
-        setAuthenticated(true);
-        
-        // Navigation vers l'app
-        router.replace('/homescreen');
-      } else {
-        // Erreur
-        setError('Code incorrect. Réessayez.');
-        setCode('');
-        shakeAnimation();
-        // Refocus sur l'input après l'erreur
-        setTimeout(() => {
-          inputRef.current?.focus();
-        }, 100);
-      }
-    }, 1500);
-  };
-
-  const handleChangeEmail = () => {
-    router.back();
-  };
-
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-    },
-    backButton: {
-      padding: 8,
-      marginRight: 16,
-    },
-    content: {
-      flex: 1,
-      paddingHorizontal: 24,
-      alignItems: 'center',
+    scrollContent: {
+      flexGrow: 1,
+      justifyContent: 'center',
+      paddingVertical: spacing.xl,
     },
     logoContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginTop: 40,
-      marginBottom: 60,
-    },
-    logoText: {
-      marginLeft: 12,
-      fontSize: 28,
-      fontWeight: '600',
+      justifyContent: 'center',
+      gap: spacing.sm,
+      marginBottom: spacing.xxl,
     },
     title: {
       textAlign: 'center',
-      marginBottom: 40,
+      marginBottom: spacing.xl,
     },
     codeInputContainer: {
-      marginBottom: 40,
       width: '100%',
-      maxWidth: 300,
+      maxWidth: 320,
+      alignSelf: 'center',
+      marginBottom: spacing.lg,
     },
     codeInput: {
-      height: 56,
-      borderRadius: 12,
+      minHeight: scale(56),
+      borderRadius: radius.md,
       borderWidth: 2,
-      borderColor: colors.border,
-      backgroundColor: colors.card,
-      paddingHorizontal: 20,
-      fontSize: 18,
-      fontWeight: '500',
+      borderColor: error ? colors.destructive : code.length > 0 ? colors.primary : colors.border,
+      backgroundColor: error ? `${colors.destructive}10` : colors.card,
+      paddingHorizontal: spacing.lg,
+      fontSize: fontSize(20),
       color: colors.text,
       textAlign: 'center',
-      letterSpacing: 4,
+      letterSpacing: 6,
     },
-    codeInputFocused: {
-      borderColor: colors.primary,
-    },
-    codeInputError: {
-      borderColor: colors.destructive,
-      backgroundColor: colors.destructive + '10',
+    errorText: {
+      textAlign: 'center',
+      marginBottom: spacing.md,
     },
     emailInfo: {
       alignItems: 'center',
-      marginBottom: 30,
+      gap: spacing.xs,
     },
     mailIcon: {
-      width: 60,
-      height: 60,
-      borderRadius: 30,
+      width: scale(56),
+      height: scale(56),
+      borderRadius: radius.pill,
       backgroundColor: colors.card,
       justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: 16,
       borderWidth: 1,
       borderColor: colors.border,
-    },
-    emailText: {
-      textAlign: 'center',
-      marginBottom: 8,
-    },
-    emailAddress: {
-      fontWeight: '600',
-      marginBottom: 16,
-    },
-    changeEmailButton: {
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-    },
-    changeEmailText: {
-      color: colors.primary,
-      textDecorationLine: 'underline',
-    },
-    errorText: {
-      color: colors.destructive,
-      textAlign: 'center',
-      marginBottom: 20,
+      marginBottom: spacing.xs,
     },
     loadingOverlay: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: colors.background + 'AA',
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: `${colors.background}CC`,
       justifyContent: 'center',
       alignItems: 'center',
+      gap: spacing.sm,
     },
   });
 
   return (
-    <View style={styles.container}>
-      
-      <SafeAreaView style={styles.container}>
-        {/* Header avec bouton retour */}
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <ArrowLeft size={24} color={colors.icon} />
-          </TouchableOpacity>
-        </View>
+    <Screen edges={['top', 'left', 'right', 'bottom']}>
+      <ScreenHeader bordered={false} onBack={() => router.back()} />
 
-        <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
-          {/* Logo et nom de l'app */}
-          <View style={styles.logoContainer}>
-            <harmoniaIcon size={64} color={colors.primary} />
-            <TextComponent style={styles.logoText} color={colors.text} variante='body1'>
-              harmonia
-            </TextComponent>
-          </View>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <Content>
+            <Animated.View style={{ opacity: fadeAnim }}>
+              <View style={styles.logoContainer}>
+                <HarmoniaIcon size={scale(56)} color={colors.primary} />
+                <TextComponent variante="subtitle1" color={colors.text}>
+                  Harmonia
+                </TextComponent>
+              </View>
 
-          {/* Titre */}
-          <TextComponent style={styles.title} color={colors.text} variante='body1'>
-            Entrez le code que nous avons envoyé à votre email
-          </TextComponent>
-
-          {/* Input simple pour le code */}
-          <Animated.View 
-            style={[
-              styles.codeInputContainer,
-              { transform: [{ translateX: shakeAnim }] }
-            ]}
-          >
-            <TextInput
-              ref={inputRef}
-              style={[
-                styles.codeInput,
-                code.length > 0 && !error && styles.codeInputFocused,
-                error && styles.codeInputError
-              ]}
-              value={code}
-              onChangeText={handleCodeChange}
-              placeholder="Code"
-              placeholderTextColor={colors.text2}
-              keyboardType="numeric"
-              maxLength={6}
-              autoComplete="sms-otp"
-              textContentType="oneTimeCode"
-              autoFocus
-            />
-          </Animated.View>
-
-          {/* Message d'erreur */}
-          {error ? (
-            <TextComponent variante="body3" style={styles.errorText}>
-              {error}
-            </TextComponent>
-          ) : null}
-
-          {/* Informations email */}
-          <View style={styles.emailInfo}>
-            <View style={styles.mailIcon}>
-              <Mail size={24} color={colors.primary} />
-            </View>
-            <TextComponent variante="body2" style={styles.emailText}>
-              Nous avons envoyé un email à
-            </TextComponent>
-            <TextComponent variante="subtitle2" style={styles.emailAddress} color={colors.text}>
-              {email || 'votre@email.com'}
-            </TextComponent>
-            <TouchableOpacity 
-              style={styles.changeEmailButton}
-              onPress={handleChangeEmail}
-            >
-              <TextComponent variante="body2" style={styles.changeEmailText}>
-                Changer l'adresse email
+              <TextComponent variante="body2" color={colors.text} style={styles.title}>
+                Entrez le code que nous avons envoyé à votre email
               </TextComponent>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
 
-        {/* Overlay de chargement */}
-        {isLoading && (
-          <View style={styles.loadingOverlay}>
-            <TextComponent variante="subtitle2" color={colors.text}>
-              Vérification en cours...
-            </TextComponent>
-          </View>
-        )}
-      </SafeAreaView>
-    </View>
+              <Animated.View
+                style={[styles.codeInputContainer, { transform: [{ translateX: shakeAnim }] }]}
+              >
+                <TextInput
+                  ref={inputRef}
+                  style={styles.codeInput}
+                  value={code}
+                  onChangeText={handleCodeChange}
+                  placeholder="Code"
+                  placeholderTextColor={colors.text2}
+                  keyboardType="number-pad"
+                  maxLength={CODE_LENGTH}
+                  autoComplete="sms-otp"
+                  textContentType="oneTimeCode"
+                  maxFontSizeMultiplier={MAX_FONT_SCALE}
+                  accessibilityLabel="Code de vérification à six chiffres"
+                  autoFocus
+                />
+              </Animated.View>
+
+              {!!error && (
+                <TextComponent variante="body4" color={colors.destructive} style={styles.errorText}>
+                  {error}
+                </TextComponent>
+              )}
+
+              <View style={styles.emailInfo}>
+                <View style={styles.mailIcon}>
+                  <Mail size={22} color={colors.primary} />
+                </View>
+
+                <TextComponent variante="body4" color={colors.text2} style={{ textAlign: 'center' }}>
+                  Nous avons envoyé un email à
+                </TextComponent>
+
+                <TextComponent variante="subtitle3" color={colors.text} numberOfLines={1}>
+                  {email || 'votre@email.com'}
+                </TextComponent>
+
+                <TouchableOpacity
+                  onPress={() => router.back()}
+                  hitSlop={touchSlop}
+                  style={{ paddingVertical: spacing.xs, paddingHorizontal: spacing.md }}
+                  accessibilityRole="button"
+                >
+                  <TextComponent
+                    variante="body4"
+                    color={colors.primary}
+                    style={{ textDecorationLine: 'underline' }}
+                  >
+                    Changer l&apos;adresse email
+                  </TextComponent>
+                </TouchableOpacity>
+              </View>
+            </Animated.View>
+          </Content>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <TextComponent variante="subtitle3" color={colors.text}>
+            Vérification en cours...
+          </TextComponent>
+        </View>
+      )}
+    </Screen>
   );
 }

@@ -1,66 +1,81 @@
-import { useAppStore } from '@/stores/appStore';
 import React, { useEffect, useRef } from 'react';
-import { Animated, Dimensions, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { DrawerMenu } from './musicComponents/DrawerMenu';
+import { Animated, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const DRAWER_WIDTH = 230;
+import { getDrawerWidth } from '@/constants/layout';
+import { useAppStore } from '@/stores/appStore';
+import { DrawerMenu } from './musicComponents/DrawerMenu';
 
 interface WrapperComponentProps {
   children: React.ReactNode;
   showDrawer?: boolean; // Option pour désactiver le drawer sur certaines pages
 }
 
+/**
+ * Enveloppe d'écran gérant le tiroir « push » : le contenu glisse vers la
+ * gauche exactement de la largeur du tiroir, calculée à partir de la fenêtre
+ * courante (rotation et multi-fenêtre inclus).
+ */
 export function WrapperComponent({ children, showDrawer = true }: WrapperComponentProps) {
   const { isDrawerOpen, setDrawerOpen } = useAppStore();
-  const slideAnim = useRef(new Animated.Value(0)).current;
+  const { width } = useWindowDimensions();
+  const drawerWidth = getDrawerWidth(width);
+
+  const progress = useRef(new Animated.Value(0)).current;
+  const open = showDrawer && isDrawerOpen;
 
   useEffect(() => {
-    Animated.timing(slideAnim, {
-      toValue: isDrawerOpen ? -DRAWER_WIDTH : 0, // Négatif pour pousser vers la gauche
-      duration: 200,
-      useNativeDriver: false,
+    Animated.timing(progress, {
+      toValue: open ? 1 : 0,
+      duration: 220,
+      useNativeDriver: true,
     }).start();
-  }, [isDrawerOpen]);
+  }, [open, progress]);
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      flexDirection: 'row',
-    },
-    contentContainer: {
-      flex: 1,
-      width: SCREEN_WIDTH,
-    },
-    overlay: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.3)',
-      zIndex: 999,
-    },
+  const translateX = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -drawerWidth],
+  });
+
+  const overlayOpacity = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 1],
   });
 
   return (
     <View style={styles.container}>
-      {/* Contenu principal animé */}
-      <Animated.View style={[styles.contentContainer, { transform: [{ translateX: slideAnim }] }]}>
+      <Animated.View style={[styles.contentContainer, { transform: [{ translateX }] }]}>
         {children}
-        
-        {/* Overlay pour fermer le drawer */}
-        {isDrawerOpen && showDrawer && (
-          <TouchableOpacity 
-            style={styles.overlay}
-            onPress={() => setDrawerOpen(false)}
-            activeOpacity={1}
-          />
+
+        {/* Voile de fermeture : n'intercepte les gestes que tiroir ouvert. */}
+        {open && (
+          <Animated.View style={[styles.overlay, { opacity: overlayOpacity }]} pointerEvents="auto">
+            <Pressable
+              style={StyleSheet.absoluteFill}
+              onPress={() => setDrawerOpen(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Fermer le menu"
+            />
+          </Animated.View>
         )}
       </Animated.View>
 
-      {/* Drawer Menu à droite */}
       {showDrawer && <DrawerMenu />}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  contentContainer: {
+    flex: 1,
+    width: '100%',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    zIndex: 999,
+  },
+});

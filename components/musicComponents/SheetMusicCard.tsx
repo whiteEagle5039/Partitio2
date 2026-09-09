@@ -1,7 +1,10 @@
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { Check, Download, Play } from 'lucide-react-native';
 import React from 'react';
-import { Image, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, TouchableOpacity, View, useWindowDimensions } from 'react-native';
+
+import { elevation, touchSlop } from '@/constants/layout';
+import { useResponsive } from '@/hooks/useResponsive';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { TextComponent } from '../uxComponents/TextComponent';
 
 type SheetMusicCardProps = {
@@ -13,112 +16,107 @@ type SheetMusicCardProps = {
   onDownload?: () => void;
 };
 
-export function SheetMusicCard({ 
-  title, 
-  composer, 
-  thumbnail, 
+export function SheetMusicCard({
+  title,
+  composer,
+  thumbnail,
   isDownloaded = false,
   onPress,
-  onDownload 
+  onDownload,
 }: SheetMusicCardProps) {
   const colors = useThemeColors();
+  const { spacing, radius, icon, scale } = useResponsive();
+  const { width: windowWidth } = useWindowDimensions();
+
+  // La carte suit la largeur d'écran : ~45 % sur téléphone, plafonnée pour ne
+  // pas devenir démesurée sur tablette.
+  const cardWidth = Math.round(Math.min(Math.max(windowWidth * 0.45, 150), 210));
+  const thumbHeight = Math.round(cardWidth * 0.72);
+  const actionSize = scale(32);
 
   const styles = StyleSheet.create({
     card: {
-      width: 160,
-      marginRight: 16,
+      width: cardWidth,
       backgroundColor: colors.card,
-      borderRadius: 16,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: colors.border,
       overflow: 'hidden',
-      // elevation: 3,
-      // shadowColor: colors.primary,
-      // shadowOffset: { width: 0, height: 2 },
-      // shadowOpacity: 0.1,
-      // shadowRadius: 6,
+      ...elevation(1),
     },
     thumbnail: {
       width: '100%',
-      height: 120,
+      height: thumbHeight,
       backgroundColor: colors.muted,
       justifyContent: 'center',
       alignItems: 'center',
-      position: 'relative',
     },
     thumbnailImage: {
       width: '100%',
       height: '100%',
     },
     overlay: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(0, 0, 0, 0.25)',
       justifyContent: 'center',
       alignItems: 'center',
     },
     playButton: {
       backgroundColor: `${colors.primary}E6`,
-      borderRadius: 20,
-      width: 40,
-      height: 40,
+      borderRadius: radius.pill,
+      width: scale(40),
+      height: scale(40),
       justifyContent: 'center',
       alignItems: 'center',
     },
     downloadButton: {
       position: 'absolute',
-      top: 8,
-      right: 8,
+      top: spacing.xs,
+      right: spacing.xs,
       backgroundColor: isDownloaded ? colors.validated : `${colors.background}E6`,
-      borderRadius: 16,
-      width: 32,
-      height: 32,
+      borderRadius: radius.pill,
+      width: actionSize,
+      height: actionSize,
       justifyContent: 'center',
       alignItems: 'center',
     },
     content: {
-      padding: 12,
-    },
-    title: {
-      marginBottom: 4,
-    },
-    composer: {
-      opacity: 0.7,
+      padding: spacing.sm,
+      gap: spacing.xxs / 2,
     },
   });
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.85} accessibilityRole="button">
       <View style={styles.thumbnail}>
-        <Image 
-          source={{ uri: thumbnail }} 
-          style={styles.thumbnailImage}
-          resizeMode="cover"
-        />
+        <Image source={{ uri: thumbnail }} style={styles.thumbnailImage} resizeMode="cover" />
+
         <View style={styles.overlay}>
-          <TouchableOpacity style={styles.playButton}>
-            <Play size={20} color="#FFFFFF" />
-          </TouchableOpacity>
+          <View style={styles.playButton}>
+            <Play size={icon.sm} color="#FFFFFF" />
+          </View>
         </View>
-        
-        <TouchableOpacity 
+
+        <TouchableOpacity
           style={styles.downloadButton}
           onPress={onDownload}
+          hitSlop={touchSlop}
+          accessibilityRole="button"
+          accessibilityLabel={isDownloaded ? 'Partition téléchargée' : 'Télécharger la partition'}
         >
           {isDownloaded ? (
-            <Check size={16} color="#FFFFFF" />
+            <Check size={icon.xs} color="#FFFFFF" />
           ) : (
-            <Download size={16} color={colors.text} />
+            <Download size={icon.xs} color={colors.text} />
           )}
         </TouchableOpacity>
       </View>
-      
+
       <View style={styles.content}>
-        <TextComponent variante="subtitle3" style={styles.title} numberOfLines={1}>
+        <TextComponent variante="subtitle3" color={colors.text} numberOfLines={1}>
           {title}
         </TextComponent>
-        <TextComponent variante="caption" style={styles.composer} numberOfLines={1}>
+        <TextComponent variante="caption" color={colors.text2} numberOfLines={1}>
           {composer}
         </TextComponent>
       </View>

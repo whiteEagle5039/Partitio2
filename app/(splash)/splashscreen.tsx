@@ -2,6 +2,8 @@
 
 import SplashScreenIcon from "@/components/uxComponents/SplashScreenIcon";
 import TextComponent from "@/components/uxComponents/TextComponent";
+import { elevation } from "@/constants/layout";
+import { useResponsive } from "@/hooks/useResponsive";
 import { useThemeColors } from "@/hooks/useThemeColors";
 import { useAppStore } from "@/stores/appStore";
 import { useRouter } from "expo-router";
@@ -11,6 +13,10 @@ import { Animated, Easing, StyleSheet, View } from "react-native";
 export default function SplashScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const { spacing, scale, height } = useResponsive();
+
+  // Le logo suit la taille de l'écran (petit téléphone ↔ tablette).
+  const iconSize = scale(32, 0.8);
   
   // Récupérer l'état d'authentification depuis le store
   const { isAuthenticated, user } = useAppStore();
@@ -35,33 +41,25 @@ export default function SplashScreen() {
       alignItems: "center",
     },
     titleContainer: {
-      marginBottom: 40,
+      marginBottom: spacing.xxl,
     },
     iconsContainer: {
       alignItems: "center",
       justifyContent: "center",
-      marginBottom: 60,
+      marginBottom: spacing.xxl,
     },
     iconRow: {
       flexDirection: "row",
-      gap: 12,
-      marginVertical: 6,
+      gap: spacing.sm,
+      marginVertical: spacing.xxs,
     },
-    iconWrapper: {
-      shadowColor: "#000",
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 5,
-    },
+    iconWrapper: elevation(2),
     loadingIndicator: {
       flexDirection: "row",
-      gap: 8,
+      gap: spacing.xs,
       position: "absolute",
-      bottom: 80,
+      // Proportionnel à la hauteur : reste visible du petit téléphone à la tablette.
+      bottom: Math.max(spacing.xxl, height * 0.1),
     },
     loadingDot: {
       width: 6,
@@ -196,7 +194,7 @@ export default function SplashScreen() {
           },
         ]}
       >
-        <TextComponent variante="body0">Harmonia</TextComponent>
+        <TextComponent variante="header" color={colors.text}>Harmonia</TextComponent>
       </Animated.View>
 
       {/* Container des icônes avec rotation globale */}
@@ -222,8 +220,8 @@ export default function SplashScreen() {
             ]}
           >
             <SplashScreenIcon 
-              width={32} 
-              height={32} 
+              width={iconSize}
+              height={iconSize}
               fillColor={colors.primary}
             />
           </Animated.View>
@@ -237,8 +235,8 @@ export default function SplashScreen() {
             ]}
           >
             <SplashScreenIcon 
-              width={32} 
-              height={32} 
+              width={iconSize}
+              height={iconSize}
               fillColor={colors.primary2}
             />
           </Animated.View>
@@ -255,8 +253,8 @@ export default function SplashScreen() {
             ]}
           >
             <SplashScreenIcon 
-              width={32} 
-              height={32} 
+              width={iconSize}
+              height={iconSize}
               fillColor={colors.primary2}
             />
           </Animated.View>
@@ -270,8 +268,8 @@ export default function SplashScreen() {
             ]}
           >
             <SplashScreenIcon 
-              width={32} 
-              height={32} 
+              width={iconSize}
+              height={iconSize}
               fillColor={colors.primary}
             />
           </Animated.View>

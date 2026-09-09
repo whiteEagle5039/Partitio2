@@ -1,5 +1,7 @@
 // components/MusicKeyboard.tsx
 import { TextComponent } from '@/components/uxComponents/TextComponent';
+import { MIN_TOUCH_TARGET, elevation } from '@/constants/layout';
+import { useResponsive } from '@/hooks/useResponsive';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import {
   ArrowLeft,
@@ -10,6 +12,7 @@ import {
 } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { BackHandler, Platform, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface MusicKeyboardProps {
   activeVoice: 'S' | 'A' | 'T' | 'B';
@@ -40,6 +43,8 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
   currentContent = '',
 }) => {
   const colors = useThemeColors();
+  const { spacing, radius, fontSize, maxWideWidth } = useResponsive();
+  const insets = useSafeAreaInsets();
   const [keyboardMode, setKeyboardMode] = useState<KeyboardMode>('notes');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [lastInsertedType, setLastInsertedType] = useState<'note' | 'symbol' | null>(null);
@@ -55,12 +60,11 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
       backgroundColor: colors.card,
       borderTopWidth: 1,
       borderTopColor: colors.border,
-      // Shadow for better visual depth
-      elevation: 10,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: -4 },
-      shadowOpacity: 0.12,
-      shadowRadius: 8,
+      // Sur grand écran, le clavier reste centré plutôt qu'étiré.
+      width: '100%',
+      maxWidth: maxWideWidth,
+      alignSelf: 'center',
+      ...elevation(3),
     },
     // Suggestions intelligentes (remplace les boutons de voix)
     suggestionsContainer: {
@@ -89,7 +93,7 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
       borderColor: colors.primary + '50',
     },
     suggestionText: {
-      fontSize: 16,
+      fontSize: fontSize(16),
       color: colors.text,
       fontWeight: '500',
     },
@@ -150,38 +154,33 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
     // Clavier principal
     keyboardContainer: {
       backgroundColor: colors.card,
-      paddingBottom: 8,
-      // subtle inner shadow / elevation
-      elevation: 6,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: -2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 6,
+      // Laisse passer l'indicateur d'accueil / la barre de navigation.
+      paddingBottom: spacing.xs + insets.bottom,
     },
     keyRow: {
       flexDirection: 'row',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
+      paddingHorizontal: spacing.xs,
+      paddingVertical: spacing.xxs,
+      gap: spacing.xxs,
     },
     key: {
       flex: 1,
       backgroundColor: colors.background,
-      borderRadius: 6,
-      paddingVertical: 12,
-      paddingHorizontal: 8,
-      marginHorizontal: 2,
+      borderRadius: radius.sm,
+      paddingVertical: spacing.sm,
+      paddingHorizontal: spacing.xs,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
       borderColor: colors.border,
-      minHeight: 44,
+      minHeight: MIN_TOUCH_TARGET,
     },
     keyPressed: {
       backgroundColor: colors.primary + '20',
       borderColor: colors.primary,
     },
     keyText: {
-      fontSize: 16,
+      fontSize: fontSize(16),
       color: colors.text,
       fontWeight: '500',
     },
@@ -216,20 +215,21 @@ export const MusicKeyboard: React.FC<MusicKeyboardProps> = ({
     // Ligne d'actions
     actionRow: {
       flexDirection: 'row',
-      paddingHorizontal: 8,
-      paddingTop: 4,
+      paddingHorizontal: spacing.xs,
+      paddingTop: spacing.xxs,
+      gap: spacing.xxs,
     },
     actionButton: {
       backgroundColor: colors.background2,
-      borderRadius: 6,
-      paddingVertical: 8,
-      paddingHorizontal: 12,
-      marginHorizontal: 2,
+      borderRadius: radius.sm,
+      paddingVertical: spacing.xs,
+      paddingHorizontal: spacing.sm,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
       borderColor: colors.border,
-      minWidth: 50,
+      minWidth: MIN_TOUCH_TARGET,
+      minHeight: MIN_TOUCH_TARGET,
     },
     closeButton: {
       position: 'absolute',

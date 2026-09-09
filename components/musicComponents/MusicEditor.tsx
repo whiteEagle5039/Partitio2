@@ -1,9 +1,10 @@
 // components/MusicEditor.tsx
 import { TextComponent } from '@/components/uxComponents/TextComponent';
+import { useResponsive } from '@/hooks/useResponsive';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { ChevronDown, ChevronUp, Edit3, Plus } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Dimensions, ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, TextInput, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface Section {
@@ -35,8 +36,6 @@ interface MusicEditorProps {
   onStaffFocus?: (voice: 'S' | 'A' | 'T' | 'B', sectionId: string) => void;
 }
 
-const { width } = Dimensions.get('window');
-
 export const MusicEditor: React.FC<MusicEditorProps> = ({
   composition,
   onCompositionChange,
@@ -49,6 +48,10 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
   onStaffFocus,
 }) => {
   const colors = useThemeColors();
+  const { spacing, radius } = useResponsive();
+  // Largeur vivante : la pagination portées / paroles suit la rotation et le
+  // multi-fenêtre, contrairement à un Dimensions.get() figé au chargement.
+  const { width } = useWindowDimensions();
   const scrollViewRef = useRef<ScrollView>(null);
   const inputRefs = useRef<{ [key: string]: TextInput | null }>({});
   
@@ -70,14 +73,14 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       paddingTop: 0,
     },
     sectionContainer: {
-      marginVertical: 8,
+      marginVertical: spacing.xs,
       position: 'relative',
     },
     sectionHeader: {
       backgroundColor: colors.card,
-      marginHorizontal: 8,
-      borderRadius: 12,
-      padding: 16,
+      marginHorizontal: spacing.xs,
+      borderRadius: radius.md,
+      padding: spacing.md,
       borderWidth: 1,
       borderColor: colors.card2,
       elevation: 1,
@@ -137,10 +140,10 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: colors.primary + '15',
-      marginHorizontal: 8,
-      marginVertical: 4,
-      borderRadius: 12,
-      padding: 16,
+      marginHorizontal: spacing.xs,
+      marginVertical: spacing.xxs,
+      borderRadius: radius.md,
+      padding: spacing.md,
       borderWidth: 2,
       borderColor: colors.primary + '30',
       borderStyle: 'dashed',
@@ -152,8 +155,8 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       color: colors.primary,
     },
     lyricsContainer: {
-      width: width,
-      padding: 12,
+      width,
+      padding: spacing.sm,
       justifyContent: 'flex-start',
       backgroundColor: colors.background,
     },
@@ -161,8 +164,8 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
       width: '100%',
       minHeight: 200,
       maxHeight: 600,
-      padding: 12,
-      borderRadius: 12,
+      padding: spacing.sm,
+      borderRadius: radius.md,
       backgroundColor: colors.card,
       color: colors.text,
       fontSize: 14,
@@ -173,10 +176,10 @@ export const MusicEditor: React.FC<MusicEditorProps> = ({
     },
     staffContainer: {
       backgroundColor: colors.card,
-      borderRadius: 12,
-      margin: 8,
-      marginTop: 4,
-      padding: 10,
+      borderRadius: radius.md,
+      margin: spacing.xs,
+      marginTop: spacing.xxs,
+      padding: spacing.xs,
       minHeight: 200,
       maxWidth: '96%',
     },

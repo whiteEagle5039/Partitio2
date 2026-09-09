@@ -1,8 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { ArrowLeft, Download, Share2, Edit3 } from 'lucide-react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Download, Edit3, Share2 } from 'lucide-react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+
+import { EmptyState } from '@/components/uxComponents/EmptyState';
+import { Content, Screen } from '@/components/uxComponents/Screen';
+import { ScreenHeader } from '@/components/uxComponents/ScreenHeader';
 import { TextComponent } from '@/components/uxComponents/TextComponent';
+import { MIN_TOUCH_TARGET, elevation, touchSlop } from '@/constants/layout';
+import { useResponsive } from '@/hooks/useResponsive';
+import { useSheetTheme } from '@/hooks/useSheetTheme';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useCompositionStorage } from '@/utils/CompositionStorage';
 
@@ -24,343 +31,244 @@ interface Composition {
   composer?: string;
 }
 
+const hasVoiceContent = (voice: string): boolean =>
+  !!voice && voice.trim() !== '' && voice.trim() !== '(vide)';
+
+const hasSectionContent = (section: Section): boolean =>
+  hasVoiceContent(section.soprano) ||
+  hasVoiceContent(section.alto) ||
+  hasVoiceContent(section.tenor) ||
+  hasVoiceContent(section.bass);
+
 export default function CompositionPreviewScreen() {
   const colors = useThemeColors();
+  const sheet = useSheetTheme();
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { spacing, radius, icon, isTablet } = useResponsive();
   const { loadComposition } = useCompositionStorage();
-  
+
   const [composition, setComposition] = useState<Composition | null>(null);
   const [loading, setLoading] = useState(true);
   const compositionId = params.id as string;
 
-  useEffect(() => {
-    loadCompositionData();
-  }, [compositionId]);
-
-  const loadCompositionData = async () => {
+  const loadCompositionData = useCallback(async () => {
     try {
       setLoading(true);
       const data = await loadComposition(compositionId);
+
       if (data) {
-        console.log('📄 Composition chargée:', data);
         setComposition(data);
       } else {
-        console.warn('⚠️ Aucune composition trouvée pour l\'ID:', compositionId);
+        console.warn("⚠️ Aucune composition trouvée pour l'ID:", compositionId);
       }
     } catch (error) {
       console.error('❌ Erreur chargement:', error);
     } finally {
       setLoading(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [compositionId]);
 
-  const handleEdit = () => {
-    router.push(`/compose?id=${compositionId}`);
-  };
-
-  const handleShare = () => {
-    console.log('📤 Partage de la composition');
-  };
-
-  const handleExport = () => {
-    console.log('💾 Export en PDF');
-  };
-
-  // ✅ Fonction pour vérifier si une voix a du contenu
-  const hasVoiceContent = (voice: string): boolean => {
-    return !!voice && voice.trim() !== '' && voice.trim() !== '(vide)';
-  };
-
-  // ✅ Fonction pour vérifier si une section a au moins une voix non vide
-  const hasSectionContent = (section: Section): boolean => {
-    return hasVoiceContent(section.soprano) ||
-           hasVoiceContent(section.alto) ||
-           hasVoiceContent(section.tenor) ||
-           hasVoiceContent(section.bass);
-  };
+  useEffect(() => {
+    void loadCompositionData();
+  }, [loadCompositionData]);
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-      paddingTop: 10,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-      backgroundColor: colors.card,
-    },
-    headerLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      flex: 1,
-    },
-    headerTitle: {
-      marginLeft: 12,
-      marginTop: 8,
-    },
-    headerActions: {
-      flexDirection: 'row',
-      gap: 12,
-    },
     actionButton: {
-      padding: 8,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
+      minWidth: MIN_TOUCH_TARGET,
+      minHeight: MIN_TOUCH_TARGET,
       alignItems: 'center',
+      justifyContent: 'center',
     },
-    scrollContent: {
-      padding: 8,
-    },
-    pageContainer: {
-      backgroundColor: 'white',
-      borderRadius: 8,
-      padding: 15,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 4,
+    page: {
+      backgroundColor: sheet.paper,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      borderColor: sheet.ruleStrong,
+      padding: isTablet ? spacing.xl : spacing.md,
+      ...elevation(1),
     },
     pageHeader: {
-      marginBottom: 24,
+      marginBottom: spacing.lg,
       borderBottomWidth: 2,
-      borderBottomColor: '#333',
-      paddingBottom: 16,
+      borderBottomColor: sheet.ruleStrong,
+      paddingBottom: spacing.sm,
+      gap: spacing.xs,
     },
-    compositionTitle: {
-      textAlign: 'center',
-    },
-    compositionMeta: {
+    metaRow: {
       flexDirection: 'row',
-      justifyContent: 'space-between'
+      justifyContent: 'space-between',
     },
-    metaItem: {
-      color: '#666',
-      fontSize: 14,
-    },
-    sectionContainer: {
-      marginBottom: 32,
-    },
-    sectionHeader: {
-      marginBottom: 15,
-    },
-    lyricsContainer: {
-      backgroundColor: '#f9f9f9',
-      padding: 12,
-      borderRadius: 4,
-      marginBottom: 16,
-      borderLeftWidth: 3,
-      borderLeftColor: colors.primary,
-      marginTop: 15,
-    },
-    lyricsText: {
-      fontSize: 14,
-      color: '#333',
-      lineHeight: 20,
+    section: {
+      marginBottom: spacing.xl,
+      gap: spacing.sm,
     },
     voiceRow: {
       flexDirection: 'row',
-      paddingVertical: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: '#e0e0e0',
+      gap: spacing.xs,
+      paddingVertical: spacing.xs,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: sheet.rule,
     },
     voiceLabel: {
-      width: 20,
-      color: '#000',
+      width: 22,
     },
-    voiceContent: {
-      flex: 1,
-      color: '#333',
-      letterSpacing: 2,
-    },
-    emptyVoice: {
-      color: '#999',
-      fontStyle: 'italic',
-    },
-    emptySectionMessage: {
-      padding: 16,
-      backgroundColor: '#f5f5f5',
-      borderRadius: 8,
+    emptySection: {
+      padding: spacing.md,
+      backgroundColor: sheet.highlight,
+      borderRadius: radius.sm,
       alignItems: 'center',
     },
-    emptySectionText: {
-      color: '#999',
-      fontSize: 14,
-      fontStyle: 'italic',
+    lyricsContainer: {
+      backgroundColor: sheet.highlight,
+      padding: spacing.sm,
+      borderRadius: radius.xs,
+      marginTop: spacing.sm,
+      borderLeftWidth: 3,
+      borderLeftColor: colors.primary,
     },
     footer: {
-      marginTop: 32,
-      paddingTop: 16,
-      borderTopWidth: 1,
-      borderTopColor: '#e0e0e0',
+      marginTop: spacing.xl,
+      paddingTop: spacing.md,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: sheet.rule,
       alignItems: 'center',
-    },
-    footerText: {
-      fontSize: 12,
     },
   });
 
   if (loading) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <ArrowLeft size={24} color={colors.text} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.loadingContainer}>
+      <Screen background={colors.card}>
+        <ScreenHeader title="Composition" />
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm }}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <TextComponent variante="body3" color={colors.text2} style={{ marginTop: 12 }}>
+          <TextComponent variante="body4" color={colors.text2}>
             Chargement...
           </TextComponent>
         </View>
-      </View>
+      </Screen>
     );
   }
 
   if (!composition) {
     return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <ArrowLeft size={24} color={colors.text} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.loadingContainer}>
-          <TextComponent variante="subtitle2">
-            Composition introuvable
-          </TextComponent>
-        </View>
-      </View>
+      <Screen background={colors.card}>
+        <ScreenHeader title="Composition" />
+        <EmptyState
+          variant="plain"
+          title="Composition introuvable"
+          subtitle="Cette composition n'existe plus ou n'a pas pu être chargée."
+          actionText="Retour"
+          onActionPress={() => router.back()}
+        />
+      </Screen>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <ArrowLeft size={24} color={colors.text} />
-          </TouchableOpacity>
-          <View style={{ flexShrink: 1, overflow: 'hidden' }}>
-            <TextComponent variante="subtitle2" style={styles.headerTitle} numberOfLines={1}>
-              {composition.title}
-            </TextComponent>
-          </View>
-        </View>
-        
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.actionButton} onPress={handleEdit}>
-            <Edit3 size={20} color={colors.primary} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={handleShare}>
-            <Share2 size={20} color={colors.text} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionButton} onPress={handleExport}>
-            <Download size={20} color={colors.text} />
-          </TouchableOpacity>
-        </View>
-      </View>
+    <Screen background={colors.card}>
+      <ScreenHeader
+        title={composition.title}
+        subtitle={composition.composer}
+        right={
+          <>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => router.push(`/compose?id=${compositionId}`)}
+              hitSlop={touchSlop}
+              accessibilityRole="button"
+              accessibilityLabel="Modifier"
+            >
+              <Edit3 size={icon.md} color={colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => console.log('📤 Partage de la composition')}
+              hitSlop={touchSlop}
+              accessibilityRole="button"
+              accessibilityLabel="Partager"
+            >
+              <Share2 size={icon.md} color={colors.icon} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => console.log('💾 Export en PDF')}
+              hitSlop={touchSlop}
+              accessibilityRole="button"
+              accessibilityLabel="Exporter"
+            >
+              <Download size={icon.md} color={colors.icon} />
+            </TouchableOpacity>
+          </>
+        }
+      />
 
-      {/* Content */}
-      <ScrollView style={styles.container}>
-        <View style={styles.scrollContent}>
-          <View style={styles.pageContainer}>
-            {/* Page Header */}
+      <ScrollView
+        style={{ flex: 1, backgroundColor: colors.background }}
+        contentContainerStyle={{ paddingVertical: spacing.md }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Content width="wide">
+          <View style={styles.page}>
             <View style={styles.pageHeader}>
-              <View style={styles.compositionMeta}>
-                <TextComponent style={styles.metaItem}>
+              <View style={styles.metaRow}>
+                <TextComponent variante="body5" color={sheet.inkMuted}>
                   {composition.key}
                 </TextComponent>
-                <TextComponent style={styles.metaItem}>
+                <TextComponent variante="body5" color={sheet.inkMuted}>
                   {composition.tempo}
                 </TextComponent>
               </View>
-              <View>
-                <TextComponent variante="subtitle2" style={styles.compositionTitle}>
-                  {composition.title}
-                </TextComponent>
-              </View>
+
+              <TextComponent variante="subtitle2" color={sheet.ink} style={{ textAlign: 'center' }}>
+                {composition.title}
+              </TextComponent>
             </View>
 
-            {/* Sections */}
-            {composition.sections.map((section, index) => (
-              <View key={section.id} style={styles.sectionContainer}>
-                <View style={styles.sectionHeader}>
-                  <TextComponent variante='subtitle3'>
-                    {section.name} 
-                  </TextComponent>
-                </View>
+            {composition.sections.map((section) => (
+              <View key={section.id} style={styles.section}>
+                <TextComponent variante="subtitle3" color={sheet.ink}>
+                  {section.name}
+                </TextComponent>
 
-                {/* ✅ Vérifier si la section a du contenu */}
                 {!hasSectionContent(section) ? (
-                  <View style={styles.emptySectionMessage}>
-                    <TextComponent style={styles.emptySectionText}>
+                  <View style={styles.emptySection}>
+                    <TextComponent variante="body5" color={sheet.inkMuted} style={{ fontStyle: 'italic' }}>
                       Cette partie ne contient pas de notes.
                     </TextComponent>
                   </View>
                 ) : (
                   <View>
-                    {hasVoiceContent(section.soprano) && (
-                      <View style={styles.voiceRow}>
-                        <TextComponent variante='body6'  style={styles.voiceLabel}>
-                          S: 
-                        </TextComponent>
-                        <TextComponent variante='subtitle4' style={styles.voiceContent}>
-                          {section.soprano}
-                        </TextComponent>
-                      </View>
-                    )}
-
-                    {hasVoiceContent(section.alto) && (
-                      <View style={styles.voiceRow}>
-                        <TextComponent variante='body6'  style={styles.voiceLabel}>
-                          A:
-                        </TextComponent>
-                        <TextComponent variante='subtitle4' style={styles.voiceContent}>
-                          {section.alto}
-                        </TextComponent>
-                      </View>
-                    )}
-
-                    {hasVoiceContent(section.tenor) && (
-                      <View style={styles.voiceRow}>
-                        <TextComponent variante='body6'  style={styles.voiceLabel}>
-                          T:
-                        </TextComponent>
-                        <TextComponent variante='subtitle4' style={styles.voiceContent}>
-                          {section.tenor}
-                        </TextComponent>
-                      </View>
-                    )}
-
-                    {hasVoiceContent(section.bass) && (
-                      <View style={styles.voiceRow}>
-                        <TextComponent variante='body6'  style={styles.voiceLabel}>
-                          B:
-                        </TextComponent>
-                        <TextComponent variante='subtitle4' style={styles.voiceContent}>
-                          {section.bass}
-                        </TextComponent>
-                      </View>
-                    )}
+                    {(
+                      [
+                        ['S', section.soprano],
+                        ['A', section.alto],
+                        ['T', section.tenor],
+                        ['B', section.bass],
+                      ] as const
+                    )
+                      .filter(([, value]) => hasVoiceContent(value))
+                      .map(([label, value]) => (
+                        <View key={label} style={styles.voiceRow}>
+                          <TextComponent variante="body6" color={sheet.ink} style={styles.voiceLabel}>
+                            {label}
+                          </TextComponent>
+                          <TextComponent
+                            variante="subtitle4"
+                            color={sheet.ink}
+                            style={{ flex: 1, letterSpacing: 1.5 }}
+                          >
+                            {value}
+                          </TextComponent>
+                        </View>
+                      ))}
                   </View>
                 )}
 
-                {/* Lyrics if available */}
-                {section.lyrics && section.lyrics.trim() !== '' && (
+                {!!section.lyrics && section.lyrics.trim() !== '' && (
                   <View style={styles.lyricsContainer}>
-                    <TextComponent style={styles.lyricsText}>
+                    <TextComponent variante="body4" color={sheet.ink}>
                       {section.lyrics}
                     </TextComponent>
                   </View>
@@ -368,15 +276,14 @@ export default function CompositionPreviewScreen() {
               </View>
             ))}
 
-            {/* Footer */}
             <View style={styles.footer}>
-              <TextComponent color={colors.primary} style={styles.footerText}>
+              <TextComponent variante="caption" color={colors.primary}>
                 Le {new Date().toLocaleDateString('fr-FR')}
               </TextComponent>
             </View>
           </View>
-        </View>
+        </Content>
       </ScrollView>
-    </View>
+    </Screen>
   );
 }

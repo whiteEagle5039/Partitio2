@@ -44,6 +44,7 @@ interface AlertCardProps {
   actionText?: string;               // Texte du bouton d'action
   onAction?: () => void;             // Fonction appelée au clic du bouton
   visible?: boolean;                 // Affichage conditionnel (défaut: true)
+  tone?: string;                     // Couleur d'accent (défaut: blueSingle)
   containerStyle?: ViewStyle;        // Style personnalisé du container
 }
 ```

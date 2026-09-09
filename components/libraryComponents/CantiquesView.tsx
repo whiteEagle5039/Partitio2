@@ -1,10 +1,15 @@
-import { TextComponent } from '@/components/uxComponents/TextComponent';
-import { useThemeColors } from '@/hooks/useThemeColors';
-import { useCantiqueStorage } from '@/utils/CantiqueStorage';
 import { router } from 'expo-router';
 import { Music } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, RefreshControl, View } from 'react-native';
+
+import { EmptyState } from '@/components/uxComponents/EmptyState';
+import { Badge, ListItemCard } from '@/components/uxComponents/ListItemCard';
+import { TextComponent } from '@/components/uxComponents/TextComponent';
+import { useListLayout } from '@/hooks/useListLayout';
+import { useResponsive } from '@/hooks/useResponsive';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import { useCantiqueStorage } from '@/utils/CantiqueStorage';
 
 interface CantiqueMetadata {
   id: string;
@@ -21,214 +26,98 @@ interface CantiquesViewProps {
 
 export const CantiquesView: React.FC<CantiquesViewProps> = ({ onContentPress }) => {
   const colors = useThemeColors();
+  const { spacing } = useResponsive();
+  const listLayout = useListLayout();
   const { getAllMetadata } = useCantiqueStorage();
-  
+
   const [cantiques, setCantiques] = useState<CantiqueMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // Charger les cantiques au montage du composant
-  useEffect(() => {
-    loadCantiques();
-  }, []);
-
-  const loadCantiques = async () => {
+  const loadCantiques = useCallback(async () => {
     try {
-      setLoading(true);
       const data = await getAllMetadata();
-      // Trier par numéro de cantique
-      const sorted = data.sort((a, b) => a.number - b.number);
-      setCantiques(sorted);
-      console.log('✅ Cantiques chargés:', sorted.length);
+      setCantiques([...data].sort((a, b) => a.number - b.number));
     } catch (error) {
       console.error('❌ Erreur lors du chargement des cantiques:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+    // getAllMetadata provient d'un hook de stockage recréé à chaque rendu.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    void loadCantiques();
+  }, [loadCantiques]);
 
   const handleRefresh = () => {
     setRefreshing(true);
-    loadCantiques();
+    void loadCantiques();
   };
 
   const handleCantiquePress = (cantiqueId: string) => {
-    console.log('🎵 Cantique cliqué, ID:', cantiqueId);
-    console.log('📍 onContentPress existe?', !!onContentPress);
-    console.log('📍 router existe?', !!router);
-    
-    if (!cantiqueId) {
-      console.error('❌ ID de cantique invalide');
-      return;
-    }
-    
+    if (!cantiqueId) return;
+
     if (onContentPress) {
-      console.log('✅ Appel de onContentPress');
       onContentPress(cantiqueId);
     } else {
-      console.log('✅ Navigation par défaut');
-      console.log('📍 Navigation vers /cantiquePreview?id=' + cantiqueId);
       router.push(`/cantiquePreview?id=${cantiqueId}`);
     }
   };
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-    },
-    scrollContainer: {
-      paddingHorizontal: 12,
-      paddingTop: 3,
-    },
-    loadingContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingVertical: 40,
-    },
-    emptyContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingVertical: 60,
-    },
-    emptyIcon: {
-      marginBottom: 16,
-      opacity: 0.3,
-    },
-    listItem: {
-      flexDirection: 'row',
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      padding: 16,
-      marginBottom: 8,
-      alignItems: 'center',
-      borderColor: colors.border,
-      borderWidth: 1,
-    },
-    listThumbnail: {
-      width: 60,
-      height: 70,
-      borderRadius: 12,
-      marginRight: 16,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    listContent: {
-      flex: 1,
-    },
-    listTitle: {
-      marginBottom: 4,
-    },
-    contentInfo: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      alignItems: 'center',
-      gap: 8,
-      marginTop: 8,
-    },
-    metricItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    infoSeparator: {
-      width: 4,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: colors.text2,
-    },
-    categoryBadge: {
-      backgroundColor: colors.primary + '20',
-      paddingHorizontal: 8,
-      paddingVertical: 2,
-      borderRadius: 8,
-    },
-  });
-
-  // État de chargement
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm }}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <TextComponent variante="body3" color={colors.text2} style={{ marginTop: 12 }}>
+        <TextComponent variante="body4" color={colors.text2}>
           Chargement des cantiques...
         </TextComponent>
       </View>
     );
   }
 
-  // Aucun cantique
   if (cantiques.length === 0) {
     return (
-      <View style={styles.emptyContainer}>
-        <Music size={64} color={colors.text2} style={styles.emptyIcon} />
-        <TextComponent variante="subtitle2" color={colors.text}>
-          Aucun cantique disponible
-        </TextComponent>
-        <TextComponent variante="body3" color={colors.text2} style={{ marginTop: 8, textAlign: 'center' }}>
-          La bibliothèque de cantiques{'\n'}ne contient pas encore de contenu
-        </TextComponent>
-      </View>
+      <EmptyState
+        variant="plain"
+        icon={Music}
+        title="Aucun cantique disponible"
+        subtitle="La bibliothèque de cantiques ne contient pas encore de contenu."
+      />
     );
   }
 
-  // Liste des cantiques
   return (
-    <ScrollView 
-      style={styles.container}
-      contentContainerStyle={styles.scrollContainer}
+    <FlatList
+      data={cantiques}
+      keyExtractor={(item) => item.id}
+      contentContainerStyle={listLayout.contentContainerStyle}
       showsVerticalScrollIndicator={false}
-    >
-      {cantiques.map((cantique) => (
-        <TouchableOpacity
-          key={cantique.id}
-          style={styles.listItem}
-          onPress={() => handleCantiquePress(cantique.id)}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.listThumbnail, { backgroundColor: `${colors.primary}15` }]}>
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={colors.primary} />
+      }
+      renderItem={({ item }) => (
+        <ListItemCard
+          title={item.title}
+          subtitle={item.composer}
+          leading={
             <TextComponent variante="subtitle3" color={colors.primary}>
-              {cantique.number}
+              {item.number}
             </TextComponent>
-          </View>
-          
-          <View style={styles.listContent}>
-            <TextComponent variante="subtitle3" style={styles.listTitle}>
-              {cantique.title}
-            </TextComponent>
-            
-            <TextComponent variante="body4" color={colors.text2}>
-              {cantique.composer}
-            </TextComponent>
-            
-            <View style={styles.contentInfo}>
-              {cantique.category && (
-                <>
-                  <View style={styles.categoryBadge}>
-                    <TextComponent variante="caption" color={colors.primary}>
-                      {cantique.category}
-                    </TextComponent>
-                  </View>
-                  {cantique.tags && cantique.tags.length > 0 && (
-                    <View style={styles.infoSeparator} />
-                  )}
-                </>
+          }
+          onPress={() => handleCantiquePress(item.id)}
+          meta={
+            <>
+              {!!item.category && <Badge label={item.category} tone={colors.primary} />}
+              {!!item.tags?.length && (
+                <Badge label={item.tags.slice(0, 2).join(', ') + (item.tags.length > 2 ? '…' : '')} />
               )}
-              
-              {cantique.tags && cantique.tags.length > 0 && (
-                <View style={styles.metricItem}>
-                  <TextComponent variante="caption" color={colors.text2}>
-                    {cantique.tags.slice(0, 2).join(', ')}
-                    {cantique.tags.length > 2 ? '...' : ''}
-                  </TextComponent>
-                </View>
-              )}
-            </View>
-          </View>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+            </>
+          }
+        />
+      )}
+    />
   );
 };
